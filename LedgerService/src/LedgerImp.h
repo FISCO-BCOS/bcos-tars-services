@@ -1,32 +1,21 @@
-﻿#ifndef _LedgerImp_H_
-#define _LedgerImp_H_
+﻿#pragma once
 
-#include "servant/Application.h"
 #include "Ledger.h"
+#include "servant/Application.h"
 
-/**
- *
- *
- */
-class LedgerImp : public bcos::Ledger
-{
+namespace bcos_tars {
+
+class LedgerImp : public Ledger {
 public:
-    /**
-     *
-     */
-    virtual ~LedgerImp() override {}
+  virtual ~LedgerImp() override {}
 
-    /**
-     *
-     */
-    virtual void initialize() override;
+  virtual void initialize() override;
 
-    /**
-     *
-     */
-    virtual void destroy() override;
+  virtual void destroy() override;
 
-    virtual void commitBlock(tars::Int32 blockNumber,tars::TarsCurrentPtr current) override;
+  virtual void commitBlock(tars::Int32 blockNumber,
+                           tars::TarsCurrentPtr current) override;
 };
+
+} // namespace bcos
 /////////////////////////////////////////////////////
-#endif

@@ -1,0 +1,46 @@
+#include "Transaction.tars"
+#include "TransactionReceipt.tars"
+
+module bcos_tars {
+    enum BlockType {
+        CompleteBlock,
+        WithTransactionsHash,
+    };
+
+    struct ParentInfo {
+        1 optional long blockNumber;
+        2 optional vector<byte> hash;
+    };
+
+    struct Signature {
+        1 optional long sealerIndex;
+        2 optional vector<byte> signature;
+    };
+
+    struct BlockHeader {
+        2 optional int version;
+        3 optional vector<ParentInfo> parentInfo;
+        4 optional vector<byte> txsRoot;
+        5 optional vector<byte> receiptRoot;
+        6 optional vector<byte> stateRoot;
+        7 optional long blockNumber;
+        8 optional vector<byte> gasUsed;
+        9 optional long timestamp;
+        10 optional long sealer;
+        11 optional vector<vector<byte>> sealerList;
+        12 optional vector<byte> extraData;
+        13 optional vector<Signature> signatureList;
+        14 optional vector<vector<long>> consensusWeights;
+    };
+
+    struct Block {
+        1 optional int version;
+        2 optional BlockType type;
+        3 optional BlockHeader blockHeader;
+        4 optional vector<Transaction> transactions;
+        5 optional vector<TransactionReceipt> receipts;
+        6 optional vector<vector<byte>> transactionsHash;
+        7 optional vector<vector<byte>> receiptsHash;
+    };
+   
+};

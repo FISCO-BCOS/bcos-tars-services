@@ -1,0 +1,17 @@
+module bcos_tars {
+    struct LogEntry {
+        1 optional vector<byte> address;
+        2 optional byte topic[32];
+        3 optional vector<byte> data;
+    };
+
+    struct TransactionReceipt {
+        1 optional int version;
+        2 optional vector<byte> stateRoot;
+        3 optional byte gasUsed[32];
+        4 optional byte bloom[256];
+        5 optional int status;
+        6 optional vector<byte> output;
+        7 optional vector<LogEntry> logEntries;
+    };
+};

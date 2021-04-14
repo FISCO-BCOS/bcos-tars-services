@@ -1,20 +1,16 @@
 ﻿#include "LedgerImp.h"
 #include "servant/Application.h"
 
-//////////////////////////////////////////////////////
+using namespace bcos_tars;
+
 void LedgerImp::initialize()
 {
-    //initialize servant here:
-    //...
 }
 
-//////////////////////////////////////////////////////
 void LedgerImp::destroy()
 {
-    //destroy servant here:
-    //...
 }
 
 void LedgerImp::commitBlock(tars::Int32 blockNumber,tars::TarsCurrentPtr current) {
-    
+    current->sendResponse(0);
 }
