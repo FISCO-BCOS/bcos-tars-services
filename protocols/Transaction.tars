@@ -1,0 +1,20 @@
+module bcos {
+    enum TransactionType {
+        NullTransaction,
+        ContractCreation,
+        MessageCall,
+    };
+
+    struct Transaction {
+        1 optional int version;
+        2 optional string chainID;
+        3 optional string groupID;
+        4 optional long blockLimit;
+        5 optional byte nonce[32];
+        6 optional vector<byte> to;
+        7 optional vector<byte> sender;
+        8 optional vector<byte> input;
+        9 optional long importTime;
+        10 optional TransactionType type;
+    };
+};

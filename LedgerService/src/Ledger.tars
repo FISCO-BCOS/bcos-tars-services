@@ -1,0 +1,10 @@
+
+module bcos
+{
+
+interface Ledger
+{
+    void commitBlock(int blockNumber);
+};
+
+}; 
