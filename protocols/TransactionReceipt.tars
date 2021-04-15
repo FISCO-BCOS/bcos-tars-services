@@ -9,9 +9,10 @@ module bcos_tars {
         1 optional int version;
         2 optional vector<byte> stateRoot;
         3 optional byte gasUsed[32];
-        4 optional byte bloom[256];
-        5 optional int status;
-        6 optional vector<byte> output;
-        7 optional vector<LogEntry> logEntries;
+        4 optional vector<byte> contractAddress;
+        5 optional byte bloom[256];
+        6 optional int status;
+        7 optional vector<byte> output;
+        8 optional vector<LogEntry> logEntries;
     };
 };
