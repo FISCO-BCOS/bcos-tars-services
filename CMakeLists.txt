@@ -44,3 +44,4 @@ link_directories(/usr/local/tars/cpp/thirdparty/lib)
 # import tars project
 add_subdirectory(protocols)
 add_subdirectory(LedgerService)
+add_subdirectory(StorageService)

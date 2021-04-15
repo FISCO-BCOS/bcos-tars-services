@@ -1,0 +1,10 @@
+
+module bcos_tars
+{
+
+interface Storage
+{
+    int test();
+};
+
+}; 
