@@ -7,7 +7,8 @@ class StorageService : public Application {
 public:
   virtual ~StorageService() override{};
 
-  virtual void initialize() override {}
+  virtual void initialize() override {
+  }
 
   virtual void destroyApp() override {}
 };

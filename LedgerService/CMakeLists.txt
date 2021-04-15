@@ -4,4 +4,4 @@ project(bcos-LedgerService)
 
 gen_server(bcos_tars LedgerService)
 
-#target_link_libraries(mysqlclient ssl crypto nghttp2-static)
+target_link_libraries(LedgerService bcos-framework::protocol)

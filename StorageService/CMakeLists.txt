@@ -4,4 +4,4 @@ project(bcos_tars-Storage)
 
 gen_server(bcos_tars StorageService)
 
-#target_link_libraries(mysqlclient ssl crypto nghttp2-static)
+target_link_libraries(StorageService bcos-framework::protocol)
