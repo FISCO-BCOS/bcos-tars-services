@@ -1,7 +1,7 @@
 #include "Transaction.tars"
 #include "TransactionReceipt.tars"
 
-module bcos_tars {
+module bcostars {
     enum BlockType {
         CompleteBlock,
         WithTransactionsHash,

@@ -1,14 +1,14 @@
 ﻿#pragma once
 
 #include "servant/Application.h"
-#include "Storage.h"
+#include "StorageService.h"
 
-namespace bcos_tars {
+namespace bcostars {
 
-class StorageImp : public Storage
+class StorageServiceImp : public StorageService
 {
 public:
-    virtual ~StorageImp() {}
+    virtual ~StorageServiceImp() {}
 
     virtual void initialize();
 

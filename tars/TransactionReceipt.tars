@@ -1,4 +1,4 @@
-module bcos_tars {
+module bcostars {
     struct LogEntry {
         1 optional vector<byte> address;
         2 optional byte topic[32];

@@ -1,0 +1,10 @@
+
+module bcostars
+{
+
+interface StorageService
+{
+    int test();
+};
+
+}; 

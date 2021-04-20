@@ -1,13 +1,14 @@
-#include "StorageImp.h"
+#include "LedgerServiceImp.h"
 #include "servant/Application.h"
 
-using namespace bcos_tars;
+using namespace bcostars;
 
-class StorageService : public Application {
+class LedgerService : public Application {
 public:
-  virtual ~StorageService() override{};
+  virtual ~LedgerService() override{};
 
   virtual void initialize() override {
+    addServant<LedgerImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".LedgerObj");
   }
 
   virtual void destroyApp() override {}
@@ -15,7 +16,7 @@ public:
 
 int main(int argc, char *argv[]) {
   try {
-    StorageService service;
+    LedgerService service;
     service.main(argc, argv);
     service.waitForShutdown();
 

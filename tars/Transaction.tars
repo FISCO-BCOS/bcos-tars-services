@@ -1,4 +1,4 @@
-module bcos_tars {
+module bcostars {
     enum TransactionType {
         NullTransaction,
         ContractCreation,
