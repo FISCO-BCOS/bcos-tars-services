@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-set(GIT_URL_BASE "gitee.com")
+set(GIT_URL_BASE "github.com.cnpmjs.org")
 # import bcos-cmake-scripts & hunter & bcos-framework
 include(FetchContent)
 FetchContent_Declare(bcos-cmake-scripts
@@ -13,7 +13,7 @@ FetchContent_MakeAvailable(bcos-cmake-scripts)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR}/bcos-cmake-scripts)
 
 FetchContent_Declare(bcos-framework
-GIT_REPOSITORY https://${GIT_URL_BASE}/ancelmo/bcos-framework.git
+GIT_REPOSITORY https://${GIT_URL_BASE}/FISCO-BCOS/bcos-framework.git
 GIT_TAG dev
 SOURCE_DIR bcos-framework
 # BUILD_IN_SOURCE 1
