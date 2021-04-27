@@ -23,6 +23,7 @@ link_directories(/usr/local/tars/cpp/thirdparty/lib)
 include_directories(${CMAKE_SOURCE_DIR}/tars)
 
 #include_directories(/home/tarsprotol/App/OtherServer)
+include(CompilerSettings)
 
 # import tars project
 add_subdirectory(tars)

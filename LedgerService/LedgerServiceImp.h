@@ -2,7 +2,7 @@
 
 #include "LedgerService.h"
 #include "servant/Application.h"
-#include <bcos-framework/interfaces/ledger/ledgerInterface.h>
+#include <bcos-framework/interfaces/ledger/LedgerInterface.h>
 
 namespace bcostars {
 
@@ -74,7 +74,7 @@ public:
                                   tars::TarsCurrentPtr current) override;
 
 private:
-
+  std::shared_ptr<bcos::ledger::LedgerInterface> m_ledger;
 };
 
 } // namespace bcostars

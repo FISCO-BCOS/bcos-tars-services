@@ -1,5 +1,4 @@
 ﻿#include "StorageServiceImp.h"
-#include "servant/Application.h"
 
 using namespace bcostars;
 

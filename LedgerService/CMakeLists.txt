@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 project(bcostars-LedgerService)
 
-# gen_server(bcostars LedgerService)
+gen_server(bcostars LedgerService)
+target_compile_options(LedgerService PRIVATE -Wno-error)
 
-# target_link_libraries(LedgerService bcos-framework::protocol)
+add_dependencies(LedgerService bcos-framework)

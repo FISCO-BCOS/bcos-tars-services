@@ -1,14 +1,13 @@
 #include "LedgerServiceImp.h"
-#include "servant/Application.h"
 
 using namespace bcostars;
 
-class LedgerService : public Application {
+class LedgerServiceApp : public Application {
 public:
-  virtual ~LedgerService() override{};
+  virtual ~LedgerServiceApp() override{};
 
   virtual void initialize() override {
-    addServant<LedgerImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".LedgerObj");
+    addServant<LedgerServiceImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".LedgerServiceObj");
   }
 
   virtual void destroyApp() override {}
@@ -16,9 +15,9 @@ public:
 
 int main(int argc, char *argv[]) {
   try {
-    LedgerService service;
-    service.main(argc, argv);
-    service.waitForShutdown();
+    LedgerServiceApp app;
+    app.main(argc, argv);
+    app.waitForShutdown();
 
     return 0;
   } catch (std::exception &e) {

@@ -1,14 +1,13 @@
 #include "StorageServiceImp.h"
-#include "servant/Application.h"
 
 using namespace bcostars;
 
-class StorageService : public Application {
+class StorageServiceApp : public Application {
 public:
-  virtual ~StorageService() override{};
+  virtual ~StorageServiceApp() override{};
 
   virtual void initialize() override {
-    addServant<StorageImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".StorageObj");
+    addServant<StorageServiceImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".StorageServiceObj");
   }
 
   virtual void destroyApp() override {}
@@ -16,9 +15,9 @@ public:
 
 int main(int argc, char *argv[]) {
   try {
-    StorageService service;
-    service.main(argc, argv);
-    service.waitForShutdown();
+    StorageServiceApp app;
+    app.main(argc, argv);
+    app.waitForShutdown();
 
     return 0;
   } catch (std::exception &e) {

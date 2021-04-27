@@ -1,10 +1,4 @@
 module bcostars {
-    enum TransactionType {
-        NullTransaction,
-        ContractCreation,
-        MessageCall,
-    };
-
     struct Transaction {
         1 optional int version;
         2 optional string chainID;
@@ -15,6 +9,6 @@ module bcostars {
         7 optional vector<byte> sender;
         8 optional vector<byte> input;
         9 optional long importTime;
-        10 optional TransactionType type;
+        10 optional uint32_t type;
     };
 };
