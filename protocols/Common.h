@@ -4,16 +4,17 @@
 #include <functional>
 #include <memory>
 #include <tup/Tars.h>
+#include <bcos-framework/libutilities/Common.h>
 
 namespace bcostars {
 namespace protocol {
 class BufferWriterByteVector {
 protected:
-  mutable std::vector<std::byte> _buffer;
-  std::byte *_buf;
+  mutable std::vector<bcos::byte> _buffer;
+  bcos::byte *_buf;
   std::size_t _len;
   std::size_t _buf_len;
-  std::function<std::byte *(BufferWriterByteVector &, size_t)> _reserve;
+  std::function<bcos::byte *(BufferWriterByteVector &, size_t)> _reserve;
 
 private:
   //不让copy 复制
@@ -35,23 +36,23 @@ public:
 
   void reset() { _len = 0; }
 
-  void writeBuf(const std::byte *buf, size_t len) {
+  void writeBuf(const bcos::byte *buf, size_t len) {
     TarsReserveBuf(*this, _len + len);
     memcpy(_buf + _len, buf, len);
     _len += len;
   }
 
-  const std::vector<std::byte> &getByteBuffer() const {
+  const std::vector<bcos::byte> &getByteBuffer() const {
     _buffer.resize(_len);
     return _buffer;
   }
-  std::vector<std::byte> &getByteBuffer() {
+  std::vector<bcos::byte> &getByteBuffer() {
     _buffer.resize(_len);
     return _buffer;
   }
-  const std::byte *getBuffer() const { return _buf; }
+  const bcos::byte *getBuffer() const { return _buf; }
   size_t getLength() const { return _len; }
-  void swap(std::vector<std::byte> &v) {
+  void swap(std::vector<bcos::byte> &v) {
     _buffer.resize(_len);
     v.swap(_buffer);
     _buf = NULL;

@@ -2,7 +2,7 @@
 
 #include "Common.h"
 #include "Transaction.h"
-#include "bcos-framework/libutilities/Common.h"
+#include <bcos-framework/libutilities/Common.h>
 #include <bcos-framework/interfaces/protocol/Transaction.h>
 
 namespace bcostars {
@@ -22,10 +22,9 @@ public:
 
       m_transaction->writeTo(output);
       output.getByteBuffer().swap(_txData);
-      _txData.swap(output.getByteBuffer());
   }
   virtual bcos::crypto::HashType const &hash() const override {
-
+      return m_hash;
   }
 
   virtual int32_t version() const override {
@@ -41,7 +40,7 @@ public:
       return m_transaction->blockLimit;
   }
   virtual bcos::u256 nonce() const override {
-      return bcos::u256(m_transaction->nonce);
+      return bcos::u256(&m_transaction->nonce);
   }
   virtual bcos::bytesConstRef to() const override {
       return bcos::bytesConstRef((const unsigned char*)m_transaction->to.data(), m_transaction->to.size());
@@ -62,8 +61,11 @@ public:
       m_transaction->sender.assign(_sender.begin(), _sender.end());
   }
 
+  void setTransaction(bcostars::Transaction *transaction) { m_transaction = transaction; }
+
   private:
   bcostars::Transaction *m_transaction;
+  bcos::crypto::HashType m_hash;
 }
 }; // namespace protocol
 } // namespace bcostars

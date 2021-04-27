@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Common.h"
 #include "Block.h"
 #include <bcos-framework/interfaces/protocol/Block.h>
 #include <bcos-framework/interfaces/protocol/BlockFactory.h>
@@ -18,30 +19,34 @@ public:
             blockHeader, [](bcostars::BlockHeader *) {})){};
 
   virtual void decode(bcos::bytesConstRef _data) override {
-    // m_blockHeader->readFrom(tars::TarsInputStream<ReaderT> &_is);
-  }
-  virtual void encode(bcos::bytes &_encodeData) const override;
-  virtual bcos::crypto::HashType const &hash() const override {
+    tars::TarsInputStream input;
+    input.setBuffer((const char *)_data.data(), _data.size());
 
+    m_blockHeader->readFrom(input);
+  }
+
+  virtual void encode(bcos::bytes &_encodeData) const override {
+    tars::TarsOutputStream<bcostars::protocol::BufferWriterByteVector> output;
+
+    m_blockHeader->writeTo(output);
+    output.getByteBuffer().swap(_encodeData);
+  }
+
+  virtual bcos::crypto::HashType const &hash() const override {
+    return m_hash;
   }
   virtual void
   populateFromParents(BlockHeadersPtr _parents,
-                      bcos::protocol::BlockNumber _number) override {
-
-                      }
-  virtual void clear() override {
-  }
+                      bcos::protocol::BlockNumber _number) override {}
+  virtual void clear() override {}
   // verify the signatureList
-  virtual void verifySignatureList() const override;
+  virtual void verifySignatureList() const override {}
   virtual void populateEmptyBlock(int64_t _timestamp) override;
 
   // the version of the blockHeader
-  virtual int32_t version() const override {
-    return m_blockHeader->version;
-  }
+  virtual int32_t version() const override { return m_blockHeader->version; }
   // the parent information, including (parentBlockNumber, parentHash)
-  virtual bcos::protocol::ParentInfoListPtr parentInfo() const override {
-  }
+  virtual bcos::protocol::ParentInfoListPtr parentInfo() const override {}
   // the txsRoot of the current block
   virtual bcos::crypto::HashType const &txsRoot() const override {
     return bcos::crypto::HashType(m_blockHeader->txsRoot.data());
@@ -57,13 +62,9 @@ public:
   virtual bcos::u256 const &gasUsed() override {
     return m_blockHeader->gasUsed;
   }
-  virtual int64_t timestamp() override {
-    return m_blockHeader->timestamp;
-  }
+  virtual int64_t timestamp() override { return m_blockHeader->timestamp; }
   // the sealer that generate this block
-  virtual int64_t sealer() override {
-    return m_blockHeader->sealer;
-  }
+  virtual int64_t sealer() override { return m_blockHeader->sealer; }
   // the current sealer list
   virtual bcos::protocol::BytesListPtr sealerList() const override {
     return bcos::protocol::BytesListPtr(&(m_blockHeader->sealerList));
@@ -84,7 +85,13 @@ public:
   }
   virtual void
   setParentInfo(bcos::protocol::ParentInfoListPtr _parentInfo) override {
-    m_blockHeader->parentInfo = _parentInfo;
+    m_blockHeader->parentInfo.clear();
+    for(auto& it: *_parentInfo) {
+      ParentInfo parentInfo;
+      parentInfo.blockNumber = it.first;
+      parentInfo.hash.assign(it.second.begin(), it.second.end());
+      m_blockHeader->parentInfo.emplace_back(parentInfo);
+    }
   }
   virtual void setTxsRoot(bcos::crypto::HashType const &_txsRoot) override {
     m_blockHeader->txsRoot = _txsRoot;
@@ -109,6 +116,7 @@ public:
 
 private:
   std::shared_ptr<bcostars::BlockHeader> m_blockHeader;
+  bcos::crypto::HashType m_hash;
 };
 
 class Block : public bcos::protocol::Block {
@@ -116,12 +124,8 @@ public:
   virtual ~Block() override;
 
   virtual void decode(bcos::bytesConstRef _data, bool _calculateHash,
-                      bool _checkSig) override {
-
-                      }
-  virtual void encode(bcos::bytes &_encodeData) const override {
-    
-  }
+                      bool _checkSig) override {}
+  virtual void encode(bcos::bytes &_encodeData) const override {}
   virtual bcos::crypto::HashType
   calculateTransactionRoot(bool _updateHeader) const override;
   virtual bcos::crypto::HashType

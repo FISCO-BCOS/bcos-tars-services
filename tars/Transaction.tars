@@ -4,11 +4,11 @@ module bcostars {
         2 optional string chainID;
         3 optional string groupID;
         4 optional long blockLimit;
-        5 optional byte nonce[32];
-        6 optional vector<byte> to;
-        7 optional vector<byte> sender;
-        8 optional vector<byte> input;
+        5 optional unsigned byte nonce[32];
+        6 optional vector<unsigned byte> to;
+        7 optional vector<unsigned byte> sender;
+        8 optional vector<unsigned byte> input;
         9 optional long importTime;
-        10 optional uint32_t type;
+        10 optional unsigned int type;
     };
 };

@@ -9,26 +9,26 @@ module bcostars {
 
     struct ParentInfo {
         1 optional long blockNumber;
-        2 optional vector<byte> hash;
+        2 optional vector<unsigned byte> hash;
     };
 
     struct Signature {
         1 optional long sealerIndex;
-        2 optional vector<byte> signature;
+        2 optional vector<unsigned byte> signature;
     };
 
     struct BlockHeader {
         2 optional int version;
         3 optional vector<ParentInfo> parentInfo;
-        4 optional vector<byte> txsRoot;
-        5 optional vector<byte> receiptRoot;
-        6 optional vector<byte> stateRoot;
+        4 optional vector<unsigned byte> txsRoot;
+        5 optional vector<unsigned byte> receiptRoot;
+        6 optional vector<unsigned byte> stateRoot;
         7 optional long blockNumber;
-        8 optional vector<byte> gasUsed;
+        8 optional vector<unsigned byte> gasUsed;
         9 optional long timestamp;
         10 optional long sealer;
-        11 optional vector<vector<byte>> sealerList;
-        12 optional vector<byte> extraData;
+        11 optional vector<vector<unsigned byte>> sealerList;
+        12 optional vector<unsigned byte> extraData;
         13 optional vector<Signature> signatureList;
         14 optional vector<vector<long>> consensusWeights;
     };
@@ -39,8 +39,8 @@ module bcostars {
         3 optional BlockHeader blockHeader;
         4 optional vector<Transaction> transactions;
         5 optional vector<TransactionReceipt> receipts;
-        6 optional vector<vector<byte>> transactionsHash;
-        7 optional vector<vector<byte>> receiptsHash;
+        6 optional vector<vector<unsigned byte>> transactionsHash;
+        7 optional vector<vector<unsigned byte>> receiptsHash;
     };
    
 };
