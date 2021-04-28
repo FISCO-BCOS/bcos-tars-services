@@ -6,6 +6,8 @@
 #include <bcos-framework/interfaces/protocol/BlockFactory.h>
 #include <bcos-framework/interfaces/protocol/BlockHeader.h>
 #include <bcos-framework/interfaces/protocol/BlockHeaderFactory.h>
+#include <gsl/span>
+#include <iterator>
 
 namespace bcostars {
 namespace protocol {
@@ -32,87 +34,122 @@ public:
     output.getByteBuffer().swap(_encodeData);
   }
 
-  virtual bcos::crypto::HashType const &hash() const override {
+  virtual bcos::crypto::HashType hash() const override {
     return m_hash;
   }
-  virtual void
+  void
   populateFromParents(BlockHeadersPtr _parents,
-                      bcos::protocol::BlockNumber _number) override {}
-  virtual void clear() override {}
+                      bcos::protocol::BlockNumber _number) override {
+                        (void)_parents;
+                        (void)_number;
+                      }
+  void clear() override {}
   // verify the signatureList
-  virtual void verifySignatureList() const override {}
-  virtual void populateEmptyBlock(int64_t _timestamp) override;
+  void verifySignatureList() const override {}
+  void populateEmptyBlock(int64_t _timestamp) override;
 
   // the version of the blockHeader
   virtual int32_t version() const override { return m_blockHeader->version; }
   // the parent information, including (parentBlockNumber, parentHash)
-  virtual bcos::protocol::ParentInfoListPtr parentInfo() const override {}
+  gsl::span<const bcos::protocol::ParentInfo> parentInfo() const override {
+  }
   // the txsRoot of the current block
-  virtual bcos::crypto::HashType const &txsRoot() const override {
-    return bcos::crypto::HashType(m_blockHeader->txsRoot.data());
+  bcos::crypto::HashType const &txsRoot() const override {
+    return *(reinterpret_cast<bcos::crypto::HashType*>(m_blockHeader->txsRoot.data()));
   }
   // the receiptRoot of the current block
-  virtual bcos::crypto::HashType const &receiptRoot() const override;
+  bcos::crypto::HashType const &receiptRoot() const override {
+    return *(reinterpret_cast<bcos::crypto::HashType*>(m_blockHeader->receiptRoot.data()));
+  }
   // the stateRoot of the current block
-  virtual bcos::crypto::HashType const &stateRoot() const override;
+  bcos::crypto::HashType const &stateRoot() const override {
+    return *(reinterpret_cast<bcos::crypto::HashType*>(m_blockHeader->stateRoot.data()));
+  }
   // the number of the current block
-  virtual bcos::protocol::BlockNumber number() const override {
+  bcos::protocol::BlockNumber number() const override {
     return m_blockHeader->blockNumber;
   }
-  virtual bcos::u256 const &gasUsed() override {
-    return m_blockHeader->gasUsed;
+  bcos::u256 const &gasUsed() override {
+    return *((bcos::u256*)(m_blockHeader->gasUsed.data()));
   }
-  virtual int64_t timestamp() override { return m_blockHeader->timestamp; }
+  int64_t timestamp() override { return m_blockHeader->timestamp; }
   // the sealer that generate this block
-  virtual int64_t sealer() override { return m_blockHeader->sealer; }
+  int64_t sealer() override { return m_blockHeader->sealer; }
   // the current sealer list
-  virtual bcos::protocol::BytesListPtr sealerList() const override {
-    return bcos::protocol::BytesListPtr(&(m_blockHeader->sealerList));
+  gsl::span<const bcos::bytes> sealerList() const override {
+    return m_blockHeader->sealerList;
   }
-  virtual bcos::bytes const &extraData() const override {
-    return m_blockHeader->extraData;
+  bcos::bytesConstRef extraData() const override {
+    return bcos::bytesConstRef(m_blockHeader->extraData.data(), m_blockHeader->extraData.size());
   }
-  virtual bcos::protocol::SignatureListPtr signatureList() const override {
-    return m_blockHeader->signatureList;
-  }
-
-  virtual bcos::protocol::WeightList const &consensusWeights() const override {
-    return m_blockHeader->consensusWeights;
+  gsl::span<const bcos::protocol::Signature> signatureList() const override {
+    return gsl::span(reinterpret_cast<const bcos::protocol::Signature*>(m_blockHeader->signatureList.data()), m_blockHeader->signatureList.size());
   }
 
-  virtual void setVersion(int32_t _version) override {
+  virtual gsl::span<const uint64_t> consensusWeights() const override {
+    return gsl::span(reinterpret_cast<uint64_t*>(m_blockHeader->consensusWeights.data()), m_blockHeader->consensusWeights.size());
+  }
+
+  void setVersion(int32_t _version) override {
     m_blockHeader->version = _version;
   }
-  virtual void
-  setParentInfo(bcos::protocol::ParentInfoListPtr _parentInfo) override {
+  void
+  setParentInfo(gsl::span<const bcos::protocol::ParentInfo> const& _parentInfo) override {
     m_blockHeader->parentInfo.clear();
-    for(auto& it: *_parentInfo) {
+    for(auto& it: _parentInfo) {
       ParentInfo parentInfo;
-      parentInfo.blockNumber = it.first;
-      parentInfo.hash.assign(it.second.begin(), it.second.end());
+      parentInfo.blockNumber = it.blockNumber;
+      *parentInfo.blockHash = *it.blockHash.data();
       m_blockHeader->parentInfo.emplace_back(parentInfo);
     }
   }
   virtual void setTxsRoot(bcos::crypto::HashType const &_txsRoot) override {
-    m_blockHeader->txsRoot = _txsRoot;
+    m_blockHeader->txsRoot.assign(_txsRoot.begin(), _txsRoot.end());
+  }
+  
+  virtual void
+  setReceiptRoot(bcos::crypto::HashType const &_receiptRoot) override {
+    m_blockHeader->receiptRoot.assign(_receiptRoot.begin(), _receiptRoot.end());
+  }
+  virtual void setStateRoot(bcos::crypto::HashType const &_stateRoot) override {
+    m_blockHeader->stateRoot.assign(_stateRoot.begin(), _stateRoot.end());
+  }
+  virtual void setNumber(bcos::protocol::BlockNumber _blockNumber) override {
+    m_blockHeader->blockNumber = _blockNumber;
+  }
+  virtual void setGasUsed(bcos::u256 const &_gasUsed) override {
+  }
+  virtual void setTimestamp(int64_t _timestamp) override {
+    m_blockHeader->timestamp = _timestamp;
+  }
+  virtual void setSealer(int64_t _sealerId) override {
+    m_blockHeader->sealer = _sealerId;
   }
   virtual void
-  setReceiptRoot(bcos::crypto::HashType const &_receiptRoot) override;
-  virtual void setStateRoot(bcos::crypto::HashType const &_stateRoot) override;
-  virtual void setNumber(bcos::protocol::BlockNumber _blockNumber) override;
-  virtual void setGasUsed(bcos::u256 const &_gasUsed) override;
-  virtual void setTimestamp(int64_t const &_timestamp) override;
-  virtual void setSealer(int64_t _sealerId) override;
-  virtual void
-  setSealerList(bcos::protocol::BytesList const &_sealerList) override;
+  setSealerList(gsl::span<const bcos::bytes> const& _sealerList) override {
+    m_blockHeader->sealerList.assign(_sealerList.begin(), _sealerList.end());
+  }
 
   virtual void
-  setConsensusWeights(bcos::protocol::WeightListPtr _weightList) override;
+  setConsensusWeights(gsl::span<const uint64_t> const& _weightList) override {
+    m_blockHeader->consensusWeights.assign(_weightList.begin(), _weightList.end());
+  }
 
-  virtual void setExtraData(bcos::bytes const &_extraData) override;
-  virtual void setExtraData(bcos::bytes &&_extraData) override;
+  virtual void setExtraData(bcos::bytes const &_extraData) override {
+    m_blockHeader->extraData = _extraData;
+  }
+  virtual void setExtraData(bcos::bytes &&_extraData) override {
+    m_blockHeader->extraData = std::move(_extraData);
+  }
   virtual void
-  setSignatureList(bcos::protocol::SignatureListPtr _signatureList) override;
+  setSignatureList(gsl::span<const bcos::protocol::Signature> const& _signatureList) override {
+    for(auto &it: _signatureList) {
+      Signature signature;
+      signature.sealerIndex = it.index;
+      signature.signature = it.signature;
+      m_blockHeader->signatureList.emplace_back(signature);
+    }
+  }
 
 private:
   std::shared_ptr<bcostars::BlockHeader> m_blockHeader;

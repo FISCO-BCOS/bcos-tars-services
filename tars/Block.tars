@@ -9,7 +9,7 @@ module bcostars {
 
     struct ParentInfo {
         1 optional long blockNumber;
-        2 optional vector<unsigned byte> hash;
+        2 optional unsigned byte blockHash[32];
     };
 
     struct Signature {
@@ -30,7 +30,7 @@ module bcostars {
         11 optional vector<vector<unsigned byte>> sealerList;
         12 optional vector<unsigned byte> extraData;
         13 optional vector<Signature> signatureList;
-        14 optional vector<vector<long>> consensusWeights;
+        14 optional vector<long> consensusWeights;
     };
 
     struct Block {

@@ -5,4 +5,6 @@ project(bcostars-LedgerService)
 gen_server(bcostars LedgerService)
 target_compile_options(LedgerService PRIVATE -Wno-error)
 
+find_package(Microsoft.GSL CONFIG REQUIRED)
 add_dependencies(LedgerService bcos-framework)
+target_link_libraries(LedgerService Microsoft.GSL::GSL)
