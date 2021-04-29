@@ -1,82 +1,91 @@
-﻿#include "LedgerServiceImp.h"
+﻿#include "LedgerServiceServer.h"
 #include "StorageService.h"
+#include "../StorageService/StorageServiceClient.h"
 
 using namespace bcostars;
 
-void LedgerServiceImp::initialize() {
-    auto storageProxy = getApplication()->getCommunicator()->stringToProxy<StorageServiceProxy>("bcostars.StorageService.StorageServiceObj");
-    // auto ledger = std::make_shared<bcos::ledger::LedgerInterface>();
+void LedgerServiceServer::initialize() {
+    auto storageServiceClient = std::make_shared<StorageServiceClient>(getApplication()->getCommunicator());
+
+    /*
+    auto ledger = std::make_shared<bcos::ledger::Ledger>(
+        std::make_shared<bcostars::BlockFactory>(),
+        std::make_shared<bcostars::BlockHeaderFactory>(),
+        storageServiceClient,
+    );
+    m_ledger = ledger;
+    */
 }
 
-void LedgerServiceImp::destroy() {}
+void LedgerServiceServer::destroy() {}
 
 tars::Int32
-LedgerServiceImp::commitBlock(tars::Int64 blockNumber,
+LedgerServiceServer::commitBlock(tars::Int64 blockNumber,
                               const vector<vector<tars::Char>> &signList,
                               tars::TarsCurrentPtr current) {}
 
 tars::Int32
-LedgerServiceImp::getBlockByHash(const vector<tars::Char> &blockHash,
+LedgerServiceServer::getBlockByHash(const vector<tars::Char> &blockHash,
                                  bcostars::Block &block,
                                  tars::TarsCurrentPtr current) {}
 
-tars::Int32 LedgerServiceImp::getBlockByNumber(tars::Int64 blockNumber,
+tars::Int32 LedgerServiceServer::getBlockByNumber(tars::Int64 blockNumber,
                                                bcostars::Block &block,
                                                tars::TarsCurrentPtr current) {}
 
 tars::Int32
-LedgerServiceImp::getBlockHashByNumber(tars::Int64 blockNumber,
+LedgerServiceServer::getBlockHashByNumber(tars::Int64 blockNumber,
                                        vector<tars::Char> &blockHash,
                                        tars::TarsCurrentPtr current) {}
 
-tars::Int32 LedgerServiceImp::getBlockHeaderByHash(
+tars::Int32 LedgerServiceServer::getBlockHeaderByHash(
     const vector<tars::Char> &blockHash, bcostars::BlockHeader &blockHeader,
     vector<vector<tars::Char>> &sigList, tars::TarsCurrentPtr current) {}
 
-tars::Int32 LedgerServiceImp::getBlockHeaderByNumber(
+tars::Int32 LedgerServiceServer::getBlockHeaderByNumber(
     tars::Int64 blockNumber, bcostars::BlockHeader &blockHeader,
     vector<vector<tars::Char>> &sigList, tars::TarsCurrentPtr current) {}
 
-tars::Int32 LedgerServiceImp::getBlockNumber(tars::Int64 &blockNumber,
+tars::Int32 LedgerServiceServer::getBlockNumber(tars::Int64 &blockNumber,
                                              tars::TarsCurrentPtr current) {}
 
-tars::Int32 LedgerServiceImp::getCode(const std::string &tableID,
+tars::Int32 LedgerServiceServer::getCode(const std::string &tableID,
                                       const vector<tars::Char> &codeAddress,
                                       vector<tars::Char> &code,
                                       tars::TarsCurrentPtr current) {}
 
-tars::Int32 LedgerServiceImp::getNonceList(tars::Int64 blockNumber,
+tars::Int32 LedgerServiceServer::getNonceList(tars::Int64 blockNumber,
                                            const vector<tars::Char> &nonceList,
                                            tars::TarsCurrentPtr current) {}
 
-tars::Int32 LedgerServiceImp::getTotalTransactionCount(
+tars::Int32 LedgerServiceServer::getTotalTransactionCount(
     tars::Int64 &totalTx, tars::Int64 &failedTx, tars::Int64 &blockNumber,
     tars::TarsCurrentPtr current) {}
 
-tars::Int32 LedgerServiceImp::getTransactionByBlockHashAndIndex(
+tars::Int32 LedgerServiceServer::getTransactionByBlockHashAndIndex(
     const vector<tars::Char> &blockHash, tars::Int64 index,
     bcostars::Transaction &tx, tars::TarsCurrentPtr current) {}
 
-tars::Int32 LedgerServiceImp::getTransactionByBlockNumberAndIndex(
+tars::Int32 LedgerServiceServer::getTransactionByBlockNumberAndIndex(
     tars::Int64 blockNumber, tars::Int64 index, bcostars::Transaction &tx,
     tars::TarsCurrentPtr current) {}
 
-tars::Int32 LedgerServiceImp::getTransactionProof(
+tars::Int32 LedgerServiceServer::getTransactionProof(
     const vector<tars::Char> &blockHash, tars::Int64 index,
     vector<std::string> &proof, tars::TarsCurrentPtr current) {}
 
 tars::Int32
-LedgerServiceImp::getTransactionReceiptByHash(const vector<tars::Char> &hash,
+LedgerServiceServer::getTransactionReceiptByHash(const vector<tars::Char> &hash,
                                               bcostars::Transaction &tx,
                                               tars::TarsCurrentPtr current) {}
 
-tars::Int32 LedgerServiceImp::getTransactionReceiptProof(
+tars::Int32 LedgerServiceServer::getTransactionReceiptProof(
     const vector<tars::Char> &block, tars::Int64 index,
     vector<std::string> &proof, tars::TarsCurrentPtr current) {}
 
-tars::Int32 LedgerServiceImp::getTxByHash(const vector<tars::Char> &hash,
+tars::Int32 LedgerServiceServer::getTxByHash(const vector<tars::Char> &hash,
                                           bcostars::Transaction &tx,
                                           tars::TarsCurrentPtr current) {}
                                           
-tars::Int32 LedgerServiceImp::preStoreTxs(const vector<bcostars::Block> &blocks,
+tars::Int32 LedgerServiceServer::preStoreTxs(const vector<bcostars::Block> &blocks,
                                           tars::TarsCurrentPtr current) {}

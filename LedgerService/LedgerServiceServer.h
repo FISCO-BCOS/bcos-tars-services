@@ -6,9 +6,9 @@
 
 namespace bcostars {
 
-class LedgerServiceImp : public LedgerService {
+class LedgerServiceServer : public LedgerService {
 public:
-  virtual ~LedgerServiceImp() override {}
+  virtual ~LedgerServiceServer() override {}
 
   virtual void initialize() override;
 

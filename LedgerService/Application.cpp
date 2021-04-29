@@ -1,4 +1,4 @@
-#include "LedgerServiceImp.h"
+#include "LedgerServiceServer.h"
 #include "StorageService.h"
 
 using namespace bcostars;
@@ -8,7 +8,7 @@ public:
   virtual ~LedgerServiceApp() override{};
 
   virtual void initialize() override {
-    addServant<LedgerServiceImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".LedgerServiceObj");
+    addServant<LedgerServiceServer>(ServerConfig::Application + "." + ServerConfig::ServerName + ".LedgerServiceObj");
   }
 
   virtual void destroyApp() override {}

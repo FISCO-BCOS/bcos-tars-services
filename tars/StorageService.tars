@@ -20,7 +20,7 @@ struct Condition {
 
 interface StorageService
 {
-    int getPrimaryKeys(TableInfo tableInfo, Condition condition, out vector<string> keys);
+    vector<string> getPrimaryKeys(TableInfo tableInfo, Condition condition);
 };
 
 }; 
