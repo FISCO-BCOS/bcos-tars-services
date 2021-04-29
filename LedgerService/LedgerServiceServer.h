@@ -3,6 +3,8 @@
 #include "LedgerService.h"
 #include "servant/Application.h"
 #include <bcos-framework/interfaces/ledger/LedgerInterface.h>
+#include "../fake/FakeLedger.h"
+#include "../Clients/StorageServiceClient.h"
 
 namespace bcostars {
 
@@ -75,6 +77,7 @@ public:
 
 private:
   std::shared_ptr<bcos::ledger::LedgerInterface> m_ledger;
+  bcostars::StorageServiceClient::Ptr m_storageServiceClient;
 };
 
 } // namespace bcostars

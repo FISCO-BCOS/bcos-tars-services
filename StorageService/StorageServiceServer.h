@@ -16,7 +16,7 @@ public:
 
     void destroy() override;
 
-    tars::Int32 getPrimaryKeys(const bcostars::TableInfo & tableInfo,const bcostars::Condition & condition,vector<std::string> &keys,tars::TarsCurrentPtr current) override;
+    vector<std::string> getPrimaryKeys(const bcostars::TableInfo & tableInfo,const bcostars::Condition & condition,tars::TarsCurrentPtr current) override;
 
     private:
     bcos::storage::StorageInterface::Ptr m_storage;

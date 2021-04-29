@@ -9,9 +9,10 @@
 namespace bcostars {
 class StorageServiceClient : public bcos::storage::StorageInterface {
 public:
-  StorageServiceClient(CommunicatorPtr &communicator)
-      : m_communicator(communicator) {}
   ~StorageServiceClient() override {}
+
+  StorageServiceClient(CommunicatorPtr communicator)
+      : m_communicator(communicator) {}
 
   std::vector<std::string> getPrimaryKeys(
       std::shared_ptr<bcos::storage::TableInfo> _tableInfo,
@@ -28,7 +29,9 @@ public:
     (void)_condition;
 
     try {
-      return getProxy().getPrimaryKeys(tableInfo, condition);
+      auto proxy =
+          m_communicator->stringToProxy<StorageServicePrx>(m_servantName);
+      return proxy->getPrimaryKeys(tableInfo, condition);
     } catch (std::exception &e) {
       throw e;
     }
@@ -83,8 +86,8 @@ public:
     bcostars::Condition condition;
     (void)_condition;
 
-    getProxy().async_getPrimaryKeys(new Callback(_callback), tableInfo,
-                                  condition);
+    auto proxy = m_communicator->stringToProxy<StorageServicePrx>(m_servantName);
+    proxy->async_getPrimaryKeys(new Callback(_callback), tableInfo, condition);
   }
   void asyncGetRow(
       std::shared_ptr<bcos::storage::TableInfo> _tableInfo,
@@ -146,11 +149,7 @@ public:
                     callback) override {}
 
 private:
-  bcostars::StorageServiceProxy getProxy() const {
-    return m_communicator->stringToProxy<StorageServiceProxy>(
-        "bcostars.StorageService.StorageServiceObj");
-  }
-
   CommunicatorPtr m_communicator;
+  const std::string m_servantName = "bcostars.StorageService.StorageServiceObj";
 };
 } // namespace bcostars
