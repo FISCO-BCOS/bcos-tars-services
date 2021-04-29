@@ -2,9 +2,25 @@
 module bcostars
 {
 
+struct TableInfo {
+    0 optional string name;
+    1 optional string keyValue;
+    2 optional vector<string> fields;
+    3 optional vector<string> indices;
+    4 optional bool enableConsensus;
+    5 optional bool enableCache;
+    6 optional bool newTable;
+};
+
+struct Condition {
+    0 optional vector<short> conditions;
+    1 optional long offset;
+    2 optional long size;
+};
+
 interface StorageService
 {
-    int test();
+    int getPrimaryKeys(TableInfo tableInfo, Condition condition, out vector<string> keys);
 };
 
 }; 

@@ -1,4 +1,4 @@
-#include "StorageServiceImp.h"
+#include "StorageServiceServer.h"
 
 using namespace bcostars;
 
@@ -7,7 +7,7 @@ public:
   virtual ~StorageServiceApp() override{};
 
   virtual void initialize() override {
-    addServant<StorageServiceImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".StorageServiceObj");
+    addServant<StorageServiceServer>(ServerConfig::Application + "." + ServerConfig::ServerName + ".StorageServiceObj");
   }
 
   virtual void destroyApp() override {}

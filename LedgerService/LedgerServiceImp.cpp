@@ -1,8 +1,12 @@
 ﻿#include "LedgerServiceImp.h"
+#include "StorageService.h"
 
 using namespace bcostars;
 
-void LedgerServiceImp::initialize() {}
+void LedgerServiceImp::initialize() {
+    auto storageProxy = getApplication()->getCommunicator()->stringToProxy<StorageServiceProxy>("bcostars.StorageService.StorageServiceObj");
+    // auto ledger = std::make_shared<bcos::ledger::LedgerInterface>();
+}
 
 void LedgerServiceImp::destroy() {}
 

@@ -13,12 +13,14 @@ FetchContent_MakeAvailable(bcos-cmake-scripts)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR}/bcos-cmake-scripts)
 
 include(ExternalProject)
-ExternalProject_Add(bcos-framework
-    GIT_REPOSITORY https://${GIT_URL_BASE}/FISCO-BCOS/bcos-framework.git
-    # GIT_REPOSITORY https://${GIT_URL_BASE}/morebtcg/bcos-framework.git
-    GIT_TAG dev
-    SOURCE_DIR ${DEPENDENCIES_DIR}/bcos-framework
-    CMAKE_ARGS -DURL_BASE=${GIT_URL_BASE} -DCMAKE_INSTALL_PREFIX=${DEPENDENCIES_DIR}/bcos-framework-install
-)
-include_directories(${DEPENDENCIES_DIR}/bcos-framework-install/include)
-link_directories(${DEPENDENCIES_DIR}/bcos-framework-install/lib)
+
+foreach(BCOS_MODULE framework ledger)
+    ExternalProject_Add(bcos-${module}
+        GIT_REPOSITORY https://${GIT_URL_BASE}/FISCO-BCOS/bcos-${BCOS_MODULE}.git
+        GIT_TAG dev
+        SOURCE_DIR ${DEPENDENCIES_DIR}/bcos-${BCOS_MODULE}
+        CMAKE_ARGS -DURL_BASE=${GIT_URL_BASE} -DCMAKE_INSTALL_PREFIX=${DEPENDENCIES_DIR}/bcos-${BCOS_MODULE}-install
+    )
+    include_directories(${DEPENDENCIES_DIR}/bcos-${BCOS_MODULE}-install/include)
+    link_directories(${DEPENDENCIES_DIR}/bcos-${BCOS_MODULE}-install/lib)
+endforeach(BCOS_MODULE)
