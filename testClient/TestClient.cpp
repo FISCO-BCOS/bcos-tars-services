@@ -7,7 +7,7 @@ int main() {
                  "tars.tarsregistry.QueryObj@tcp -h 172.31.168.134 -p 17890");
 
   auto proxy = c->stringToProxy<bcostars::LedgerServicePrx>(
-      "bcostars.LedgerService.LedgerServiceObj");
+      "bcosNode1.LedgerService.LedgerServiceObj");
 
   bcostars::Block block;
   auto ret = proxy->getBlockByNumber(100, block);
