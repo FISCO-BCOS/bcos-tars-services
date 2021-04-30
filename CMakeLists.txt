@@ -42,4 +42,5 @@ add_subdirectory(StorageService)
 
 if(TESTS)
     add_subdirectory(tests)
+    add_subdirectory(testClient)
 endif()

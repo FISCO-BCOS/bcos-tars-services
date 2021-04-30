@@ -12,7 +12,7 @@ public:
 
   void asyncCommitBlock(
       bcos::protocol::BlockNumber _blockNumber,
-      bcos::protocol::SignatureListPtr _signList,
+      const gsl::span<const bcos::protocol::Signature> &_signList,
       std::function<void(bcos::Error::Ptr)> _onCommitBlock) override{};
 
   void asyncPreStoreTransactions(
@@ -23,7 +23,15 @@ public:
       bcos::protocol::BlockNumber _blockNumber,
       std::function<void(bcos::Error::Ptr,
                          bcos::protocol::TransactionsConstPtr)>
-          _onGetTx) override{};
+          _onGetTx) override {
+    auto tableInfo =
+        std::make_shared<bcos::storage::TableInfo>("sys_transactions");
+    auto condition = std::make_shared<bcos::storage::Condition>();
+    auto result = m_storageServiceClient->getPrimaryKeys(tableInfo, condition);
+
+    bcos::protocol::TransactionsConstPtr tx;
+    _onGetTx(std::make_shared<bcos::Error>(0, result[0]), tx);
+  };
 
   void asyncGetTransactionByHash(
       bcos::crypto::HashType const &_txHash,
@@ -35,14 +43,7 @@ public:
       bcos::crypto::HashType const &_blockHash, int64_t _index,
       std::function<void(bcos::Error::Ptr,
                          bcos::protocol::Transaction::ConstPtr)>
-          _onGetTx) override{
-              auto tableInfo = std::make_shared<bcos::storage::TableInfo>();
-              auto condition = std::make_shared<bcos::storage::Condition>();
-              m_storageServiceClient->getPrimaryKeys(tableInfo, condition);
-
-              auto tx = std::make_shared<bcos::protocol::Transaction>();
-              _onGetTx(std::make_shared<bcos::Error>(), tx);
-          };
+          _onGetTx) override{};
 
   void asyncGetTransactionByBlockNumberAndIndex(
       bcos::protocol::BlockNumber _blockNumber, int64_t _index,
@@ -68,12 +69,12 @@ public:
           _callback) override{};
 
   void asyncGetTransactionReceiptProof(
-      bcos::crypto::HashType const &_blockHash, int64_t const &_index,
+      bcos::protocol::BlockNumber _blockNumber, int64_t _index,
       std::function<void(bcos::Error::Ptr, MerkleProofPtr)> _onGetProof)
       override{};
 
   void asyncGetTransactionProof(
-      bcos::crypto::HashType const &_blockHash, int64_t const &_index,
+      bcos::protocol::BlockNumber _blockNumber, int64_t _index,
       std::function<void(bcos::Error::Ptr, MerkleProofPtr)> _onGetProof)
       override{};
 
@@ -82,19 +83,22 @@ public:
       std::function<void(bcos::Error::Ptr, MerkleProofPtr)> _onGetProof)
       override{};
 
+  virtual void asyncGetTransactionReceiptProofByHash(
+      bcos::crypto::HashType const &_txHash,
+      std::function<void(bcos::Error::Ptr, MerkleProofPtr)> _onGetProof)
+      override {}
+
   void asyncGetBlockNumber(
       std::function<void(bcos::Error::Ptr, bcos::protocol::BlockNumber)>
           _onGetBlock) override{};
 
   void asyncGetBlockHashByNumber(
       bcos::protocol::BlockNumber _blockNumber,
-      std::function<void(bcos::Error::Ptr,
-                         std::shared_ptr<const bcos::crypto::HashType>)>
+      std::function<void(bcos::Error::Ptr, const bcos::crypto::HashType)>
           _onGetBlock) override{};
   void asyncGetBlockNumberByHash(
       const bcos::crypto::HashType &_blockHash,
-      std::function<void(bcos::Error::Ptr,
-                         std::shared_ptr<const bcos::crypto::HashType>)>
+      std::function<void(bcos::Error::Ptr, bcos::protocol::BlockNumber)>
           _onGetBlock) override{};
 
   void asyncGetBlockByHash(
@@ -113,31 +117,19 @@ public:
       override{};
   void asyncGetBlockHeaderByNumber(
       bcos::protocol::BlockNumber _blockNumber,
-      std::function<void(
-          bcos::Error::Ptr,
-          std::shared_ptr<const std::pair<bcos::protocol::BlockHeader::Ptr,
-                                          bcos::protocol::SignatureListPtr>>)>
+      std::function<void(bcos::Error::Ptr, bcos::protocol::BlockHeader::Ptr)>
           _onGetBlock) override{};
 
   void asyncGetBlockHeaderByHash(
       bcos::crypto::HashType const &_blockHash,
-      std::function<void(
-          bcos::Error::Ptr,
-          std::shared_ptr<const std::pair<bcos::protocol::BlockHeader::Ptr,
-                                          bcos::protocol::SignatureListPtr>>)>
+      std::function<void(bcos::Error::Ptr, bcos::protocol::BlockHeader::Ptr)>
           _onGetBlock) override{};
 
-  void asyncGetCode(
-      std::string const &_tableID, bcos::Address _codeAddress,
-      std::function<void(bcos::Error::Ptr, std::shared_ptr<const bcos::bytes>)>
-          _onGetCode) override{};
-
-  void asyncGetSystemConfigByKey(
-      std::string const &_key,
-      std::function<void(bcos::Error::Ptr,
-                         std::shared_ptr<const std::pair<
-                             std::string, bcos::protocol::BlockNumber>>)>
-          _onGetConfig) override{};
+  void
+  asyncGetSystemConfigByKey(std::string const &_key,
+                            std::function<void(bcos::Error::Ptr, std::string,
+                                               bcos::protocol::BlockNumber)>
+                                _onGetConfig) override{};
 
   void asyncGetNonceList(
       bcos::protocol::BlockNumber _blockNumber,
@@ -150,6 +142,6 @@ public:
   }
 
 private:
-  bcostars::StorageServiceClient::Ptr m_storageServiceClient;
+  bcos::storage::StorageInterface::Ptr m_storageServiceClient;
 };
 } // namespace bcostars

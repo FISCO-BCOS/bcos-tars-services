@@ -74,7 +74,6 @@ public:
                                   tars::TarsCurrentPtr current) override;
   virtual tars::Int32 preStoreTxs(const vector<bcostars::Block> &blocks,
                                   tars::TarsCurrentPtr current) override;
-
 private:
   std::shared_ptr<bcos::ledger::LedgerInterface> m_ledger;
   bcostars::StorageServiceClient::Ptr m_storageServiceClient;

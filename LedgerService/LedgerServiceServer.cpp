@@ -27,7 +27,20 @@ LedgerServiceServer::getBlockByHash(const vector<tars::Char> &blockHash,
 tars::Int32
 LedgerServiceServer::getBlockByNumber(tars::Int64 blockNumber,
                                       bcostars::Block &block,
-                                      tars::TarsCurrentPtr current) {}
+                                      tars::TarsCurrentPtr current) {
+  current->setResponse(false);
+  m_ledger->asyncGetTransactionsByBlockNumber(
+      blockNumber, [current](bcos::Error::Ptr error,
+                             bcos::protocol::TransactionsConstPtr txs) {
+        tars::Int32 ret = 0;
+        bcostars::Block block;
+        block.blockHeader.blockNumber = 88980;
+
+        std::cout << "getBlockByNumber" << std::endl;
+ 
+        async_response_getBlockByNumber(current, ret, block);
+      });
+}
 
 tars::Int32
 LedgerServiceServer::getBlockHashByNumber(tars::Int64 blockNumber,
