@@ -2,6 +2,7 @@
 
 #include "Common.h"
 #include "Transaction.h"
+#include "bcos-framework/libutilities/DataConvertUtility.h"
 #include <bcos-framework/interfaces/crypto/CommonType.h>
 #include <bcos-framework/interfaces/protocol/Transaction.h>
 #include <bcos-framework/interfaces/protocol/TransactionFactory.h>
@@ -26,31 +27,17 @@ public:
   }
 
   void encode(bcos::bytes &_txData) const override {
-    if (!m_cached) {
-      tars::TarsOutputStream<bcostars::protocol::BufferWriterByteVector> output;
+    tars::TarsOutputStream<bcostars::protocol::BufferWriterByteVector> output;
 
-      m_transaction->writeTo(output);
-      output.getByteBuffer().swap(_txData);
-    }
-    else {
-        _txData = m_encoded;
-    }
+    m_transaction->writeTo(output);
+    output.getByteBuffer().swap(_txData);
   }
 
   bcos::crypto::HashType const &hash() const override {
-    if(m_hashed && m_cached) {
-        return m_hash;
-    }
-    else if(m_cached && !m_hashed) {
-        m_hash = m_cryptoSuite->hash(m_encoded);
-        m_hashed = true;
-    }
-    else if(!m_cached) {
-        encode(m_encoded);
-        m_hash = m_cryptoSuite->hash(m_encoded);
-        m_cached = true;
-        m_hashed = true;
-    }
+    bcos::bytes encoded;
+
+    encode(encoded);
+    m_hash = m_cryptoSuite->hash(encoded);
 
     return m_hash;
   }
@@ -91,22 +78,11 @@ public:
     m_transaction = transaction;
   }
 
-private:
-  void checkDirty() const {
-    if (m_cached) {
-      tars::TarsOutputStream<bcostars::protocol::BufferWriterByteVector> output;
-
-      m_transaction->writeTo(output);
-      output.getByteBuffer().swap(m_encoded);
-      m_hash = m_cryptoSuite->hash(m_encoded);
-      m_cached = false;
-    }
+  void setCryptoSuite(bcos::crypto::CryptoSuite::Ptr cryptoSuite) {
+    m_cryptoSuite = cryptoSuite;
   }
 
-  mutable bool m_cached = false;
-  mutable bcos::bytes m_encoded;
-
-  mutable bool m_hashed = false;
+private:
   mutable bcos::crypto::HashType m_hash;
 
   std::shared_ptr<bcostars::Transaction> m_transaction;
@@ -122,14 +98,17 @@ public:
     auto inner = std::make_shared<bcostars::Transaction>();
     auto transaction = std::make_shared<Transaction>();
     transaction->setTransaction(inner);
+    transaction->setCryptoSuite(m_cryptoSuite);
 
     transaction->decode(_txData, _checkSig);
     return transaction;
   }
+
   Transaction::Ptr createTransaction(bcos::bytes const &_txData,
                                      bool _checkSig = true) override {
-    return createTransaction(ref(_txData), _checkSig);
+    return createTransaction(bcos::ref(_txData), _checkSig);
   }
+
   Transaction::Ptr
   createTransaction(int32_t const &_version, bcos::bytes const &_to,
                     bcos::bytes const &_input, bcos::u256 const &_nonce,
@@ -146,8 +125,15 @@ public:
     inner->groupID = _groupId;
     inner->importTime = _importTime;
 
-    auto transaction = std::make_shared<Transaction>();
+    auto transaction = std::make_shared<bcostars::protocol::Transaction>();
     transaction->setTransaction(inner);
+    transaction->setCryptoSuite(m_cryptoSuite);
+
+    return transaction;
+  }
+
+  void setCryptoSuite(bcos::crypto::CryptoSuite::Ptr cryptoSuite) {
+    m_cryptoSuite = cryptoSuite;
   }
 
   bcos::crypto::CryptoSuite::Ptr cryptoSuite() override {

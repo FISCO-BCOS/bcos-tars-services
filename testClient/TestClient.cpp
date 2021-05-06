@@ -9,9 +9,7 @@ int main() {
   auto proxy = c->stringToProxy<bcostars::LedgerServicePrx>(
       "bcosNode1.LedgerService.LedgerServiceObj");
 
-  bcostars::Block block;
-  auto ret = proxy->getBlockByNumber(100, block);
+  auto ret = proxy->test();
 
   std::cout << "ret: " << ret << std::endl;
-  std::cout << "Block number: " << block.blockHeader.blockNumber << std::endl;
 }

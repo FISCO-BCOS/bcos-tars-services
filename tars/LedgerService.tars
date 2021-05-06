@@ -6,26 +6,7 @@ module bcostars
 
 interface LedgerService
 {
-    int commitBlock(long blockNumber, vector<vector<byte>> signList);
-    int preStoreTxs(vector<Block> blocks);
-
-    int getTxByHash(vector<byte> hash, out Transaction tx);
-    int getTransactionByBlockHashAndIndex(vector<byte> blockHash, long index, out Transaction tx);
-    int getTransactionByBlockNumberAndIndex(long blockNumber, long index, out Transaction tx);
-
-    int getTransactionReceiptByHash(vector<byte> hash, out Transaction tx);
-    int getTransactionReceiptProof(vector<byte> block, long index, out vector<string> proof);
-    int getTransactionProof(vector<byte> blockHash, long index, out vector<string> proof);
-
-    int getTotalTransactionCount(out long totalTx, out long failedTx, out long blockNumber);
-    int getBlockNumber(out long blockNumber);
-    int getBlockHashByNumber(long blockNumber, out vector<byte> blockHash);
-    int getBlockByHash(vector<byte> blockHash, out Block block);
-    int getBlockByNumber(long blockNumber, out Block block);
-    int getBlockHeaderByNumber(long blockNumber, out BlockHeader blockHeader, out vector<vector<byte>> sigList);
-    int getBlockHeaderByHash(vector<byte> blockHash, out BlockHeader blockHeader, out vector<vector<byte>> sigList);
-    int getCode(string tableID, vector<byte> codeAddress, out vector<byte> code);
-    int getNonceList(long blockNumber, vector<byte> nonceList);
+    int test();
 };
 
 }; 
