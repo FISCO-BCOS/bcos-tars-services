@@ -6,7 +6,7 @@
 
 #define BOOST_TEST_MAIN
 
-#include "../protocols/TransactionTars.h"
+#include "../protocols/TransactionImpl.h"
 #include <boost/test/unit_test.hpp>
 
 namespace bcostars {
