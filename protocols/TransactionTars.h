@@ -47,8 +47,7 @@ public:
   std::string_view groupId() const override { return m_transaction->groupID; }
   int64_t blockLimit() const override { return m_transaction->blockLimit; }
   bcos::u256 const &nonce() const override {
-    // m_transaction->nonce;
-    // return bcos::u256(&m_transaction->nonce);
+    return m_nonce;
   }
   bcos::bytesConstRef to() const override {
     return bcos::bytesConstRef((const unsigned char *)m_transaction->to.data(),
@@ -86,6 +85,8 @@ private:
   mutable bcos::crypto::HashType m_hash;
 
   std::shared_ptr<bcostars::Transaction> m_transaction;
+  bcos::u256 m_nonce;
+
   bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
 };
 

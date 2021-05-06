@@ -55,5 +55,5 @@ BOOST_AUTO_TEST_CASE(block) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace test
-} // namespace bcostars
+}
+}

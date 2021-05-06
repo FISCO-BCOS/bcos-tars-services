@@ -1,7 +1,7 @@
 module bcostars {
     struct LogEntry {
         1 optional vector<byte> address;
-        2 optional byte topic[32];
+        2 optional vector<vector<byte>> topic;
         3 optional vector<byte> data;
     };
 

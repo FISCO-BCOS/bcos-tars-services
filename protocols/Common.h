@@ -17,14 +17,12 @@ protected:
   std::function<bcos::byte *(BufferWriterByteVector &, size_t)> _reserve;
 
 private:
-  //不让copy 复制
   BufferWriterByteVector(const BufferWriterByteVector &);
   BufferWriterByteVector &operator=(const BufferWriterByteVector &buf);
 
 public:
   BufferWriterByteVector() : _buf(NULL), _len(0), _buf_len(0) {
 #ifndef GEN_PYTHON_MASK
-    //内存分配器
     _reserve = [](BufferWriterByteVector &os, size_t len) {
       os._buffer.resize(len);
       return os._buffer.data();
