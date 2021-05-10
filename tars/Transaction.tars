@@ -4,7 +4,7 @@ module bcostars {
         2 optional string chainID;
         3 optional string groupID;
         4 optional long blockLimit;
-        5 optional unsigned byte nonce[32];
+        5 optional string nonce;
         6 optional vector<unsigned byte> to;
         7 optional vector<unsigned byte> sender;
         8 optional vector<unsigned byte> input;

@@ -41,6 +41,7 @@ add_subdirectory(LedgerService)
 add_subdirectory(StorageService)
 
 if(TESTS)
+    enable_testing()
     add_subdirectory(tests)
     add_subdirectory(testClient)
 endif()

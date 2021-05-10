@@ -1,18 +1,18 @@
 module bcostars {
     struct LogEntry {
-        1 optional vector<byte> address;
-        2 optional vector<vector<byte>> topic;
-        3 optional vector<byte> data;
+        1 optional vector<unsigned byte> address;
+        2 optional vector<vector<unsigned byte>> topic;
+        3 optional vector<unsigned byte> data;
     };
 
     struct TransactionReceipt {
         1 optional int version;
-        2 optional vector<byte> stateRoot;
-        3 optional byte gasUsed[32];
-        4 optional vector<byte> contractAddress;
+        2 optional vector<unsigned byte> stateRoot;
+        3 optional string gasUsed;
+        4 optional vector<unsigned byte> contractAddress;
         5 optional byte bloom[256];
         6 optional int status;
-        7 optional vector<byte> output;
+        7 optional vector<unsigned byte> output;
         8 optional vector<LogEntry> logEntries;
     };
 };
