@@ -1,5 +1,4 @@
 ﻿#include "LedgerServiceServer.h"
-#include "../Clients/StorageServiceClient.h"
 #include "StorageService.h"
 
 using namespace bcostars;

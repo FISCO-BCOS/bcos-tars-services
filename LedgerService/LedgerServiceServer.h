@@ -3,7 +3,7 @@
 #include "LedgerService.h"
 #include "servant/Application.h"
 #include <bcos-framework/interfaces/ledger/LedgerInterface.h>
-#include "../Clients/StorageServiceClient.h"
+#include "../StorageService/StorageServiceClient.h"
 
 namespace bcostars {
 

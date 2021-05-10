@@ -22,7 +22,6 @@ public:
     tableInfo.keyValue = _tableInfo->key;
     tableInfo.fields = _tableInfo->fields;
     tableInfo.indices = _tableInfo->indices;
-    tableInfo.enableCache = _tableInfo->enableCache;
     tableInfo.enableConsensus = _tableInfo->enableConsensus;
 
     bcostars::Condition condition;
@@ -80,7 +79,6 @@ public:
     tableInfo.keyValue = _tableInfo->key;
     tableInfo.fields = _tableInfo->fields;
     tableInfo.indices = _tableInfo->indices;
-    tableInfo.enableCache = _tableInfo->enableCache;
     tableInfo.enableConsensus = _tableInfo->enableConsensus;
 
     bcostars::Condition condition;
