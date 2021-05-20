@@ -5,9 +5,9 @@ set (DEPENDENCIES_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 include(FetchContent)
 FetchContent_Declare(bcos-cmake-scripts
-GIT_REPOSITORY https://${GIT_URL_BASE}/FISCO-BCOS/bcos-cmake-scripts.git
-GIT_TAG dev
-SOURCE_DIR ${DEPENDENCIES_DIR}/bcos-cmake-scripts
+    GIT_REPOSITORY https://${GIT_URL_BASE}/FISCO-BCOS/bcos-cmake-scripts.git
+    GIT_TAG dev
+    SOURCE_DIR ${DEPENDENCIES_DIR}/bcos-cmake-scripts
 )
 FetchContent_MakeAvailable(bcos-cmake-scripts)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR}/bcos-cmake-scripts)
@@ -20,6 +20,9 @@ ExternalProject_Add(tarscpp
     CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${DEPENDENCIES_DIR}/tarscpp-install
     PATCH_COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/patchTars.sh ${DEPENDENCIES_DIR}/tarscpp ${DEPENDENCIES_DIR}/tarscpp-install
 )
+include_directories(${DEPENDENCIES_DIR}/tarscpp-install/include)
+link_directories(${DEPENDENCIES_DIR}/tarscpp-install/lib)
+set(TARS2CPP ${DEPENDENCIES_DIR}/tarscpp-install/tools/tars2cpp)
 
 foreach(BCOS_MODULE framework storage front pbft txpool)
     ExternalProject_Add(bcos-${BCOS_MODULE}
