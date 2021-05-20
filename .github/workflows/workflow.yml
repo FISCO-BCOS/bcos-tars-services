@@ -97,7 +97,7 @@ jobs:
           cd build
           cmake ..
           make
-          make install
+          sudo make install
       - name: configure
         run: cmake . -DTESTS=ON
       - name: compile
@@ -144,7 +144,7 @@ jobs:
           cd build
           cmake ..
           make
-          make install
+          sudo make install
       - name: configure
         run: cmake . -DTESTS=ON -DCOVERAGE=ON
       - name: compile
@@ -187,6 +187,7 @@ jobs:
         run: |
           yum install -y epel-release centos-release-scl
           yum install -y git make gcc gcc-c++ glibc-static glibc-devel cmake3 ccache devtoolset-7 && source /opt/rh/devtoolset-7/enable
+          alias cmake='cmake3'
       - name: install tars dependencies
         run: |
           git clone https://github.com/TarsCloud/TarsCpp.git --recursive
