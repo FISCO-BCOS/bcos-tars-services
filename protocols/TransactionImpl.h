@@ -12,88 +12,94 @@ namespace bcostars {
 namespace protocol {
 class Transaction : public bcos::protocol::Transaction {
 public:
+  explicit Transaction(bcos::crypto::CryptoSuite::Ptr _cryptoSuite)
+      : bcos::protocol::Transaction(_cryptoSuite) {}
   ~Transaction() {}
+
+  friend class TransactionFactory;
 
   bool operator==(const Transaction &rhs) const {
     return this->hash() == rhs.hash();
   }
 
-  void decode(bcos::bytesConstRef _txData, bool _checkSig) override {
+  void decode(bcos::bytesConstRef _txData) override {
+    m_buffer.assign(_txData.begin(), _txData.end());
+
     tars::TarsInputStream input;
-    input.setBuffer((const char *)_txData.data(), _txData.size());
-    (void)_checkSig;
+    input.setBuffer((const char *)m_buffer.data(), m_buffer.size());
 
-    m_inner->readFrom(input);
-    m_nonce = boost::lexical_cast<bcos::u256>(m_inner->nonce);
+    m_inner.readFrom(input);
+
+    m_nonce = boost::lexical_cast<bcos::u256>(m_inner.data.nonce);
   }
 
-  void encode(bcos::bytes &_txData) const override {
-    tars::TarsOutputStream<bcostars::protocol::BufferWriterByteVector> output;
+  bcos::bytesConstRef encode(bool _onlyHashFields = false) const override {
+    if (_onlyHashFields) {
+      if (m_dataBuffer.empty()) {
+        tars::TarsOutputStream<bcostars::protocol::BufferWriterByteVector>
+            output;
+        m_inner.data.writeTo(output);
+        output.getByteBuffer().swap(m_dataBuffer);
+      }
 
-    m_inner->nonce = boost::lexical_cast<std::string>(m_nonce);
-    m_inner->writeTo(output);
-    output.getByteBuffer().swap(_txData);
+      return bcos::ref(m_dataBuffer);
+    } else {
+      if (m_buffer.empty()) {
+        tars::TarsOutputStream<bcostars::protocol::BufferWriterByteVector>
+            output;
+
+        auto hash = m_cryptoSuite->hash(m_dataBuffer);
+        m_inner.dataHash.assign(hash.begin(), hash.end());
+        m_inner.writeTo(output);
+        output.getByteBuffer().swap(m_buffer);
+      }
+      return bcos::ref(m_buffer);
+    }
   }
 
-  bcos::crypto::HashType const &hash() const override {
-    bcos::bytes encoded;
-
-    encode(encoded);
-    m_hash = m_cryptoSuite->hash(encoded);
-
-    return m_hash;
+  virtual bcos::crypto::HashType const &hash() const override {
+    if (m_inner.dataHash.empty()) {
+      auto buffer = encode(true);
+      auto hash = m_cryptoSuite->hash(buffer);
+      m_inner.dataHash.assign(hash.begin(), hash.end());
+    }
+    return *(
+        reinterpret_cast<bcos::crypto::HashType *>(m_inner.dataHash.data()));
   }
 
-  int32_t version() const override { return m_inner->version; }
-  std::string_view chainId() const override { return m_inner->chainID; }
-  std::string_view groupId() const override { return m_inner->groupID; }
-  int64_t blockLimit() const override { return m_inner->blockLimit; }
-  bcos::u256 const &nonce() const override {
-    return m_nonce;
-  }
+  int32_t version() const override { return m_inner.data.version; }
+  std::string_view chainId() const override { return m_inner.data.chainID; }
+  std::string_view groupId() const override { return m_inner.data.groupID; }
+  int64_t blockLimit() const override { return m_inner.data.blockLimit; }
+  bcos::u256 const &nonce() const override { return m_nonce; }
   bcos::bytesConstRef to() const override {
-    return bcos::bytesConstRef((const unsigned char *)m_inner->to.data(),
-                               m_inner->to.size());
-  }
-  bcos::bytesConstRef sender() const override {
-    return bcos::bytesConstRef(
-        (const unsigned char *)m_inner->sender.data(),
-        m_inner->sender.size());
+    return bcos::bytesConstRef(m_inner.data.to.data(), m_inner.data.to.size());
   }
   bcos::bytesConstRef input() const override {
-    return bcos::bytesConstRef(
-        (const unsigned char *)m_inner->input.data(),
-        m_inner->input.size());
+    return bcos::bytesConstRef(m_inner.data.input.data(),
+                               m_inner.data.input.size());
   }
-  virtual int64_t importTime() const override {
-    return m_inner->importTime;
+  int64_t importTime() const override { return m_inner.importTime; }
+  void setImportTime(int64_t _importTime) override {
+    m_inner.importTime = _importTime;
   }
-  virtual bcos::protocol::TransactionType type() const override {
-    return (bcos::protocol::TransactionType)m_inner->type;
+  bcos::protocol::TransactionType type() const override {
+    // return (bcos::protocol::TransactionType)m_inner.data.type;
+    return bcos::protocol::TransactionType::MessageCall;
   }
-  virtual void forceSender(bcos::bytes const &_sender) override {
-    m_inner->sender.assign(_sender.begin(), _sender.end());
-  }
-
-  void setNonce(bcos::u256 nonce) {
-    m_nonce = nonce;
+  bcos::bytesConstRef signatureData() const override {
+    return bcos::ref(m_inner.signature);
   }
 
-  void setInner(std::shared_ptr<bcostars::Transaction> transaction) {
-    m_inner = transaction;
-  }
-
-  void setCryptoSuite(bcos::crypto::CryptoSuite::Ptr cryptoSuite) {
-    m_cryptoSuite = cryptoSuite;
+  void setSignatureData(bcos::bytes &signature) {
+    signature.swap(m_inner.signature);
   }
 
 private:
-  mutable bcos::crypto::HashType m_hash;
-
-  std::shared_ptr<bcostars::Transaction> m_inner;
+  mutable bcostars::Transaction m_inner;
+  mutable bcos::bytes m_buffer;
+  mutable bcos::bytes m_dataBuffer;
   bcos::u256 m_nonce;
-
-  bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
 };
 
 class TransactionFactory : public bcos::protocol::TransactionFactory {
@@ -102,12 +108,12 @@ public:
 
   Transaction::Ptr createTransaction(bcos::bytesConstRef _txData,
                                      bool _checkSig = true) override {
-    auto inner = std::make_shared<bcostars::Transaction>();
-    auto transaction = std::make_shared<Transaction>();
-    transaction->setInner(inner);
-    transaction->setCryptoSuite(m_cryptoSuite);
+    auto transaction = std::make_shared<Transaction>(m_cryptoSuite);
 
-    transaction->decode(_txData, _checkSig);
+    transaction->decode(_txData);
+    if (_checkSig) {
+      transaction->verify();
+    }
     return transaction;
   }
 
@@ -122,31 +128,30 @@ public:
                     int64_t const &_blockLimit, std::string const &_chainId,
                     std::string const &_groupId,
                     int64_t const &_importTime) override {
-    auto inner = std::make_shared<bcostars::Transaction>();
-    inner->version = _version;
-    inner->to = _to;
-    inner->input = _input;
-    inner->blockLimit = _blockLimit;
-    inner->chainID = _chainId;
-    inner->groupID = _groupId;
-    inner->importTime = _importTime;
+    auto transaction =
+        std::make_shared<bcostars::protocol::Transaction>(m_cryptoSuite);
+    transaction->m_inner.data.version = _version;
+    transaction->m_inner.data.to = _to;
+    transaction->m_inner.data.input = _input;
+    transaction->m_inner.data.blockLimit = _blockLimit;
+    transaction->m_inner.data.chainID = _chainId;
+    transaction->m_inner.data.groupID = _groupId;
+    transaction->m_inner.importTime = _importTime;
 
-    auto transaction = std::make_shared<bcostars::protocol::Transaction>();
-    transaction->setInner(inner);
-    transaction->setNonce(_nonce);
-    transaction->setCryptoSuite(m_cryptoSuite);
+    transaction->m_inner.data.nonce = boost::lexical_cast<std::string>(_nonce);
+    transaction->m_nonce = _nonce;
 
     return transaction;
-  }
-
-  bcos::crypto::CryptoSuite::Ptr cryptoSuite() override {
-    return m_cryptoSuite;
   }
 
   void setCryptoSuite(bcos::crypto::CryptoSuite::Ptr cryptoSuite) {
     m_cryptoSuite = cryptoSuite;
   }
+  bcos::crypto::CryptoSuite::Ptr cryptoSuite() override {
+    return m_cryptoSuite;
+  }
 
+private:
   bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
 };
 

@@ -10,9 +10,10 @@ module bcostars {
         2 optional vector<unsigned byte> stateRoot;
         3 optional string gasUsed;
         4 optional vector<unsigned byte> contractAddress;
-        5 optional byte bloom[256];
+        5 optional unsigned byte bloom[256];
         6 optional int status;
         7 optional vector<unsigned byte> output;
         8 optional vector<LogEntry> logEntries;
+        9 optional long blockNumber;
     };
 };
