@@ -185,13 +185,13 @@ jobs:
             hunter-centos-v1-notest-${{ runner.temp }}-
       - name: install tars dependencies
         run: |
-        git clone https://github.com/TarsCloud/TarsCpp.git --recursive
-        cd TarsCpp
-        mkdir build
-        cd build
-        cmake ..
-        make
-        make install
+          git clone https://github.com/TarsCloud/TarsCpp.git --recursive
+          cd TarsCpp
+          mkdir build
+          cd build
+          cmake ..
+          make
+          make install
       - name: install CentOS dependencies
         run: |
           yum install -y epel-release centos-release-scl
