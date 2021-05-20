@@ -4,13 +4,12 @@
 #include "bcos-framework/interfaces/crypto/CryptoSuite.h"
 #include "bcos-framework/libprotocol/LogEntry.h"
 #include "bcos-framework/libutilities/DataConvertUtility.h"
-#include <boost/test/tools/old/interface.hpp>
-
-#define BOOST_TEST_MAIN
-
+#include "bcos-framework/testutils/SignatureImpl.h"
+#include "bcos-framework/testutils/HashImpl.h"
 #include "../protocols/TransactionImpl.h"
 #include "../protocols/TransactionReceiptImpl.h"
 #include <boost/test/unit_test.hpp>
+#include <memory>
 
 namespace bcostars {
 namespace test {
@@ -18,13 +17,13 @@ namespace test {
 struct Fixture {
   Fixture() {
     cryptoSuite = std::make_shared<bcos::crypto::CryptoSuite>(
-        bcos::crypto::Hash::Ptr(new TarsHash()), nullptr, nullptr);
+        std::make_shared<bcos::test::Sm3Hash>(), std::make_shared<bcos::test::SM2SignatureImpl>(), nullptr);
   }
 
   bcos::crypto::CryptoSuite::Ptr cryptoSuite;
 };
 
-BOOST_FIXTURE_TEST_SUITE(f, Fixture)
+BOOST_FIXTURE_TEST_SUITE(TestProtocol, Fixture)
 
 BOOST_AUTO_TEST_CASE(transaction) {
   bcos::bytes to(bcos::asBytes("Target"));
@@ -36,15 +35,18 @@ BOOST_AUTO_TEST_CASE(transaction) {
   auto tx = factory.createTransaction(0, to, input, nonce, 100, "testChain",
                                       "testGroup", 1000);
 
-  bcos::bytes buffer;
-  tx->encode(buffer);
+  auto signature = cryptoSuite->signatureImpl()->sign(cryptoSuite->signatureImpl()->generateKeyPair(), tx->hash(), true);
+  std::dynamic_pointer_cast<bcostars::protocol::Transaction>(tx)->setSignatureData(*signature);
 
-  auto decodedTx = factory.createTransaction(buffer, false);
+  auto buffer = tx->encode(false);
+
+  auto decodedTx = factory.createTransaction(buffer, true);
 
   BOOST_CHECK_EQUAL(tx->hash(), decodedTx->hash());
   BOOST_CHECK_EQUAL(tx->version(), 0);
   BOOST_CHECK_EQUAL(bcos::asString(tx->to()), bcos::asString(to));
   BOOST_CHECK_EQUAL(bcos::asString(tx->input()), bcos::asString(input));
+
   BOOST_CHECK_EQUAL(tx->nonce(), nonce);
   BOOST_CHECK_EQUAL(tx->blockLimit(), 100);
   BOOST_CHECK_EQUAL(tx->chainId(), "testChain");
@@ -73,7 +75,7 @@ BOOST_AUTO_TEST_CASE(transactionReceipt) {
 
   bcostars::protocol::TransactionReceiptFactory factory;
   factory.setCryptoSuite(cryptoSuite);
-  auto receipt = factory.createReceipt(1000, stateRoot, gasUsed, contractAddress, logEntries, 50, output);
+  auto receipt = factory.createReceipt(1000, stateRoot, gasUsed, contractAddress, std::make_shared<std::vector<bcos::protocol::LogEntry>>(*logEntries), 50, output, 888);
 
   bcos::bytes buffer;
   receipt->encode(buffer);
@@ -96,6 +98,7 @@ BOOST_AUTO_TEST_CASE(transactionReceipt) {
 
   BOOST_CHECK_EQUAL(receipt->status(), 50);
   BOOST_CHECK_EQUAL(bcos::asString(receipt->output()), bcos::asString(output));
+  BOOST_CHECK_EQUAL(receipt->blockNumber(), 888);
 }
 
 BOOST_AUTO_TEST_CASE(block) {

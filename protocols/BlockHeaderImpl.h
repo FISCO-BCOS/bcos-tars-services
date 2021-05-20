@@ -33,25 +33,13 @@ public:
     output.getByteBuffer().swap(_encodeData);
   }
 
-  virtual bcos::crypto::HashType const& hash() const override {
-    bcos::bytes encoded;
-    encode(encoded);
-
-    m_hash = m_cryptoSuite->hash(encoded);
-    return m_hash;
-  }
-  void populateFromParents(BlockHeadersPtr _parents,
-                           bcos::protocol::BlockNumber _number) override {
-    (void)_parents;
-    (void)_number;
-  }
   void clear() override {}
   // verify the signatureList
-  void verifySignatureList() const override {}
-  void populateEmptyBlock(int64_t _timestamp) override;
 
   virtual int32_t version() const override { return m_inner->version; }
+
   gsl::span<const bcos::protocol::ParentInfo> parentInfo() const override {}
+  
   bcos::crypto::HashType const &txsRoot() const override {
     return *(reinterpret_cast<bcos::crypto::HashType *>(
         m_inner->txsRoot.data()));
@@ -154,8 +142,6 @@ public:
 
 private:
   std::shared_ptr<bcostars::BlockHeader> m_inner;
-  mutable bcos::crypto::HashType m_hash;
-  bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
 };
 
 } // namespace protocol

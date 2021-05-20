@@ -37,11 +37,9 @@ hunter_add_package(Boost COMPONENTS all)
 # import tars project
 add_subdirectory(tars)
 add_subdirectory(protocols)
-add_subdirectory(LedgerService)
 add_subdirectory(StorageService)
 
 if(TESTS)
     enable_testing()
     add_subdirectory(tests)
-    add_subdirectory(testClient)
 endif()
