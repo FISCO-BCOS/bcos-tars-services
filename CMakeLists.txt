@@ -11,9 +11,6 @@ HunterGate(
 
 project(Bcos-Tars-Service)
 
-# include (${DEPENDENCIES_DIR}/tarscpp-install/makefile/tars-tools.cmake)
-# include (${DEPENDENCIES_DIR}/tarscpp/servant/makefile/tars-tools.cmake)
-
 include_directories(${DEPENDENCIES_DIR}/tarscpp-install/thirdparty/include)
 link_directories(${DEPENDENCIES_DIR}/tarscpp-install/thirdparty/lib)
 
@@ -23,6 +20,7 @@ include_directories(${TARS_HEADER_DIR})
 include(CompilerSettings)
 
 hunter_add_package(Microsoft.GSL)
+hunter_add_package(tbb)
 hunter_add_package(Boost COMPONENTS all)
 
 # import tars project

@@ -17,6 +17,7 @@ public:
   std::vector<std::string> getPrimaryKeys(
       std::shared_ptr<bcos::storage::TableInfo> _tableInfo,
       std::shared_ptr<bcos::storage::Condition> _condition) const override {
+        /*
     bcostars::TableInfo tableInfo;
     tableInfo.name = _tableInfo->name;
     tableInfo.keyValue = _tableInfo->key;
@@ -34,6 +35,7 @@ public:
     } catch (std::exception &e) {
       throw e;
     }
+    */
   };
 
 private:
