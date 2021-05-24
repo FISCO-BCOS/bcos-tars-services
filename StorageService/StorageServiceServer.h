@@ -1,17 +1,15 @@
 ﻿#pragma once
 
+#include "Common.h"
 #include "StorageService.h"
 #include "servant/Application.h"
-#include "bcos-framework/interfaces/crypto/CryptoSuite.h"
-#include "bcos-framework/interfaces/storage/Common.h"
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/interfaces/storage/TableInterface.h>
 #include <bcos-framework/libtable/TableFactory.h>
-#include <bcos-storage/Storage.h>
-#include <bcos-storage/RocksDBAdapter/RocksDBAdapter.h>
 #include <bcos-storage/KVDBImpl.h>
+#include <bcos-storage/RocksDBAdapter/RocksDBAdapter.h>
 #include <bcos-storage/RocksDBAdapter/RocksDBAdapterFactory.h>
-#include "Common.h"
+#include <bcos-storage/Storage.h>
 #include <memory>
 
 namespace bcostars {
@@ -22,12 +20,14 @@ public:
 
   void initialize() override {
     // load the config
-    bcos::storage::RocksDBAdapterFactory rocksdbAdapterFactory(ServerConfig::DataPath + "/db");
+    bcos::storage::RocksDBAdapterFactory rocksdbAdapterFactory(
+        ServerConfig::DataPath + "/db");
     auto rocksdbAdapter = rocksdbAdapterFactory.createAdapter("bcos_storage");
     auto ret = rocksdbAdapterFactory.createRocksDB("kv_storage");
     auto kvDB = std::make_shared<bcos::storage::KVDBImpl>(ret.first);
 
-    auto storageImpl = std::make_shared<bcos::storage::StorageImpl>(rocksdbAdapter, kvDB);
+    auto storageImpl =
+        std::make_shared<bcos::storage::StorageImpl>(rocksdbAdapter, kvDB);
 
     m_storage = storageImpl;
   }
@@ -38,7 +38,9 @@ public:
                                 const bcostars::TableFactory &tableFactory,
                                 tars::TarsCurrentPtr current) override {
     try {
-      m_storage->addStateCache(blockNumber, toBcosTableFactory(tableFactory, m_storage, m_cryptoSuite));
+      m_storage->addStateCache(
+          blockNumber,
+          toBcosTableFactory(tableFactory, m_storage, m_cryptoSuite));
     } catch (const bcos::Error &error) {
       return toTarsError(error);
     }
@@ -172,7 +174,9 @@ public:
                                 bcostars::TableFactory &tableFactory,
                                 tars::TarsCurrentPtr current) override {
     try {
-      m_storage->getStateCache(blockNumber);
+      auto bcosTableFactory = m_storage->getStateCache(blockNumber);
+
+      tableFactory = toTarsTableFactory(bcosTableFactory);
     } catch (const bcos::Error &error) {
       return toTarsError(error);
     }
@@ -182,11 +186,23 @@ public:
 
   bcostars::Error put(const std::string &columnFamily, const std::string &_key,
                       const std::string &value,
-                      tars::TarsCurrentPtr current) override {}
+                      tars::TarsCurrentPtr current) override {
+    try {
+      return toTarsError(m_storage->put(columnFamily, _key, value));
+    } catch (const bcos::Error &error) {
+      return toTarsError(error);
+    }
+  }
 
   bcostars::Error remove(const std::string &columnFamily,
                          const std::string &_key,
-                         tars::TarsCurrentPtr current) override {}
+                         tars::TarsCurrentPtr current) override {
+    try {
+      return toTarsError(m_storage->remove(columnFamily, _key));
+    } catch (const bcos::Error &error) {
+      return toTarsError(error);
+    }
+  }
 
 private:
   bcos::storage::StorageInterface::Ptr m_storage;

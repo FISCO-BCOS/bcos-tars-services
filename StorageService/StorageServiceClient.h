@@ -1,10 +1,11 @@
 #pragma once
 
-#include "servant/Application.h"
+#include "Common.h"
 #include "StorageService.h"
 #include "bcos-framework/interfaces/storage/Common.h"
+#include "servant/Application.h"
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
-#include "Common.h"
+#include <emmintrin.h>
 #include <exception>
 
 namespace bcostars {
@@ -48,28 +49,26 @@ public:
     public:
       Callback(std::function<void(const bcos::Error::Ptr &,
                                   const std::vector<std::string> &)>
-                   callback,
-               StorageServiceClient *self)
-          : m_callback(callback), m_self(self){};
+                   callback)
+          : m_callback(callback){};
 
       void
       callback_getPrimaryKeys(const bcostars::Error &ret,
                               const std::vector<std::string> &keys) override {
-        m_callback(m_self->toBcosError(ret), keys);
+        m_callback(toBcosError(ret), keys);
       }
 
       void callback_getPrimaryKeys_exception(tars::Int32 ret) override {
-        m_callback(m_self->toBcosError(ret), std::vector<std::string>());
+        m_callback(toBcosError(ret), std::vector<std::string>());
       }
 
     private:
       std::function<void(const bcos::Error::Ptr &,
                          const std::vector<std::string> &)>
           m_callback;
-      StorageServiceClient *m_self;
     };
 
-    m_storageServiceProxy->async_getPrimaryKeys(new Callback(_callback, this),
+    m_storageServiceProxy->async_getPrimaryKeys(new Callback(_callback),
                                                 toTarsTableInfo(_tableInfo),
                                                 toTarsCondition(_condition));
   }
@@ -90,10 +89,10 @@ public:
 
       void callback_getRow(const bcostars::Error &ret,
                            const bcostars::Entry &row) override {
-        m_callback(m_self->toBcosError(ret), m_self->toBcosEntry(row));
+        m_callback(toBcosError(ret), toBcosEntry(row));
       }
       void callback_getRow_exception(tars::Int32 ret) override {
-        m_callback(m_self->toBcosError(ret), nullptr);
+        m_callback(toBcosError(ret), nullptr);
       }
 
     private:
@@ -116,24 +115,23 @@ public:
                    _callback) override {
     class Callback : public bcostars::StorageServiceCoroPrxCallback {
     public:
-      Callback(std::function<void(
-                   const bcos::Error::Ptr &,
-                   const std::map<std::string, bcos::storage::Entry::Ptr> &)>
-                   callback,
-               StorageServiceClient *self)
-          : m_callback(callback), m_self(self){};
+      Callback(std::function<
+               void(const bcos::Error::Ptr &,
+                    const std::map<std::string, bcos::storage::Entry::Ptr> &)>
+                   callback)
+          : m_callback(callback){};
 
       void
       callback_getRows(const bcostars::Error &ret,
                        const map<std::string, bcostars::Entry> &rows) override {
         std::map<std::string, bcos::storage::Entry::Ptr> bcosRows;
         for (auto const &it : rows) {
-          bcosRows.emplace(it.first, m_self->toBcosEntry(it.second));
+          bcosRows.emplace(it.first, toBcosEntry(it.second));
         }
-        m_callback(m_self->toBcosError(ret), bcosRows);
+        m_callback(toBcosError(ret), bcosRows);
       }
       void callback_getRows_exception(tars::Int32 ret) override {
-        m_callback(m_self->toBcosError(ret),
+        m_callback(toBcosError(ret),
                    std::map<std::string, bcos::storage::Entry::Ptr>());
       }
 
@@ -142,10 +140,9 @@ public:
           const bcos::Error::Ptr &,
           const std::map<std::string, bcos::storage::Entry::Ptr> &)>
           m_callback;
-      StorageServiceClient *m_self;
     };
 
-    m_storageServiceProxy->async_getRows(new Callback(_callback, this),
+    m_storageServiceProxy->async_getRows(new Callback(_callback),
                                          toTarsTableInfo(_tableInfo), *_keys);
   }
 
@@ -159,38 +156,39 @@ public:
       override {
     class Callback : public bcostars::StorageServiceCoroPrxCallback {
     public:
-      Callback(std::function<void(const bcos::Error::Ptr &, size_t)> callback,
-               StorageServiceClient *self)
-          : m_callback(callback), m_self(self){};
+      Callback(std::function<void(const bcos::Error::Ptr &, size_t)> callback)
+          : m_callback(callback){};
 
       void callback_commitBlock(const bcostars::Error &ret,
                                 tars::Int64 count) override {
-        m_callback(m_self->toBcosError(ret), count);
+        m_callback(toBcosError(ret), count);
       }
       void callback_commitBlock_exception(tars::Int32 ret) override {
-        m_callback(m_self->toBcosError(ret), 0);
+        m_callback(toBcosError(ret), 0);
       }
 
     private:
       std::function<void(const bcos::Error::Ptr &, size_t)> m_callback;
-      StorageServiceClient *m_self;
     };
 
     std::vector<bcostars::TableInfo> tarsTablesInfos;
-    for(auto const& it: *_infos) {
+    for (auto const &it : *_infos) {
       tarsTablesInfos.emplace_back(toTarsTableInfo(it));
     }
 
     std::vector<std::map<std::string, bcostars::Entry>> tarsDatas;
-    for(auto const& it: *_datas) {
+    for (auto const &it : *_datas) {
       std::map<std::string, bcostars::Entry> tableData;
 
-      for(auto const& tableIt: *it) {
+      for (auto const &tableIt : *it) {
         tableData.emplace(tableIt.first, toTarsEntry(tableIt.second));
       }
+
+      tarsDatas.emplace_back(tableData);
     }
 
-    m_storageServiceProxy->async_commitBlock(new Callback(_callback, this), _blockNumber, tarsTablesInfos, tarsDatas);
+    m_storageServiceProxy->async_commitBlock(
+        new Callback(_callback), _blockNumber, tarsTablesInfos, tarsDatas);
   }
 
   // cache TableFactoryInterface
@@ -199,17 +197,87 @@ public:
       const std::shared_ptr<bcos::storage::TableFactoryInterface>
           &_tablefactory,
       std::function<void(const bcos::Error::Ptr &)> _callback) override {
+    class Callback : public bcostars::StorageServiceCoroPrxCallback {
+    public:
+      Callback(std::function<void(const bcos::Error::Ptr &)> callback)
+          : m_callback(callback){};
 
+      void callback_addStateCache(const bcostars::Error &ret) override {
+        m_callback(toBcosError(ret));
       }
-  virtual void asyncDropStateCache(
+      void callback_addStateCache_exception(tars::Int32 ret) override {
+        m_callback(toBcosError(ret));
+      }
+
+    private:
+      std::function<void(const bcos::Error::Ptr &)> m_callback;
+    };
+
+    m_storageServiceProxy->async_addStateCache(
+        new Callback(_callback), _blockNumber,
+        toTarsTableFactory(_tablefactory));
+  }
+
+  void asyncDropStateCache(
       bcos::protocol::BlockNumber _blockNumber,
-      std::function<void(const bcos::Error::Ptr &)> _callback) = 0;
-  virtual void asyncGetStateCache(
+      std::function<void(const bcos::Error::Ptr &)> _callback) override {
+    class Callback : public bcostars::StorageServiceCoroPrxCallback {
+    public:
+      Callback(std::function<void(const bcos::Error::Ptr &)> callback)
+          : m_callback(callback){};
+
+      void callback_dropStateCache(const bcostars::Error &ret) override {
+        m_callback(toBcosError(ret));
+      }
+
+      void callback_dropStateCache_exception(tars::Int32 ret) override {
+        m_callback(toBcosError(ret));
+      }
+
+    private:
+      std::function<void(const bcos::Error::Ptr &)> m_callback;
+    };
+
+    m_storageServiceProxy->async_dropStateCache(new Callback(_callback),
+                                                _blockNumber);
+  }
+
+  void asyncGetStateCache(
       bcos::protocol::BlockNumber _blockNumber,
       std::function<
           void(const bcos::Error::Ptr &,
                const std::shared_ptr<bcos::storage::TableFactoryInterface> &)>
-          _callback) = 0;
+          _callback) override {
+    class Callback : public bcostars::StorageServiceCoroPrxCallback {
+    public:
+      Callback(
+          std::function<void(
+              const bcos::Error::Ptr &,
+              const std::shared_ptr<bcos::storage::TableFactoryInterface> &)>
+              callback)
+          : m_callback(callback){};
+
+      void callback_getStateCache(
+          const bcostars::Error &ret,
+          const bcostars::TableFactory &tableFactory) override {
+        m_callback(toBcosError(ret),
+                   toBcosTableFactory(tableFactory, nullptr, nullptr));
+      }
+      void callback_getStateCache_exception(tars::Int32 ret) override {
+        m_callback(toBcosError(ret), nullptr);
+      }
+
+    private:
+      std::function<void(
+          const bcos::Error::Ptr &,
+          const std::shared_ptr<bcos::storage::TableFactoryInterface> &)>
+          m_callback;
+    };
+
+    m_storageServiceProxy->async_getStateCache(new Callback(_callback),
+                                               _blockNumber);
+  }
+
   std::shared_ptr<bcos::storage::TableFactoryInterface>
   getStateCache(bcos::protocol::BlockNumber _blockNumber) override {
     throw bcos::Error(-1, "Unspported interface!");
@@ -243,78 +311,112 @@ public:
   asyncPut(const std::string_view &_columnFamily, const std::string_view &_key,
            const std::string_view &_value,
            std::function<void(const bcos::Error::Ptr &)> _callback) override {
-    throw bcos::Error(-1, "Unspported interface!");
+    class Callback : public bcostars::StorageServiceCoroPrxCallback {
+    public:
+      Callback(std::function<void(const bcos::Error::Ptr &)> callback)
+          : m_callback(callback){};
+
+      void callback_put(const bcostars::Error &ret) override {
+        m_callback(toBcosError(ret));
+      }
+      void callback_put_exception(tars::Int32 ret) override {
+        m_callback(toBcosError(ret));
+      }
+
+    private:
+      std::function<void(const bcos::Error::Ptr &)> m_callback;
+    };
+
+    m_storageServiceProxy->async_put(new Callback(_callback),
+                                     std::string(_columnFamily),
+                                     std::string(_key), std::string(_value));
   }
-  virtual void
-  asyncRemove(const std::string_view &_columnFamily,
-              const std::string_view &_key,
-              std::function<void(const bcos::Error::Ptr &)> _callback) = 0;
-  virtual void asyncGet(
+
+  void asyncRemove(
+      const std::string_view &_columnFamily, const std::string_view &_key,
+      std::function<void(const bcos::Error::Ptr &)> _callback) override {
+    class Callback : public bcostars::StorageServiceCoroPrxCallback {
+    public:
+      Callback(std::function<void(const bcos::Error::Ptr &)> callback)
+          : m_callback(callback){};
+
+      void callback_remove(const bcostars::Error &ret) override {
+        m_callback(toBcosError(ret));
+      }
+      void callback_remove_exception(tars::Int32 ret) override {
+        m_callback(toBcosError(ret));
+      }
+
+    private:
+      std::function<void(const bcos::Error::Ptr &)> m_callback;
+    };
+
+    m_storageServiceProxy->async_remove(
+        new Callback(_callback), std::string(_columnFamily), std::string(_key));
+  }
+
+  void asyncGet(
       const std::string_view &_columnFamily, const std::string_view &_key,
       std::function<void(const bcos::Error::Ptr &, const std::string &value)>
-          _callback) = 0;
+          _callback) override {
+    class Callback : public bcostars::StorageServiceCoroPrxCallback {
+    public:
+      Callback(std::function<void(const bcos::Error::Ptr &,
+                                  const std::string &value)>
+                   callback)
+          : m_callback(callback){};
 
-  virtual void asyncGetBatch(
+      void callback_get(const bcostars::Error &ret,
+                        const std::string &value) override {
+        m_callback(toBcosError(ret), value);
+      }
+      void callback_get_exception(tars::Int32 ret) override {
+        m_callback(toBcosError(ret), std::string());
+      }
+
+    private:
+      std::function<void(const bcos::Error::Ptr &, const std::string &value)>
+          m_callback;
+    };
+
+    m_storageServiceProxy->async_get(
+        new Callback(_callback), std::string(_columnFamily), std::string(_key));
+  }
+
+  void asyncGetBatch(
       const std::string_view &_columnFamily,
       const std::shared_ptr<std::vector<std::string>> &_keys,
       std::function<void(const bcos::Error::Ptr &,
                          const std::shared_ptr<std::vector<std::string>> &)>
-          callback) = 0;
+          callback) override {
+    class Callback : public bcostars::StorageServiceCoroPrxCallback {
+    public:
+      Callback(
+          std::function<void(const bcos::Error::Ptr &,
+                             const std::shared_ptr<std::vector<std::string>> &)>
+              callback)
+          : m_callback(callback){};
+
+      void callback_getBatch(const bcostars::Error &ret,
+                             const vector<std::string> &values) override {
+        m_callback(toBcosError(ret),
+                   std::make_shared<std::vector<std::string>>(values));
+      }
+      void callback_getBatch_exception(tars::Int32 ret) override {
+        m_callback(toBcosError(ret), nullptr);
+      }
+
+    private:
+      std::function<void(const bcos::Error::Ptr &,
+                         const std::shared_ptr<std::vector<std::string>> &)>
+          m_callback;
+    };
+
+    m_storageServiceProxy->async_getBatch(new Callback(callback), std::string(_columnFamily), *_keys);
+  }
 
 private:
   StorageServicePrx m_storageServiceProxy;
   const std::string m_servantName = "bcostars.StorageService.StorageServiceObj";
-
-  bcos::Error::Ptr toBcosError(const bcostars::Error &error) const {
-    if (error.errorCode == 0) {
-      return nullptr;
-    }
-
-    auto bcosError =
-        std::make_shared<bcos::Error>(error.errorCode, error.errorMessage);
-    return bcosError;
-  }
-
-  bcos::Error::Ptr toBcosError(tars::Int32 ret) const {
-    if (ret == 0) {
-      return nullptr;
-    }
-
-    auto bcosError = std::make_shared<bcos::Error>(ret, "TARS error!");
-    return bcosError;
-  }
-
-  bcostars::TableInfo
-  toTarsTableInfo(const bcos::storage::TableInfo::Ptr &tableInfo) const {
-    bcostars::TableInfo tarsTableInfo;
-    tarsTableInfo.name = tableInfo->name;
-    tarsTableInfo._key = tableInfo->key;
-    tarsTableInfo.fields = tableInfo->fields;
-
-    return tarsTableInfo;
-  }
-
-  bcostars::Condition
-  toTarsCondition(const bcos::storage::Condition::Ptr &condition) const {
-    bcostars::Condition tarsCondition;
-    tarsCondition.offset = condition->getLimit().first;
-    tarsCondition.size = condition->getLimit().second;
-    for (auto const &it : condition->m_conditions) {
-      tarsCondition.conditions.push_back((short)(it.cmp));
-    }
-
-    return tarsCondition;
-  }
-
-  bcos::storage::Entry::Ptr toBcosEntry(const bcostars::Entry &entry) const {
-    auto bcosEntry = std::make_shared<bcos::storage::Entry>();
-    bcosEntry->setNum(entry.num);
-    bcosEntry->setStatus((bcos::storage::Entry::Status)entry.status);
-    for (auto const &it : entry.fields) {
-      bcosEntry->setField(it.first, it.second);
-    }
-
-    return bcosEntry;
-  }
 };
 } // namespace bcostars

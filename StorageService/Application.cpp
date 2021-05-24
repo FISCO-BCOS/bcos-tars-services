@@ -7,8 +7,6 @@ public:
   virtual ~StorageServiceApp() override{};
 
   virtual void initialize() override {
-    addConfig("bcos-storage.toml");
-
     addServant<StorageServiceServer>(ServerConfig::Application + "." + ServerConfig::ServerName + ".StorageServiceObj");
   }
 

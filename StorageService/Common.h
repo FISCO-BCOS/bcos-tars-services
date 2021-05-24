@@ -1,6 +1,5 @@
 #include "StorageService.h"
 #include "bcos-framework/interfaces/crypto/CryptoSuite.h"
-#include "bcos-framework/interfaces/storage/Common.h"
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/interfaces/storage/TableInterface.h>
 #include <bcos-framework/libtable/TableFactory.h>
