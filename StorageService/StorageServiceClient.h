@@ -13,6 +13,8 @@ class StorageServiceClient : public bcos::storage::StorageInterface {
 public:
   ~StorageServiceClient() override {}
 
+  constexpr static const char* servantName = "bcostars.StorageService.StorageServiceObj";
+
   StorageServiceClient(StorageServicePrx storageServiceProxy)
       : m_storageServiceProxy(storageServiceProxy) {}
 
@@ -417,6 +419,5 @@ public:
 
 private:
   StorageServicePrx m_storageServiceProxy;
-  const std::string m_servantName = "bcostars.StorageService.StorageServiceObj";
 };
 } // namespace bcostars

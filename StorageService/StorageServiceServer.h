@@ -1,8 +1,8 @@
 ﻿#pragma once
 
+#include "servant/Application.h"
 #include "Common.h"
 #include "StorageService.h"
-#include "servant/Application.h"
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/interfaces/storage/TableInterface.h>
 #include <bcos-framework/libtable/TableFactory.h>
