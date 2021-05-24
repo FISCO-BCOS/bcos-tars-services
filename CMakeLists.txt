@@ -19,10 +19,6 @@ include_directories(${TARS_HEADER_DIR})
 
 include(CompilerSettings)
 
-hunter_add_package(Microsoft.GSL)
-hunter_add_package(tbb)
-hunter_add_package(Boost COMPONENTS all)
-
 # import tars project
 add_subdirectory(tars)
 add_subdirectory(protocols)

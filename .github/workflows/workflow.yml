@@ -56,7 +56,7 @@ jobs:
         if: ${{ runner.os == 'Linux' && github.base_ref != 'master' && github.event_name == 'pull_request' }}
         run: bash cmake/scripts/shell/check-commit.sh 3000 "https://api.github.com/repos/FISCO-BCOS/bcos-tars-services"
       - name: compile
-        run: make -j8
+        run: make
       - name: run test
         run: CTEST_OUTPUT_ON_FAILURE=TRUE make test
   build_with_gcc:
@@ -92,7 +92,7 @@ jobs:
       - name: configure
         run: cmake . -DTESTS=ON
       - name: compile
-        run: make -j8
+        run: make
       - name: run test
         run: CTEST_OUTPUT_ON_FAILURE=TRUE make test
   ubuntu16_04_build_with_gcc:
@@ -130,7 +130,7 @@ jobs:
       - name: configure
         run: cmake . -DTESTS=ON -DCOVERAGE=ON
       - name: compile
-        run: make -j8
+        run: make
       - name: run test
         run: CTEST_OUTPUT_ON_FAILURE=TRUE make test
       - name: generate coverage
@@ -175,5 +175,5 @@ jobs:
           source /opt/rh/devtoolset-7/enable
           # mkdir -p build && cd build
           cmake3 . -DTESTS=ON
-          make -j8
+          make
           CTEST_OUTPUT_ON_FAILURE=TRUE make test

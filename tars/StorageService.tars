@@ -6,7 +6,7 @@ module bcostars
 struct TableInfo {
     1 optional string name;
     2 optional string _key;
-    3 optional string fields;
+    3 optional vector<string> fields;
     4 optional vector<string> indices;
     5 optional bool enableConsensus;
     6 optional bool enableCache;
@@ -26,8 +26,9 @@ struct Entry {
 };
 
 struct TableFactory {
-    1 optional vector<TableInfo> tableInfos;
-    2 optional vector<map<string, Entry>> datas;
+    1 optional long num;
+    2 optional vector<TableInfo> tableInfos;
+    3 optional vector<map<string, Entry>> datas;
 };
 
 interface StorageService

@@ -7,6 +7,11 @@
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/interfaces/storage/TableInterface.h>
 #include <bcos-framework/libtable/TableFactory.h>
+#include <bcos-storage/Storage.h>
+#include <bcos-storage/RocksDBAdapter/RocksDBAdapter.h>
+#include <bcos-storage/KVDBImpl.h>
+#include <bcos-storage/RocksDBAdapter/RocksDBAdapterFactory.h>
+#include "Common.h"
 #include <memory>
 
 namespace bcostars {
@@ -15,44 +20,26 @@ class StorageServiceServer : public StorageService {
 public:
   ~StorageServiceServer() override {}
 
-  void initialize() override {}
+  void initialize() override {
+    // load the config
+    bcos::storage::RocksDBAdapterFactory rocksdbAdapterFactory(ServerConfig::DataPath + "/db");
+    auto rocksdbAdapter = rocksdbAdapterFactory.createAdapter("bcos_storage");
+    auto ret = rocksdbAdapterFactory.createRocksDB("kv_storage");
+    auto kvDB = std::make_shared<bcos::storage::KVDBImpl>(ret.first);
+
+    auto storageImpl = std::make_shared<bcos::storage::StorageImpl>(rocksdbAdapter, kvDB);
+
+    m_storage = storageImpl;
+  }
 
   void destroy() override {}
 
   bcostars::Error addStateCache(tars::Int64 blockNumber,
                                 const bcostars::TableFactory &tableFactory,
                                 tars::TarsCurrentPtr current) override {
-    bcos::storage::TableFactoryInterface::Ptr bcosTableFactory =
-        std::make_shared<bcos::storage::TableFactory>(
-            m_storage, m_cryptoSuite->hashImpl(), blockNumber);
-    std::vector<bcos::storage::TableInfo::Ptr> tableInfos;
-    for (auto const &tableInfo : tableFactory.tableInfos) {
-      tableInfos.emplace_back(toBcosTableInfo(tableInfo));
-    }
-
-    std::vector<
-        std::shared_ptr<std::map<std::string, bcos::storage::Entry::Ptr>>>
-        tableDatas;
-    for (auto const &tableData : tableFactory.datas) {
-      auto bcosTableData =
-          std::make_shared<std::map<std::string, bcos::storage::Entry::Ptr>>();
-      for (auto const &entry : tableData) {
-        auto bcosEntry = std::make_shared<bcos::storage::Entry>();
-        bcosEntry->setNum(entry.second.num);
-        bcosEntry->setStatus((bcos::storage::Entry::Status)entry.second.status);
-        for (auto &field : entry.second.fields) {
-          bcosEntry->setField(std::move(field.first), std::move(field.second));
-        }
-        bcosTableData->emplace(entry.first, bcosEntry);
-      }
-      tableDatas.emplace_back(bcosTableData);
-    }
-
-    bcosTableFactory->importData(tableInfos, tableDatas);
-
     try {
-      m_storage->addStateCache(blockNumber, bcosTableFactory);
-    } catch (bcos::Error error) {
+      m_storage->addStateCache(blockNumber, toBcosTableFactory(tableFactory, m_storage, m_cryptoSuite));
+    } catch (const bcos::Error &error) {
       return toTarsError(error);
     }
 
@@ -94,7 +81,7 @@ public:
       c = count;
 
       return toTarsError(error);
-    } catch (bcos::Error error) {
+    } catch (const bcos::Error &error) {
       return toTarsError(error);
     }
   }
@@ -103,7 +90,7 @@ public:
                                  tars::TarsCurrentPtr current) override {
     try {
       m_storage->dropStateCache(blockNumber);
-    } catch (bcos::Error error) {
+    } catch (const bcos::Error &error) {
       return toTarsError(error);
     }
 
@@ -118,7 +105,7 @@ public:
 
       std::tie(value, error) = m_storage->get(columnFamily, _key);
       return toTarsError(error);
-    } catch (bcos::Error error) {
+    } catch (const bcos::Error &error) {
       return toTarsError(error);
     }
   }
@@ -147,7 +134,7 @@ public:
     try {
       keys = m_storage->getPrimaryKeys(bcosTableInfo, bcosCondition);
       return toTarsError(nullptr);
-    } catch (bcos::Error error) {
+    } catch (const bcos::Error &error) {
       return toTarsError(error);
     }
   }
@@ -158,7 +145,7 @@ public:
     try {
       auto bcosTableInfo = toBcosTableInfo(tableInfo);
       row = toTarsEntry(m_storage->getRow(toBcosTableInfo(tableInfo), key));
-    } catch (bcos::Error error) {
+    } catch (const bcos::Error &error) {
       return toTarsError(error);
     }
 
@@ -174,7 +161,7 @@ public:
       for (auto const &row : bcosRows) {
         rows.emplace(row.first, toTarsEntry(row.second));
       }
-    } catch (bcos::Error error) {
+    } catch (const bcos::Error &error) {
       return toTarsError(error);
     }
 
@@ -183,7 +170,15 @@ public:
 
   bcostars::Error getStateCache(tars::Int64 blockNumber,
                                 bcostars::TableFactory &tableFactory,
-                                tars::TarsCurrentPtr current) override {}
+                                tars::TarsCurrentPtr current) override {
+    try {
+      m_storage->getStateCache(blockNumber);
+    } catch (const bcos::Error &error) {
+      return toTarsError(error);
+    }
+
+    return toTarsError(nullptr);
+  }
 
   bcostars::Error put(const std::string &columnFamily, const std::string &_key,
                       const std::string &value,
@@ -196,53 +191,6 @@ public:
 private:
   bcos::storage::StorageInterface::Ptr m_storage;
   bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
-
-  Error toTarsError(const bcos::Error &error) const {
-    Error tarsError;
-    tarsError.errorCode = error.errorCode();
-    tarsError.errorMessage = error.errorMessage();
-
-    return tarsError;
-  }
-
-  Error toTarsError(const bcos::Error::Ptr &error) const {
-    Error tarsError;
-
-    if (error) {
-      tarsError.errorCode = error->errorCode();
-      tarsError.errorMessage = error->errorMessage();
-    }
-
-    return tarsError;
-  }
-
-  bcos::storage::TableInfo::Ptr
-  toBcosTableInfo(const bcostars::TableInfo &tableInfo) const {
-    return std::make_shared<bcos::storage::TableInfo>(
-        tableInfo.name, tableInfo._key, tableInfo.fields);
-  }
-
-  bcos::storage::Entry::Ptr toBcosEntry(const bcostars::Entry &entry) const {
-    auto bcosEntry = std::make_shared<bcos::storage::Entry>();
-    bcosEntry->setNum(entry.num);
-    bcosEntry->setStatus((bcos::storage::Entry::Status)entry.status);
-    for (auto const &field : entry.fields) {
-      bcosEntry->setField(field.first, field.second);
-    }
-
-    return bcosEntry;
-  }
-
-  bcostars::Entry toTarsEntry(const bcos::storage::Entry::Ptr &entry) const {
-    bcostars::Entry tarsEntry;
-    tarsEntry.num = entry->num();
-    tarsEntry.status = entry->getStatus();
-    for (auto const &field : *entry) {
-      tarsEntry.fields.emplace(field);
-    }
-
-    return tarsEntry;
-  }
 };
 
 } // namespace bcostars
