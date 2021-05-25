@@ -1,6 +1,9 @@
-#include "../StorageService/StorageServiceClient.h"
-#include "StorageService.h"
 #include "servant/Communicator.h"
+#include "StorageService.h"
+#include "bcos-storage/Storage.h"
+#include "../StorageService/StorageServiceClient.h"
+#include "../StorageService/StorageServiceServer.h"
+#include "bcos-framework/interfaces/storage/StorageInterface.h"
 #include <boost/program_options.hpp>
 #include <boost/program_options/variables_map.hpp>
 
@@ -19,58 +22,68 @@ void summary(const std::string &desc, clock_t cost, size_t successed,
             << std::endl;
 }
 
-void testPut(StorageServiceClient &client,
-             const std::vector<std::tuple<std::string, std::string>> &list) {
+void testPut(const bcos::storage::StorageInterface::Ptr &client,
+             const std::vector<std::tuple<std::string, std::string>> &list,
+             bool wait) {
   std::atomic<size_t> successed = 0;
   std::atomic<size_t> failed = 0;
 
   std::mutex lock;
-  lock.lock();
+  if (wait) {
+    lock.lock();
+  }
 
   clock_t start = clock();
   auto count = list.size();
   for (auto const &it : list) {
-    client.asyncPut("default", std::get<0>(it), std::get<1>(it),
-                    [&successed, &failed, &lock, count,
-                     start](const bcos::Error::Ptr &error) {
-                      if (error && error->errorCode()) {
-                        std::cout << "Error while put: " << error->errorCode()
-                                  << " " << error->errorMessage() << std::endl;
-                        ++failed;
-                      } else {
-                        ++successed;
-                      }
+    client->asyncPut("default", std::get<0>(it), std::get<1>(it),
+                     [&successed, &failed, &lock, count, start,
+                      wait](const bcos::Error::Ptr &error) {
+                       if (error && error->errorCode()) {
+                         std::cout << "Error while put: " << error->errorCode()
+                                   << " " << error->errorMessage() << std::endl;
+                         ++failed;
+                       } else {
+                         ++successed;
+                       }
 
-                      if (successed + failed == count) {
-                        clock_t cost = (clock() - start) / 1000;
+                       if (successed + failed == count) {
+                         clock_t cost = (clock() - start) / 1000;
 
-                        summary("Put", cost, successed, failed);
+                         summary("Put", cost, successed, failed);
 
-                        lock.unlock();
-                      }
-                    });
+                         if (wait) {
+                           lock.unlock();
+                         }
+                       }
+                     });
   }
 
-  lock.lock();
-  lock.unlock();
+  if (wait) {
+    lock.lock();
+    lock.unlock();
+  }
 }
 
-void testGet(StorageServiceClient &client,
-             const std::vector<std::tuple<std::string, std::string>> &list) {
+void testGet(const bcos::storage::StorageInterface::Ptr &client,
+             const std::vector<std::tuple<std::string, std::string>> &list,
+             bool wait) {
   std::atomic<size_t> successed = 0;
   std::atomic<size_t> failed = 0;
 
   std::mutex lock;
-  lock.lock();
+  if (wait) {
+    lock.lock();
+  }
 
   clock_t start = clock();
   auto count = list.size();
   size_t index = 0;
   for (auto const &it : list) {
-    client.asyncGet(
+    client->asyncGet(
         "default", std::get<0>(it),
-        [&successed, &failed, &lock, count, start, &list,
-         index](const bcos::Error::Ptr &error, const std::string &value) {
+        [&successed, &failed, &lock, count, start, &list, index,
+         wait](const bcos::Error::Ptr &error, const std::string &value) {
           if (error && error->errorCode()) {
             std::cout << "Error while put!" << std::endl;
             ++failed;
@@ -88,15 +101,19 @@ void testGet(StorageServiceClient &client,
 
             summary("Get", cost, successed, failed);
 
-            lock.unlock();
+            if (wait) {
+              lock.unlock();
+            }
           }
         });
 
     ++index;
   }
 
-  lock.lock();
-  lock.unlock();
+  if (wait) {
+    lock.lock();
+    lock.unlock();
+  }
 }
 
 std::string genRandomString(size_t length) {
@@ -118,13 +135,45 @@ std::string genRandomString(size_t length) {
   return str;
 }
 
+void localBasedTest(
+    const std::vector<std::tuple<std::string, std::string>> &list) {
+  // load the config
+  bcos::storage::RocksDBAdapterFactory rocksdbAdapterFactory("./db");
+  auto rocksdbAdapter = rocksdbAdapterFactory.createAdapter("bcos_storage");
+  auto ret = rocksdbAdapterFactory.createRocksDB("kv_storage");
+  auto kvDB = std::make_shared<bcos::storage::KVDBImpl>(ret.first);
+
+  auto storageImpl =
+      std::make_shared<bcos::storage::StorageImpl>(rocksdbAdapter, kvDB, 16);
+
+  testPut(storageImpl, list, true);
+  testGet(storageImpl, list, true);
+}
+
+void tarsBasedTest(
+    const std::string &ip, unsigned short port,
+    const std::vector<std::tuple<std::string, std::string>> &list) {
+  tars::CommunicatorPtr communicator = new tars::Communicator();
+  StorageServicePrx proxy = communicator->stringToProxy<StorageServicePrx>(
+      std::string(StorageServiceClient::servantName) + "@tcp -h " + ip +
+      " -p " + boost::lexical_cast<std::string>(port));
+
+  auto client = std::make_shared<StorageServiceClient>(proxy);
+  testPut(client, list, false);
+  testGet(client, list, false);
+}
+
 int main(int argc, char *argv[]) {
   std::string ip;
   unsigned short port;
   size_t count;
+  std::string mode;
 
   boost::program_options::options_description desc("Storage client options.");
   desc.add_options()("help", "produce help message")(
+      "mode",
+      boost::program_options::value<std::string>(&mode)->default_value("local"),
+      "Test mode, local/tars")(
       "ip",
       boost::program_options::value<std::string>(&ip)->default_value(
           "127.0.0.1"),
@@ -142,17 +191,14 @@ int main(int argc, char *argv[]) {
 
   boost::program_options::notify(vm);
 
-  tars::CommunicatorPtr communicator = new tars::Communicator();
-  StorageServicePrx proxy = communicator->stringToProxy<StorageServicePrx>(
-      std::string(StorageServiceClient::servantName) + "@tcp -h " + ip +
-      " -p " + boost::lexical_cast<std::string>(port));
-
   std::vector<std::tuple<std::string, std::string>> list;
   for (size_t i = 0; i < count; ++i) {
-    list.push_back(std::make_tuple(genRandomString(32), genRandomString(64)));
+    list.push_back(std::make_tuple(genRandomString(32), genRandomString(256)));
   }
 
-  StorageServiceClient client(proxy);
-  testPut(client, list);
-  testGet(client, list);
+  if (mode == "local") {
+    localBasedTest(list);
+  } else {
+    tarsBasedTest(ip, port, list);
+  }
 }
