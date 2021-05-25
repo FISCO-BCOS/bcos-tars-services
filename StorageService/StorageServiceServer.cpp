@@ -4,12 +4,5 @@
 
 using namespace bcostars;
 
-void StorageServiceServer::initialize() {}
-
-void StorageServiceServer::destroy() {}
-
-vector<std::string>
-StorageServiceServer::getPrimaryKeys(const bcostars::TableInfo &tableInfo,
-                                     const bcostars::Condition &condition,
-                                     tars::TarsCurrentPtr current) {
-}
+std::mutex StorageServiceServer::m_initLock;
+bcos::storage::StorageInterface::Ptr StorageServiceServer::m_storage;

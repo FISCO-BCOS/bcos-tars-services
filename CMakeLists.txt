@@ -5,34 +5,20 @@ include (Dependencies.cmake)
 
 include(HunterGate)
 HunterGate(
-    URL "https://github.com/FISCO-BCOS/hunter/archive/d73ee00ba165b521f0e63161119fbf18a7eb6e60.tar.gz"
-    SHA1 "baeb7665f6755232e86bb1c86974b2000a1c4c8e"
+    URL "https://${GIT_URL_BASE}/FISCO-BCOS/hunter/archive/8c81ea454c0c268b257da1fe3e3f2f69bd59a67d.tar.gz"
+    SHA1 "13292adf48c4c053ff2ceb7173631a296c08d1ac"
+    FILEPATH "${CMAKE_SOURCE_DIR}/hunterConfig.cmake"
 )
 
 project(Bcos-Tars-Service)
 
-if(WIN32)
-    include (c:\\tars\\cpp\\makefile\\tars-tools.cmake)
-else()
-    include (/usr/local/tars/cpp/makefile/tars-tools.cmake)
-endif()
+include_directories(${DEPENDENCIES_DIR}/tarscpp-install/thirdparty/include)
+link_directories(${DEPENDENCIES_DIR}/tarscpp-install/thirdparty/lib)
 
-#####you can: cd build; cmake .. -DTARS_WEB_HOST={your web host}
-set(TARS_WEB_HOST "" CACHE STRING "set web host")
-IF (TARS_WEB_HOST STREQUAL "")
-	set(TARS_WEB_HOST "http://tars.test.com")
-ENDIF ()
+set(TARS_HEADER_DIR ${CMAKE_CURRENT_BINARY_DIR}/tars-generated)
+include_directories(${TARS_HEADER_DIR})
 
-include_directories(/usr/local/tars/cpp/thirdparty/include)
-link_directories(/usr/local/tars/cpp/thirdparty/lib)
-
-include_directories(${CMAKE_SOURCE_DIR}/tars)
-
-#include_directories(/home/tarsprotol/App/OtherServer)
 include(CompilerSettings)
-
-hunter_add_package(Microsoft.GSL)
-hunter_add_package(Boost COMPONENTS all)
 
 # import tars project
 add_subdirectory(tars)
@@ -42,4 +28,5 @@ add_subdirectory(StorageService)
 if(TESTS)
     enable_testing()
     add_subdirectory(tests)
+    add_subdirectory(testClients)
 endif()

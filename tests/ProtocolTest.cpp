@@ -1,4 +1,3 @@
-#include "CryptoTest.h"
 #include "Transaction.h"
 #include "bcos-framework/interfaces/crypto/CommonType.h"
 #include "bcos-framework/interfaces/crypto/CryptoSuite.h"

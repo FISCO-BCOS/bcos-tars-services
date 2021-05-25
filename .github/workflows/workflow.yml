@@ -52,11 +52,8 @@ jobs:
       - name: configure
         if: runner.os == 'Linux'
         run: CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake . -DTESTS=ON
-      - name: check commit
-        if: ${{ runner.os == 'Linux' && github.base_ref != 'master' && github.event_name == 'pull_request' }}
-        run: bash cmake/scripts/shell/check-commit.sh 3000 "https://api.github.com/repos/FISCO-BCOS/bcos-tars-services"
       - name: compile
-        run: make -j2
+        run: make
       - name: run test
         run: CTEST_OUTPUT_ON_FAILURE=TRUE make test
   build_with_gcc:
@@ -87,21 +84,12 @@ jobs:
             ccache-gcc-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
             cache-gcc-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-
             cache-gcc-v1-notest-${{ runner.temp }}-
-      - name: install tars dependencies
-        run: |
-          git clone https://github.com/TarsCloud/TarsCpp.git --recursive
-          cd TarsCpp
-          mkdir build
-          cd build
-          cmake ..
-          make
-          make install
       - name: install Ubuntu dependencies
         run: sudo apt install -y git curl build-essential cmake ccache
       - name: configure
         run: cmake . -DTESTS=ON
       - name: compile
-        run: make -j2
+        run: make
       - name: run test
         run: CTEST_OUTPUT_ON_FAILURE=TRUE make test
   ubuntu16_04_build_with_gcc:
@@ -134,21 +122,12 @@ jobs:
             ccache-ubuntu-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
             ccache-ubuntu-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-
             ccache-ubuntu-v1-notest-${{ runner.temp }}-
-      - name: install tars dependencies
-        run: |
-          git clone https://github.com/TarsCloud/TarsCpp.git --recursive
-          cd TarsCpp
-          mkdir build
-          cd build
-          cmake ..
-          make
-          make install
       - name: install Ubuntu dependencies
         run: sudo apt-get install -y software-properties-common python-software-properties && sudo add-apt-repository ppa:ubuntu-toolchain-r/test && sudo apt-get update && sudo apt install -y git curl build-essential cmake ccache gcc-7 g++-7 lcov&& sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 --slave /usr/bin/g++ g++ /usr/bin/g++-7 && sudo update-alternatives --config gcc
       - name: configure
         run: cmake . -DTESTS=ON -DCOVERAGE=ON
       - name: compile
-        run: make -j2
+        run: make
       - name: run test
         run: CTEST_OUTPUT_ON_FAILURE=TRUE make test
       - name: generate coverage
@@ -183,23 +162,15 @@ jobs:
             hunter-centos-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
             hunter-centos-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-
             hunter-centos-v1-notest-${{ runner.temp }}-
-      - name: install tars dependencies
-        run: |
-        git clone https://github.com/TarsCloud/TarsCpp.git --recursive
-        cd TarsCpp
-        mkdir build
-        cd build
-        cmake ..
-        make
-        make install
       - name: install CentOS dependencies
         run: |
           yum install -y epel-release centos-release-scl
           yum install -y git make gcc gcc-c++ glibc-static glibc-devel cmake3 ccache devtoolset-7 && source /opt/rh/devtoolset-7/enable
+          alias cmake='cmake3'
       - name: configure and compile
         run: |
           source /opt/rh/devtoolset-7/enable
           # mkdir -p build && cd build
           cmake3 . -DTESTS=ON
-          make -j2
+          make
           CTEST_OUTPUT_ON_FAILURE=TRUE make test
