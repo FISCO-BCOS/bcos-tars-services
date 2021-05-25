@@ -1,3 +1,5 @@
+#pragma once
+
 #include "StorageService.h"
 #include "bcos-framework/interfaces/crypto/CryptoSuite.h"
 #include <bcos-framework/interfaces/storage/StorageInterface.h>

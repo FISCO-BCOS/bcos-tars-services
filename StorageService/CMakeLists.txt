@@ -6,7 +6,6 @@ hunter_add_package(Microsoft.GSL)
 hunter_add_package(tbb)
 hunter_add_package(Boost COMPONENTS all)
 hunter_add_package(zstd)
-#set(zstd_ROOT ${ZSTD_ROOT})
 hunter_add_package(rocksdb)
 
 
