@@ -19,17 +19,20 @@ public:
   ~StorageServiceServer() override {}
 
   void initialize() override {
-    // load the config
-    bcos::storage::RocksDBAdapterFactory rocksdbAdapterFactory(
-        ServerConfig::DataPath + "/db");
-    auto rocksdbAdapter = rocksdbAdapterFactory.createAdapter("bcos_storage");
-    auto ret = rocksdbAdapterFactory.createRocksDB("kv_storage");
-    auto kvDB = std::make_shared<bcos::storage::KVDBImpl>(ret.first);
+    std::scoped_lock<std::mutex> scoped(m_initLock);
+    if(!m_storage) {
+      // load the config
+      bcos::storage::RocksDBAdapterFactory rocksdbAdapterFactory(
+          ServerConfig::DataPath + "/db");
+      auto rocksdbAdapter = rocksdbAdapterFactory.createAdapter("bcos_storage");
+      auto ret = rocksdbAdapterFactory.createRocksDB("kv_storage");
+      auto kvDB = std::make_shared<bcos::storage::KVDBImpl>(ret.first);
 
-    auto storageImpl =
-        std::make_shared<bcos::storage::StorageImpl>(rocksdbAdapter, kvDB);
+      auto storageImpl =
+          std::make_shared<bcos::storage::StorageImpl>(rocksdbAdapter, kvDB);
 
-    m_storage = storageImpl;
+      m_storage = storageImpl;
+    }
   }
 
   void destroy() override {}
@@ -205,7 +208,8 @@ public:
   }
 
 private:
-  bcos::storage::StorageInterface::Ptr m_storage;
+  static std::mutex m_initLock;
+  static bcos::storage::StorageInterface::Ptr m_storage;
   bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
 };
 

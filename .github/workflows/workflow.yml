@@ -52,9 +52,6 @@ jobs:
       - name: configure
         if: runner.os == 'Linux'
         run: CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake . -DTESTS=ON
-      - name: check commit
-        if: ${{ runner.os == 'Linux' && github.base_ref != 'master' && github.event_name == 'pull_request' }}
-        run: bash cmake/scripts/shell/check-commit.sh 3000 "https://api.github.com/repos/FISCO-BCOS/bcos-tars-services"
       - name: compile
         run: make
       - name: run test
