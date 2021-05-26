@@ -1,30 +1,13 @@
 #pragma once
 
 #include "StorageService.h"
+#include "../Common/ErrorConverter.h"
 #include "bcos-framework/interfaces/crypto/CryptoSuite.h"
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/interfaces/storage/TableInterface.h>
 #include <bcos-framework/libtable/TableFactory.h>
 
 namespace bcostars {
-inline Error toTarsError(const bcos::Error &error) {
-  Error tarsError;
-  tarsError.errorCode = error.errorCode();
-  tarsError.errorMessage = error.errorMessage();
-
-  return tarsError;
-}
-
-inline Error toTarsError(const bcos::Error::Ptr &error) {
-  Error tarsError;
-
-  if (error) {
-    tarsError.errorCode = error->errorCode();
-    tarsError.errorMessage = error->errorMessage();
-  }
-
-  return tarsError;
-}
 
 inline bcos::storage::TableInfo::Ptr
 toBcosTableInfo(const bcostars::TableInfo &tableInfo) {

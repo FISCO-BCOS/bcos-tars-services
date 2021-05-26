@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "servant/Application.h"
-#include "Common.h"
+#include "ProtocolConverter.h"
 #include "StorageService.h"
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/interfaces/storage/TableInterface.h>

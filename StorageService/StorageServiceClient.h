@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common.h"
+#include "ProtocolConverter.h"
 #include "StorageService.h"
 #include "bcos-framework/interfaces/storage/Common.h"
 #include "servant/Application.h"
