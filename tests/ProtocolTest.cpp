@@ -3,8 +3,8 @@
 #include "bcos-framework/interfaces/crypto/CryptoSuite.h"
 #include "bcos-framework/libprotocol/LogEntry.h"
 #include "bcos-framework/libutilities/DataConvertUtility.h"
-#include "bcos-framework/testutils/SignatureImpl.h"
-#include "bcos-framework/testutils/HashImpl.h"
+#include "bcos-framework/testutils/crypto/SignatureImpl.h"
+#include "bcos-framework/testutils/crypto/HashImpl.h"
 #include "../protocols/TransactionImpl.h"
 #include "../protocols/TransactionReceiptImpl.h"
 #include <boost/test/unit_test.hpp>
