@@ -24,7 +24,7 @@ include_directories(${DEPENDENCIES_DIR}/tarscpp-install/include)
 link_directories(${DEPENDENCIES_DIR}/tarscpp-install/lib)
 set(TARS2CPP ${DEPENDENCIES_DIR}/tarscpp-install/tools/tars2cpp)
 
-foreach(BCOS_MODULE framework storage front pbft txpool)
+foreach(BCOS_MODULE framework storage front pbft txpool crypto)
     ExternalProject_Add(bcos-${BCOS_MODULE}
         GIT_REPOSITORY https://${GIT_URL_BASE}/FISCO-BCOS/bcos-${BCOS_MODULE}.git
         GIT_TAG dev
