@@ -1,8 +1,8 @@
 ﻿#pragma once
 
 #include "servant/Application.h"
-#include "ProtocolConverter.h"
 #include "StorageService.h"
+#include "ProtocolConverter.h"
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/interfaces/storage/TableInterface.h>
 #include <bcos-framework/libtable/TableFactory.h>
@@ -19,8 +19,7 @@ public:
   ~StorageServiceServer() override {}
 
   void initialize() override {
-    std::scoped_lock<std::mutex> scoped(m_initLock);
-    if(!m_storage) {
+    std::call_once(m_storageFlag, []() {
       // load the config
       bcos::storage::RocksDBAdapterFactory rocksdbAdapterFactory(
           ServerConfig::DataPath + "/db");
@@ -32,7 +31,7 @@ public:
           std::make_shared<bcos::storage::StorageImpl>(rocksdbAdapter, kvDB);
 
       m_storage = storageImpl;
-    }
+    });
   }
 
   void destroy() override {}
@@ -208,7 +207,7 @@ public:
   }
 
 private:
-  static std::mutex m_initLock;
+  static std::once_flag m_storageFlag;
   static bcos::storage::StorageInterface::Ptr m_storage;
   bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
 };

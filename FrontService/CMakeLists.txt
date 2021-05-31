@@ -16,7 +16,7 @@ add_dependencies(FrontServiceServer bcostars bcos-framework bcos-storage)
 target_link_libraries(FrontServiceServer
 libbcos-front.a tarsservant tarsutil Microsoft.GSL::GSL Boost::serialization Boost::log Boost::thread Boost::chrono Boost::filesystem tbb::tbb)
 
-add_library(StorageServiceClient StorageServiceClient.cpp)
-target_compile_options(StorageServiceClient PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
-add_dependencies(StorageServiceClient bcostars bcos-framework bcos-storage)
+add_library(FrontServiceClient FrontServiceClient.cpp)
+target_compile_options(FrontServiceClient PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
+add_dependencies(FrontServiceClient bcostars bcos-framework bcos-front)
 target_link_libraries(StorageServiceClient tarsservant tarsutil Microsoft.GSL::GSL)

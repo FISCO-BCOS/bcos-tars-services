@@ -2,6 +2,8 @@
 
 module bcostars {
     interface FrontService {
+        Error asyncGetNodeIDs(out vector<vector<unsigned byte>> nodeIDs);
+
         Error onReceivedNodeIDs(string groupID, vector<vector<unsigned byte>> nodeIDs);
 
         Error onReceiveMessage(string groupID, vector<unsigned byte> nodeID, vector<unsigned byte> data);

@@ -18,10 +18,6 @@ public:
   virtual void decode(bcos::bytesConstRef _data, bool _calculateHash,
                       bool _checkSig) override {}
   virtual void encode(bcos::bytes &_encodeData) const override {}
-  virtual bcos::crypto::HashType
-  calculateTransactionRoot(bool _updateHeader) const override;
-  virtual bcos::crypto::HashType
-  calculateReceiptRoot(bool _updateHeader) const override;
 
   virtual int32_t version() const override;
   virtual void setVersion(int32_t _version) override;

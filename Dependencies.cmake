@@ -24,12 +24,12 @@ include_directories(${DEPENDENCIES_DIR}/tarscpp-install/include)
 link_directories(${DEPENDENCIES_DIR}/tarscpp-install/lib)
 set(TARS2CPP ${DEPENDENCIES_DIR}/tarscpp-install/tools/tars2cpp)
 
-foreach(BCOS_MODULE framework storage front pbft txpool crypto)
+foreach(BCOS_MODULE framework storage ledger front pbft txpool crypto)
     ExternalProject_Add(bcos-${BCOS_MODULE}
         GIT_REPOSITORY https://${GIT_URL_BASE}/FISCO-BCOS/bcos-${BCOS_MODULE}.git
         GIT_TAG dev
         SOURCE_DIR ${DEPENDENCIES_DIR}/bcos-${BCOS_MODULE}
-        CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DURL_BASE=${GIT_URL_BASE} -DFETCH_URL_BASE=${GIT_URL_BASE} -DCMAKE_INSTALL_PREFIX=${DEPENDENCIES_DIR}/bcos-${BCOS_MODULE}-install
+        CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DURL_BASE=${GIT_URL_BASE} -DCMAKE_INSTALL_PREFIX=${DEPENDENCIES_DIR}/bcos-${BCOS_MODULE}-install
     )
     include_directories(${DEPENDENCIES_DIR}/bcos-${BCOS_MODULE}-install/include)
     link_directories(${DEPENDENCIES_DIR}/bcos-${BCOS_MODULE}-install/lib)

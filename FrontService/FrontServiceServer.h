@@ -5,13 +5,29 @@
 #include "bcos-framework/interfaces/crypto/KeyFactory.h"
 #include "bcos-framework/interfaces/crypto/KeyInterface.h"
 #include "bcos-framework/interfaces/front/FrontServiceInterface.h"
-// #include <bcos-front/front/FrontService.h>
+#include <bcos-front/front/FrontService.h>
+#include <bcos-front/front/FrontServiceFactory.h>
+// #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 
 namespace bcostars {
 class FrontServiceServer : public FrontService {
   ~FrontServiceServer() override {}
 
-  void initialize() override {}
+  void initialize() override {
+    std::call_once(m_onceFlag, [this]() {
+      std::string groupID;
+      bcos::crypto::NodeIDPtr nodeID;
+
+      bcos::front::FrontServiceFactory frontServiceFactory;
+      frontServiceFactory.setGroupID(groupID);
+      frontServiceFactory.setNodeID(nodeID);
+      frontServiceFactory.setGatewayInterface(nullptr); // TODO: set the gateway interface
+
+      m_front = frontServiceFactory.buildFrontService();
+    });
+
+    // m_keyFactory = std::make_shared<bcos::crypto::KeyFactoryImpl>();
+  }
 
   void destroy() override {}
 
@@ -32,11 +48,11 @@ class FrontServiceServer : public FrontService {
     m_front->asyncSendMessageByNodeID(
         moduleID, bcosNodeID, bcos::ref(data), timeout,
         [current](bcos::Error::Ptr _error, bcos::crypto::NodeIDPtr _nodeID,
-                  bcos::bytesConstRef _data,
+                  bcos::bytesConstRef _data, const std::string &_id,
                   bcos::front::ResponseFunc _respFunc) {
-          async_response_asyncSendMessageByNodeID(
-              current, toTarsError(_error), *_nodeID->encode(), _data.toBytes(),
-              std::string()); // TODO: Add seq
+          async_response_asyncSendMessageByNodeID(current, toTarsError(_error),
+                                                  *_nodeID->encode(),
+                                                  _data.toBytes(), _id);
         });
   }
 
@@ -103,7 +119,8 @@ class FrontServiceServer : public FrontService {
   }
 
 private:
-  bcos::front::FrontServiceInterface::Ptr m_front;
+  static std::once_flag m_onceFlag;
+  static bcos::front::FrontServiceInterface::Ptr m_front;
   bcos::crypto::KeyFactory::Ptr m_keyFactory;
 };
 } // namespace bcostars
