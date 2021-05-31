@@ -1,0 +1,9 @@
+#include "Common.tars"
+
+module bcostars {
+    interface PBFTService {
+        Error asyncNotifySealProposal(long proposalIndex, long proposalEndIndex, long maxTxsToSeal);
+
+        Error asyncNoteUnSealedTxsSize(long unsealedTxsSize);
+    };
+};

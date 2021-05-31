@@ -45,7 +45,7 @@ jobs:
         run: brew install ccache
       - name: install Ubuntu dependencies
         if: runner.os == 'Linux'
-        run: sudo apt install -y git curl build-essential clang cmake ccache
+        run: sudo apt install -y git curl build-essential clang cmake ccache libzstd-dev
       - name: configure
         if: runner.os == 'macOS'
         run: export SDKROOT=$(xcrun --sdk macosx --show-sdk-path) && CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake . -DTESTS=ON
@@ -53,7 +53,7 @@ jobs:
         if: runner.os == 'Linux'
         run: CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake . -DTESTS=ON
       - name: compile
-        run: make
+        run: make -j4
       - name: run test
         run: CTEST_OUTPUT_ON_FAILURE=TRUE make test
   build_with_gcc:
@@ -85,11 +85,11 @@ jobs:
             cache-gcc-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-
             cache-gcc-v1-notest-${{ runner.temp }}-
       - name: install Ubuntu dependencies
-        run: sudo apt install -y git curl build-essential cmake ccache
+        run: sudo apt install -y libzstd-dev git curl build-essential cmake ccache
       - name: configure
         run: cmake . -DTESTS=ON
       - name: compile
-        run: make
+        run: make -j4
       - name: run test
         run: CTEST_OUTPUT_ON_FAILURE=TRUE make test
   ubuntu16_04_build_with_gcc:
@@ -123,11 +123,11 @@ jobs:
             ccache-ubuntu-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-
             ccache-ubuntu-v1-notest-${{ runner.temp }}-
       - name: install Ubuntu dependencies
-        run: sudo apt-get install -y software-properties-common python-software-properties && sudo add-apt-repository ppa:ubuntu-toolchain-r/test && sudo apt-get update && sudo apt install -y git curl build-essential cmake ccache gcc-7 g++-7 lcov&& sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 --slave /usr/bin/g++ g++ /usr/bin/g++-7 && sudo update-alternatives --config gcc
+        run: sudo apt-get install -y libzstd-dev software-properties-common python-software-properties && sudo add-apt-repository ppa:ubuntu-toolchain-r/test && sudo apt-get update && sudo apt install -y git curl build-essential cmake ccache gcc-7 g++-7 lcov&& sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 --slave /usr/bin/g++ g++ /usr/bin/g++-7 && sudo update-alternatives --config gcc
       - name: configure
         run: cmake . -DTESTS=ON -DCOVERAGE=ON
       - name: compile
-        run: make
+        run: make -j4
       - name: run test
         run: CTEST_OUTPUT_ON_FAILURE=TRUE make test
       - name: generate coverage
@@ -172,5 +172,5 @@ jobs:
           source /opt/rh/devtoolset-7/enable
           # mkdir -p build && cd build
           cmake3 . -DTESTS=ON
-          make
+          make -j4
           CTEST_OUTPUT_ON_FAILURE=TRUE make test

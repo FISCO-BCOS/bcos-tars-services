@@ -4,5 +4,5 @@
 
 using namespace bcostars;
 
-std::mutex StorageServiceServer::m_initLock;
+std::once_flag StorageServiceServer::m_storageFlag;
 bcos::storage::StorageInterface::Ptr StorageServiceServer::m_storage;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common.h"
+#include "ProtocolConverter.h"
 #include "StorageService.h"
 #include "bcos-framework/interfaces/storage/Common.h"
 #include "servant/Application.h"
@@ -16,7 +16,7 @@ public:
   constexpr static const char* servantName = "bcostars.StorageService.StorageServiceObj";
 
   StorageServiceClient(StorageServicePrx storageServiceProxy)
-      : m_storageServiceProxy(storageServiceProxy) {}
+      : m_proxy(storageServiceProxy) {}
 
   std::vector<std::string> getPrimaryKeys(
       const bcos::storage::TableInfo::Ptr &_tableInfo,
@@ -70,7 +70,7 @@ public:
           m_callback;
     };
 
-    m_storageServiceProxy->async_getPrimaryKeys(new Callback(_callback),
+    m_proxy->async_getPrimaryKeys(new Callback(_callback),
                                                 toTarsTableInfo(_tableInfo),
                                                 toTarsCondition(_condition));
   }
@@ -104,7 +104,7 @@ public:
       StorageServiceClient *m_self;
     };
 
-    m_storageServiceProxy->async_getRow(new Callback(_callback, this),
+    m_proxy->async_getRow(new Callback(_callback, this),
                                         toTarsTableInfo(_tableInfo),
                                         std::string(_key));
   }
@@ -144,7 +144,7 @@ public:
           m_callback;
     };
 
-    m_storageServiceProxy->async_getRows(new Callback(_callback),
+    m_proxy->async_getRows(new Callback(_callback),
                                          toTarsTableInfo(_tableInfo), *_keys);
   }
 
@@ -189,7 +189,7 @@ public:
       tarsDatas.emplace_back(tableData);
     }
 
-    m_storageServiceProxy->async_commitBlock(
+    m_proxy->async_commitBlock(
         new Callback(_callback), _blockNumber, tarsTablesInfos, tarsDatas);
   }
 
@@ -215,7 +215,7 @@ public:
       std::function<void(const bcos::Error::Ptr &)> m_callback;
     };
 
-    m_storageServiceProxy->async_addStateCache(
+    m_proxy->async_addStateCache(
         new Callback(_callback), _blockNumber,
         toTarsTableFactory(_tablefactory));
   }
@@ -240,7 +240,7 @@ public:
       std::function<void(const bcos::Error::Ptr &)> m_callback;
     };
 
-    m_storageServiceProxy->async_dropStateCache(new Callback(_callback),
+    m_proxy->async_dropStateCache(new Callback(_callback),
                                                 _blockNumber);
   }
 
@@ -276,7 +276,7 @@ public:
           m_callback;
     };
 
-    m_storageServiceProxy->async_getStateCache(new Callback(_callback),
+    m_proxy->async_getStateCache(new Callback(_callback),
                                                _blockNumber);
   }
 
@@ -329,7 +329,7 @@ public:
       std::function<void(const bcos::Error::Ptr &)> m_callback;
     };
 
-    m_storageServiceProxy->async_put(new Callback(_callback),
+    m_proxy->async_put(new Callback(_callback),
                                      std::string(_columnFamily),
                                      std::string(_key), std::string(_value));
   }
@@ -353,7 +353,7 @@ public:
       std::function<void(const bcos::Error::Ptr &)> m_callback;
     };
 
-    m_storageServiceProxy->async_remove(
+    m_proxy->async_remove(
         new Callback(_callback), std::string(_columnFamily), std::string(_key));
   }
 
@@ -381,7 +381,7 @@ public:
           m_callback;
     };
 
-    m_storageServiceProxy->async_get(
+    m_proxy->async_get(
         new Callback(_callback), std::string(_columnFamily), std::string(_key));
   }
 
@@ -414,10 +414,10 @@ public:
           m_callback;
     };
 
-    m_storageServiceProxy->async_getBatch(new Callback(callback), std::string(_columnFamily), *_keys);
+    m_proxy->async_getBatch(new Callback(callback), std::string(_columnFamily), *_keys);
   }
 
 private:
-  StorageServicePrx m_storageServiceProxy;
+  StorageServicePrx m_proxy;
 };
 } // namespace bcostars
