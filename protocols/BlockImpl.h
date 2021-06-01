@@ -6,30 +6,36 @@
 #include <bcos-framework/interfaces/protocol/BlockFactory.h>
 #include <bcos-framework/interfaces/protocol/BlockHeader.h>
 #include <bcos-framework/interfaces/protocol/BlockHeaderFactory.h>
+#include "BlockHeaderImpl.h"
+#include "TransactionImpl.h"
 #include <gsl/span>
 
 namespace bcostars {
 namespace protocol {
 
-class Block : public bcos::protocol::Block {
+class BlockImpl : public bcos::protocol::Block {
 public:
-  virtual ~Block() override;
+  ~BlockImpl() override;
 
-  virtual void decode(bcos::bytesConstRef _data, bool _calculateHash,
+  void decode(bcos::bytesConstRef _data, bool _calculateHash,
                       bool _checkSig) override {}
-  virtual void encode(bcos::bytes &_encodeData) const override {}
+  void encode(bcos::bytes &_encodeData) const override {}
 
-  virtual int32_t version() const override;
-  virtual void setVersion(int32_t _version) override;
+  int32_t version() const override {
+    return m_inner.blockHeader.version;
+  }
+  void setVersion(int32_t _version) override {
+    m_inner.blockHeader.version = _version;
+  }
 
   // get blockHeader
   virtual bcos::protocol::BlockHeader::Ptr blockHeader() override {
-    return std::make_shared<BlockHeader>(&m_block.blockHeader);
+    return std::make_shared<bcostars::protocol::BlockHeaderImpl>(&m_inner.blockHeader, nullptr);
   };
 
   virtual bcos::protocol::Transaction::ConstPtr
   transaction(size_t _index) const override {
-    // return std::make_shared<Transaction>(&m_block.transactions[_index]);
+    return std::make_shared<bcostars::protocol::TransactionImpl>(&m_inner.transactions[_index]);
   }
 
   virtual bcos::protocol::TransactionReceipt::ConstPtr
@@ -108,14 +114,12 @@ public:
 
 private:
   bcostars::Block m_inner;
-
-  bcos::protocol::BlockHeader::Ptr m_blockHeader;
 };
 
-class BlockFactory : public bcos::protocol::BlockFactory {
-  virtual ~BlockFactory() {}
-  virtual Block::Ptr createBlock() override;
-  virtual Block::Ptr createBlock(bcos::bytes const &_data,
+class BlockFactoryImpl : public bcos::protocol::BlockFactory {
+  ~BlockFactoryImpl() override {}
+  Block::Ptr createBlock() override;
+  Block::Ptr createBlock(bcos::bytes const &_data,
                                  bool _calculateHash = true,
                                  bool _checkSig = true) override;
 };

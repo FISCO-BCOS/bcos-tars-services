@@ -1,12 +1,15 @@
 #pragma once
 
-#include "PBFTService.h"
 #include "../Common/ErrorConverter.h"
 #include "../FrontService/FrontServiceClient.h"
+#include "../StorageService/StorageServiceClient.h"
 #include "../protocols/BlockImpl.h"
+#include "FrontService.h"
+#include "PBFTService.h"
 #include "bcos-framework/interfaces/crypto/CryptoSuite.h"
 #include "bcos-framework/interfaces/front/FrontServiceInterface.h"
-#include "bcos-framework/interfaces/protocol/BlockFactory.h"
+// #include "bcos-framework/interfaces/protocol/BlockFactory.h"
+// #include "bcos-framework/libprotocol/protobuf/PBBlockFactory.h"
 #include "bcos-framework/interfaces/sealer/SealerInterface.h"
 #include "bcos-framework/interfaces/storage/StorageInterface.h"
 #include "bcos-framework/libprotocol/TransactionSubmitResultFactoryImpl.h"
@@ -15,49 +18,71 @@
 #include "bcos-ledger/ledger/Ledger.h"
 #include "bcos-pbft/pbft/PBFTFactory.h"
 #include "bcos-txpool/TxPoolFactory.h"
+#include "servant/Application.h"
+#include "servant/Communicator.h"
+#include <mutex>
 
 namespace bcostars {
 
 class PBFTServiceServer : public bcostars::PBFTService {
 public:
   void initialize() override {
-    // Params from config
-    std::string groupID;
-    std::string chainID;
-    int64_t blockLimit;
-    bcos::crypto::KeyPairInterface::Ptr keyPair;
+    std::call_once(m_pbftFlag, [this]() {
+      // Params from config
+      std::string groupID;
+      std::string chainID;
+      int64_t blockLimit;
+      bcos::crypto::KeyPairInterface::Ptr keyPair;
 
-    std::scoped_lock<std::mutex> scoped(m_initLock);
-    if (m_sealer) {
+      std::string frontServiceDesc;
+      std::string storageServiceDesc;
+
       auto txSubmitResultFactory = std::make_shared<
           bcos::protocol::TransactionSubmitResultFactoryImpl>();
       auto blockFactory = std::make_shared<bcostars::protocol::BlockFactory>();
-      bcos::front::FrontServiceInterface::Ptr
-          frontService;                             // TODO: Init the client
-      bcos::storage::StorageInterface::Ptr storage; // TODO: Init the storage
+
+      bcostars::FrontServicePrx frontServiceProxy =
+          Application::getCommunicator()
+              ->stringToProxy<bcostars::FrontServicePrx>(frontServiceDesc);
+      bcos::front::FrontServiceInterface::Ptr frontServiceClient =
+          std::make_shared<bcostars::FrontServiceClient>(
+              frontServiceProxy, m_cryptoSuite->keyFactory());
+
+      bcostars::StorageServicePrx storageServiceProxy =
+          Application::getCommunicator()
+              ->stringToProxy<bcostars::StorageServicePrx>(storageServiceDesc);
+      bcos::storage::StorageInterface::Ptr storageServiceClient =
+          std::make_shared<bcostars::StorageServiceClient>(storageServiceProxy);
+
       bcos::dispatcher::DispatcherInterface::Ptr
           dispatcher; // TODO: Init the dispatcher
-      auto ledger =
-          std::make_shared<bcos::ledger::Ledger>(blockFactory, storage);
+
+      auto ledger = std::make_shared<bcos::ledger::Ledger>(
+          blockFactory, storageServiceClient);
 
       auto txPoolFactory = std::make_shared<bcos::txpool::TxPoolFactory>(
           bcos::crypto::NodeIDPtr(), m_cryptoSuite, txSubmitResultFactory,
-          blockFactory, frontService, ledger, groupID, chainID, blockLimit);
+          blockFactory, frontServiceClient, ledger, groupID, chainID,
+          blockLimit);
 
       auto sealerFactory = std::make_shared<bcos::sealer::SealerFactory>(
           blockFactory, txPoolFactory->txpool(), blockLimit);
 
       auto pbftFactory = std::make_shared<bcos::consensus::PBFTFactory>(
-          m_cryptoSuite, keyPair, frontService, storage, ledger,
-          txPoolFactory->txpool(), sealerFactory->sealer(), dispatcher,
+          m_cryptoSuite, keyPair, frontServiceClient, storageServiceClient,
+          ledger, txPoolFactory->txpool(), sealerFactory->sealer(), dispatcher,
           blockFactory);
 
       txPoolFactory->init(sealerFactory->sealer());
       sealerFactory->init(pbftFactory->consensus());
       pbftFactory->init();
 
+      txPoolFactory->txpool()->start();
+      sealerFactory->sealer()->start();
+      pbftFactory->consensus()->start();
+
       m_sealer = sealerFactory->sealer();
-    }
+    });
   }
 
   void destroy() override {}
@@ -86,9 +111,9 @@ public:
   }
 
 private:
-  bcos::sealer::SealerInterface::Ptr m_sealer;
-  static std::mutex m_initLock;
-  bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
+  static std::once_flag m_pbftFlag;
+  static bcos::sealer::SealerInterface::Ptr m_sealer;
+  static bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
 };
 
 } // namespace bcostars

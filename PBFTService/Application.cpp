@@ -1,15 +1,15 @@
 #include "servant/Application.h"
-#include "FrontServiceServer.h"
+#include "PBFTServiceServer.h"
 
 using namespace bcostars;
 
-class FrontServiceApp : public Application {
+class PBFTServiceApp : public Application {
 public:
-  virtual ~FrontServiceApp() override{};
+  virtual ~PBFTServiceApp() override{};
 
   virtual void initialize() override {
-    addConfig("FrontService.conf");
-    addServant<FrontServiceServer>(ServerConfig::Application + "." + ServerConfig::ServerName + ".FrontServiceObj");
+    addConfig("PBFTService.conf");
+    addServant<PBFTServiceServer>(ServerConfig::Application + "." + ServerConfig::ServerName + ".PBFTServiceObj");
   }
 
   virtual void destroyApp() override {}
@@ -17,7 +17,7 @@ public:
 
 int main(int argc, char *argv[]) {
   try {
-    FrontServiceApp app;
+    PBFTServiceApp app;
     app.main(argc, argv);
     app.waitForShutdown();
 

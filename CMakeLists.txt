@@ -25,6 +25,7 @@ add_subdirectory(tars)
 add_subdirectory(protocols)
 add_subdirectory(StorageService)
 add_subdirectory(FrontService)
+add_subdirectory(PBFTService)
 
 if(TESTS)
     enable_testing()

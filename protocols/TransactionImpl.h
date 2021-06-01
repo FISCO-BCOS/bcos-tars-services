@@ -10,13 +10,14 @@
 
 namespace bcostars {
 namespace protocol {
-class Transaction : public bcos::protocol::Transaction {
+class TransactionImpl : public bcos::protocol::Transaction {
 public:
-  explicit Transaction(bcos::crypto::CryptoSuite::Ptr _cryptoSuite)
+  explicit TransactionImpl(bcos::crypto::CryptoSuite::Ptr _cryptoSuite)
       : bcos::protocol::Transaction(_cryptoSuite) {}
-  ~Transaction() {}
 
-  friend class TransactionFactory;
+  ~TransactionImpl() {}
+
+  friend class TransactionFactoryImpl;
 
   bool operator==(const Transaction &rhs) const {
     return this->hash() == rhs.hash();
@@ -102,13 +103,13 @@ private:
   bcos::u256 m_nonce;
 };
 
-class TransactionFactory : public bcos::protocol::TransactionFactory {
+class TransactionFactoryImpl : public bcos::protocol::TransactionFactory {
 public:
-  ~TransactionFactory() override {}
+  ~TransactionFactoryImpl() override {}
 
-  Transaction::Ptr createTransaction(bcos::bytesConstRef _txData,
+  bcos::protocol::Transaction::Ptr createTransaction(bcos::bytesConstRef _txData,
                                      bool _checkSig = true) override {
-    auto transaction = std::make_shared<Transaction>(m_cryptoSuite);
+    auto transaction = std::make_shared<TransactionImpl>(m_cryptoSuite);
 
     transaction->decode(_txData);
     if (_checkSig) {
@@ -117,19 +118,19 @@ public:
     return transaction;
   }
 
-  Transaction::Ptr createTransaction(bcos::bytes const &_txData,
+  bcos::protocol::Transaction::Ptr createTransaction(bcos::bytes const &_txData,
                                      bool _checkSig = true) override {
     return createTransaction(bcos::ref(_txData), _checkSig);
   }
 
-  Transaction::Ptr
+  bcos::protocol::Transaction::Ptr
   createTransaction(int32_t const &_version, bcos::bytes const &_to,
                     bcos::bytes const &_input, bcos::u256 const &_nonce,
                     int64_t const &_blockLimit, std::string const &_chainId,
                     std::string const &_groupId,
                     int64_t const &_importTime) override {
     auto transaction =
-        std::make_shared<bcostars::protocol::Transaction>(m_cryptoSuite);
+        std::make_shared<bcostars::protocol::TransactionImpl>(m_cryptoSuite);
     transaction->m_inner.data.version = _version;
     transaction->m_inner.data.to = _to;
     transaction->m_inner.data.input = _input;
