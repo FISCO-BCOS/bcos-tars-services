@@ -29,13 +29,13 @@ BOOST_AUTO_TEST_CASE(transaction) {
   bcos::bytes input(bcos::asBytes("Arguments"));
   bcos::u256 nonce(100);
 
-  bcostars::protocol::TransactionFactory factory;
+  bcostars::protocol::TransactionFactoryImpl factory;
   factory.setCryptoSuite(cryptoSuite);
   auto tx = factory.createTransaction(0, to, input, nonce, 100, "testChain",
                                       "testGroup", 1000);
 
   auto signature = cryptoSuite->signatureImpl()->sign(cryptoSuite->signatureImpl()->generateKeyPair(), tx->hash(), true);
-  std::dynamic_pointer_cast<bcostars::protocol::Transaction>(tx)->setSignatureData(*signature);
+  std::dynamic_pointer_cast<bcostars::protocol::TransactionImpl>(tx)->setSignatureData(*signature);
 
   auto buffer = tx->encode(false);
 
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(transactionReceipt) {
   }
   bcos::bytes output(bcos::asBytes("Output!"));
 
-  bcostars::protocol::TransactionReceiptFactory factory;
+  bcostars::protocol::TransactionReceiptFactoryImpl factory;
   factory.setCryptoSuite(cryptoSuite);
   auto receipt = factory.createReceipt(1000, stateRoot, gasUsed, contractAddress, std::make_shared<std::vector<bcos::protocol::LogEntry>>(*logEntries), 50, output, 888);
 

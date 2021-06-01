@@ -28,18 +28,18 @@ class PBFTServiceServer : public bcostars::PBFTService {
 public:
   void initialize() override {
     std::call_once(m_pbftFlag, [this]() {
-      // Params from config
+      // ---- Params from config
       std::string groupID;
       std::string chainID;
       int64_t blockLimit;
       bcos::crypto::KeyPairInterface::Ptr keyPair;
-
       std::string frontServiceDesc;
       std::string storageServiceDesc;
+      // ------------------
 
       auto txSubmitResultFactory = std::make_shared<
           bcos::protocol::TransactionSubmitResultFactoryImpl>();
-      auto blockFactory = std::make_shared<bcostars::protocol::BlockFactory>();
+      auto blockFactory = std::make_shared<bcostars::protocol::BlockFactoryImpl>();
 
       bcostars::FrontServicePrx frontServiceProxy =
           Application::getCommunicator()

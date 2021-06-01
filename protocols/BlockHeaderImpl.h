@@ -140,6 +140,8 @@ public:
     }
   }
 
+  const bcostars::BlockHeader& inner() const { return *m_inner; }
+
 private:
   std::shared_ptr<bcostars::BlockHeader> m_inner;
 };

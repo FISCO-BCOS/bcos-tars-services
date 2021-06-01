@@ -2,11 +2,6 @@
 #include "TransactionReceipt.tars"
 
 module bcostars {
-    enum BlockType {
-        CompleteBlock,
-        WithTransactionsHash,
-    };
-
     struct ParentInfo {
         1 optional long blockNumber;
         2 optional unsigned byte blockHash[32];
@@ -35,12 +30,13 @@ module bcostars {
 
     struct Block {
         1 optional int version;
-        2 optional BlockType type;
+        2 optional int type;
         3 optional BlockHeader blockHeader;
         4 optional vector<Transaction> transactions;
         5 optional vector<TransactionReceipt> receipts;
         6 optional vector<vector<unsigned byte>> transactionsHash;
         7 optional vector<vector<unsigned byte>> receiptsHash;
+        8 optional vector<string> nonceList;
     };
    
 };
