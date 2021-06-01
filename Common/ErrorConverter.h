@@ -23,4 +23,23 @@ inline Error toTarsError(const bcos::Error::Ptr &error) {
   return tarsError;
 }
 
+inline bcos::Error::Ptr toBcosError(const bcostars::Error &error) {
+  if (error.errorCode == 0) {
+    return nullptr;
+  }
+
+  auto bcosError =
+      std::make_shared<bcos::Error>(error.errorCode, error.errorMessage);
+  return bcosError;
+}
+
+inline bcos::Error::Ptr toBcosError(tars::Int32 ret) {
+  if (ret == 0) {
+    return nullptr;
+  }
+
+  auto bcosError = std::make_shared<bcos::Error>(ret, "TARS error!");
+  return bcosError;
+}
+
 } // namespace bcostars

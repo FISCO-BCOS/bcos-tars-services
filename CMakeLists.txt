@@ -24,6 +24,7 @@ include(CompilerSettings)
 add_subdirectory(tars)
 add_subdirectory(protocols)
 add_subdirectory(StorageService)
+add_subdirectory(FrontService)
 
 if(TESTS)
     enable_testing()

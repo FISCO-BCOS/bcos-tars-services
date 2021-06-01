@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../Common/ErrorConverter.h"
-// #include "../FrontService/FrontServiceClient.h"
-#include "../protocols/BlockImpl.h"
 #include "PBFTService.h"
+#include "../Common/ErrorConverter.h"
+#include "../FrontService/FrontServiceClient.h"
+#include "../protocols/BlockImpl.h"
 #include "bcos-framework/interfaces/crypto/CryptoSuite.h"
 #include "bcos-framework/interfaces/front/FrontServiceInterface.h"
 #include "bcos-framework/interfaces/protocol/BlockFactory.h"

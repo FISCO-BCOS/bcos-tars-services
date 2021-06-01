@@ -21,7 +21,8 @@ class FrontServiceServer : public FrontService {
       bcos::front::FrontServiceFactory frontServiceFactory;
       frontServiceFactory.setGroupID(groupID);
       frontServiceFactory.setNodeID(nodeID);
-      frontServiceFactory.setGatewayInterface(nullptr); // TODO: set the gateway interface
+      frontServiceFactory.setGatewayInterface(
+          nullptr); // TODO: set the gateway interface
 
       m_front = frontServiceFactory.buildFrontService();
     });
@@ -30,6 +31,24 @@ class FrontServiceServer : public FrontService {
   }
 
   void destroy() override {}
+
+  bcostars::Error asyncGetNodeIDs(vector<vector<tars::UInt8>> &nodeIDs,
+                                  tars::TarsCurrentPtr current) override {
+    current->setResponse(false);
+
+    m_front->asyncGetNodeIDs(
+        [current](bcos::Error::Ptr _error,
+                  std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs) {
+          std::vector<bcos::bytes> tarsNodeIDs;
+          tarsNodeIDs.reserve(_nodeIDs->size());
+          for (auto const &it : *_nodeIDs) {
+            tarsNodeIDs.push_back(it->data());
+          }
+
+          async_response_asyncGetNodeIDs(current, toTarsError(_error),
+                                         tarsNodeIDs);
+        });
+  }
 
   void asyncSendBroadcastMessage(tars::Int32 moduleID,
                                  const vector<tars::UInt8> &data,

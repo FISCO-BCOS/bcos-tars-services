@@ -14,7 +14,7 @@ add_executable(FrontServiceServer FrontServiceServer.cpp Application.cpp)
 target_compile_options(FrontServiceServer PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
 add_dependencies(FrontServiceServer bcostars bcos-framework bcos-storage)
 target_link_libraries(FrontServiceServer
-libbcos-front.a tarsservant tarsutil Microsoft.GSL::GSL Boost::serialization Boost::log Boost::thread Boost::chrono Boost::filesystem tbb::tbb)
+libbcos-frontd.a libutilitiesd.a tarsservant tarsutil Microsoft.GSL::GSL Boost::serialization Boost::log Boost::thread Boost::chrono Boost::filesystem tbb::tbb)
 
 add_library(FrontServiceClient FrontServiceClient.cpp)
 target_compile_options(FrontServiceClient PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
