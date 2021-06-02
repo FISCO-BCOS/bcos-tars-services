@@ -17,11 +17,11 @@ public:
     m_inner = std::make_shared<bcostars::Transaction>();
   }
 
-  explicit TransactionImpl(bcostars::Transaction *transaction,
+  explicit TransactionImpl(const bcostars::Transaction *transaction,
                            bcos::crypto::CryptoSuite::Ptr _cryptoSuite)
       : bcos::protocol::Transaction(_cryptoSuite) {
     m_inner = std::shared_ptr<bcostars::Transaction>(
-        transaction, [](bcostars::Transaction *) {});
+        (bcostars::Transaction *)transaction, [](bcostars::Transaction *) {});
   }
 
   ~TransactionImpl() {}
@@ -65,12 +65,13 @@ public:
     }
   }
 
-  virtual bcos::crypto::HashType const &hash() const override {
+  bcos::crypto::HashType const &hash() const override {
     if (m_inner->dataHash.empty()) {
       auto buffer = encode(true);
       auto hash = m_cryptoSuite->hash(buffer);
       m_inner->dataHash.assign(hash.begin(), hash.end());
     }
+
     return *(
         reinterpret_cast<bcos::crypto::HashType *>(m_inner->dataHash.data()));
   }
@@ -95,10 +96,6 @@ public:
   void setImportTime(int64_t _importTime) override {
     m_inner->importTime = _importTime;
   }
-  bcos::protocol::TransactionType type() const override {
-    // return (bcos::protocol::TransactionType)m_inner.data.type;
-    return bcos::protocol::TransactionType::MessageCall;
-  }
   bcos::bytesConstRef signatureData() const override {
     return bcos::ref(m_inner->signature);
   }
@@ -118,6 +115,8 @@ private:
 
 class TransactionFactoryImpl : public bcos::protocol::TransactionFactory {
 public:
+  TransactionFactoryImpl(bcos::crypto::CryptoSuite::Ptr cryptoSuite)
+      : m_cryptoSuite(cryptoSuite) {}
   ~TransactionFactoryImpl() override {}
 
   bcos::protocol::Transaction::Ptr

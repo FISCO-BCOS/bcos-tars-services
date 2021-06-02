@@ -4,7 +4,9 @@
 #include "BlockHeaderImpl.h"
 #include "Common.h"
 #include "TransactionImpl.h"
+#include "TransactionReceipt.h"
 #include "TransactionReceiptImpl.h"
+#include "bcos-framework/interfaces/crypto/CryptoSuite.h"
 #include "bcos-framework/interfaces/protocol/TransactionReceiptFactory.h"
 #include <bcos-framework/interfaces/protocol/Block.h>
 #include <bcos-framework/interfaces/protocol/BlockFactory.h>
@@ -21,11 +23,22 @@ public:
   BlockImpl(bcos::protocol::TransactionFactory::Ptr _transactionFactory,
             bcos::protocol::TransactionReceiptFactory::Ptr _receiptFactory)
       : bcos::protocol::Block(_transactionFactory, _receiptFactory) {}
-  ~BlockImpl() override;
+  ~BlockImpl() override{};
 
   void decode(bcos::bytesConstRef _data, bool _calculateHash,
-              bool _checkSig) override {}
-  void encode(bcos::bytes &_encodeData) const override {}
+              bool _checkSig) override {
+    tars::TarsInputStream input;
+    input.setBuffer((const char *)_data.data(), _data.size());
+
+    m_inner.readFrom(input);
+  }
+
+  void encode(bcos::bytes &_encodeData) const override {
+    tars::TarsOutputStream<bcostars::protocol::BufferWriterByteVector> output;
+
+    m_inner.writeTo(output);
+    output.getByteBuffer().swap(_encodeData);
+  }
 
   int32_t version() const override { return m_inner.blockHeader.version; }
   void setVersion(int32_t _version) override {
@@ -39,19 +52,21 @@ public:
   // get blockHeader
   bcos::protocol::BlockHeader::Ptr blockHeader() override {
     return std::make_shared<bcostars::protocol::BlockHeaderImpl>(
-        &m_inner.blockHeader, m_transactionFactory->cryptoSuite());
+        &(m_inner.blockHeader), m_transactionFactory->cryptoSuite());
   };
 
   bcos::protocol::Transaction::ConstPtr
   transaction(size_t _index) const override {
     return std::make_shared<const bcostars::protocol::TransactionImpl>(
-        &m_inner.transactions[_index], m_transactionFactory->cryptoSuite());
+        &(m_inner.transactions[_index]),
+        m_transactionFactory->cryptoSuite());
   }
 
   bcos::protocol::TransactionReceipt::ConstPtr
   receipt(size_t _index) const override {
-    return std::make_shared<const bcostars::protocol::TransactionReceiptImpl>(
-        &m_inner.receipts[_index], m_transactionFactory->cryptoSuite());
+    return std::make_shared<bcostars::protocol::TransactionReceiptImpl>(
+        &(m_inner.receipts[_index]),
+        m_transactionFactory->cryptoSuite());
   };
 
   bcos::crypto::HashType const &transactionHash(size_t _index) const override {
@@ -122,13 +137,17 @@ public:
     m_inner.receiptsHash.emplace_back(_receiptHash.begin(), _receiptHash.end());
   }
   // get transactions size
-  size_t transactionsSize() override { return m_inner.transactions.size(); }
-  size_t transactionsHashSize() override {
+  size_t transactionsSize() const override {
+    return m_inner.transactions.size();
+  }
+  size_t transactionsHashSize() const override {
     return m_inner.transactionsHash.size();
   }
   // get receipts size
-  size_t receiptsSize() override { return m_inner.receipts.size(); }
-  size_t receiptsHashSize() override { return m_inner.receiptsHash.size(); }
+  size_t receiptsSize() const override { return m_inner.receipts.size(); }
+  size_t receiptsHashSize() const override {
+    return m_inner.receiptsHash.size();
+  }
 
   void setNonceList(bcos::protocol::NonceList const &_nonceList) override {
     m_inner.nonceList.clear();
@@ -136,6 +155,8 @@ public:
     for (auto const &it : _nonceList) {
       m_inner.nonceList.push_back(boost::lexical_cast<std::string>(it));
     }
+
+    m_nonceList.clear();
   }
   void setNonceList(bcos::protocol::NonceList &&_nonceList) override {
     m_inner.nonceList.clear();
@@ -143,12 +164,16 @@ public:
     for (auto const &it : _nonceList) {
       m_inner.nonceList.push_back(boost::lexical_cast<std::string>(it));
     }
+
+    m_nonceList.clear();
   }
   bcos::protocol::NonceList const &nonceList() const override {
-    m_nonceList.clear();
-    m_nonceList.reserve(m_inner.nonceList.size());
-    for (auto const &it : m_inner.nonceList) {
-      m_nonceList.push_back(boost::lexical_cast<bcos::u256>(it));
+    if (m_nonceList.empty()) {
+      m_nonceList.reserve(m_inner.nonceList.size());
+
+      for (auto const &it : m_inner.nonceList) {
+        m_nonceList.push_back(boost::lexical_cast<bcos::u256>(it));
+      }
     }
 
     return m_nonceList;
@@ -162,9 +187,12 @@ private:
 class BlockFactoryImpl : public bcos::protocol::BlockFactory {
 public:
   BlockFactoryImpl(
+      bcos::crypto::CryptoSuite::Ptr cryptoSuite,
+      bcos::protocol::BlockHeaderFactory::Ptr blockHeaderFactory,
       bcos::protocol::TransactionFactory::Ptr transactionFactory,
       bcos::protocol::TransactionReceiptFactory::Ptr receiptFactory)
-      : m_transactionFactory(transactionFactory),
+      : m_cryptoSuite(cryptoSuite), m_blockHeaderFactory(blockHeaderFactory),
+        m_transactionFactory(transactionFactory),
         m_receiptFactory(receiptFactory){};
 
   ~BlockFactoryImpl() override {}
@@ -175,14 +203,35 @@ public:
   bcos::protocol::Block::Ptr createBlock(bcos::bytes const &_data,
                                          bool _calculateHash = true,
                                          bool _checkSig = true) override {
+    return createBlock(bcos::ref(_data), _calculateHash, _checkSig);
+  }
+
+  bcos::protocol::Block::Ptr createBlock(bcos::bytesConstRef _data,
+                                         bool _calculateHash = true,
+                                         bool _checkSig = true) override {
     auto block =
         std::make_shared<BlockImpl>(m_transactionFactory, m_receiptFactory);
-    block->decode(bcos::ref(_data), _calculateHash, _checkSig);
+    block->decode(_data, _calculateHash, _checkSig);
 
     return block;
   }
 
+  bcos::crypto::CryptoSuite::Ptr cryptoSuite() override {
+    return m_cryptoSuite;
+  }
+  bcos::protocol::BlockHeaderFactory::Ptr blockHeaderFactory() override {
+    return m_blockHeaderFactory;
+  }
+  bcos::protocol::TransactionFactory::Ptr transactionFactory() override {
+    return m_transactionFactory;
+  }
+  bcos::protocol::TransactionReceiptFactory::Ptr receiptFactory() override {
+    return m_receiptFactory;
+  }
+
 private:
+  bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
+  bcos::protocol::BlockHeaderFactory::Ptr m_blockHeaderFactory;
   bcos::protocol::TransactionFactory::Ptr m_transactionFactory;
   bcos::protocol::TransactionReceiptFactory::Ptr m_receiptFactory;
 };

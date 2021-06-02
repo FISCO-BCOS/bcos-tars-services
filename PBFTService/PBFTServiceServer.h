@@ -1,15 +1,22 @@
 #pragma once
 
+#include "FrontService.h"
+#include "PBFTService.h"
+#include "servant/Application.h"
+#include "servant/Communicator.h"
 #include "../Common/ErrorConverter.h"
 #include "../FrontService/FrontServiceClient.h"
 #include "../StorageService/StorageServiceClient.h"
 #include "../protocols/BlockImpl.h"
-#include "FrontService.h"
-#include "PBFTService.h"
+#include "../protocols/TransactionImpl.h"
+#include "../protocols/TransactionReceiptImpl.h"
+#include "bcos-crypto/hash/SM3.h"
+#include "bcos-crypto/signature/sm2/SM2Crypto.h"
 #include "bcos-framework/interfaces/crypto/CryptoSuite.h"
 #include "bcos-framework/interfaces/front/FrontServiceInterface.h"
-// #include "bcos-framework/interfaces/protocol/BlockFactory.h"
-// #include "bcos-framework/libprotocol/protobuf/PBBlockFactory.h"
+#include "bcos-framework/interfaces/protocol/BlockFactory.h"
+#include "bcos-framework/interfaces/protocol/TransactionFactory.h"
+#include "bcos-framework/interfaces/protocol/TransactionReceiptFactory.h"
 #include "bcos-framework/interfaces/sealer/SealerInterface.h"
 #include "bcos-framework/interfaces/storage/StorageInterface.h"
 #include "bcos-framework/libprotocol/TransactionSubmitResultFactoryImpl.h"
@@ -18,8 +25,6 @@
 #include "bcos-ledger/ledger/Ledger.h"
 #include "bcos-pbft/pbft/PBFTFactory.h"
 #include "bcos-txpool/TxPoolFactory.h"
-#include "servant/Application.h"
-#include "servant/Communicator.h"
 #include <mutex>
 
 namespace bcostars {
@@ -37,9 +42,28 @@ public:
       std::string storageServiceDesc;
       // ------------------
 
+      bcos::crypto::CryptoSuite::Ptr cryptoSuite = std::make_shared<bcos::crypto::CryptoSuite>(
+          std::make_shared<bcos::crypto::SM3>(),
+          std::make_shared<bcos::crypto::SM2Crypto>(), nullptr);
+
+      bcos::protocol::BlockHeaderFactory::Ptr blockHeaderFactory =
+          std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(
+              cryptoSuite);
+
+      bcos::protocol::TransactionFactory::Ptr transactionFactory =
+          std::make_shared<bcostars::protocol::TransactionFactoryImpl>(
+              cryptoSuite);
+
+      bcos::protocol::TransactionReceiptFactory::Ptr transactionReceiptFactory =
+          std::make_shared<bcostars::protocol::TransactionReceiptFactoryImpl>(
+              cryptoSuite);
+
       auto txSubmitResultFactory = std::make_shared<
           bcos::protocol::TransactionSubmitResultFactoryImpl>();
-      auto blockFactory = std::make_shared<bcostars::protocol::BlockFactoryImpl>();
+      auto blockFactory =
+          std::make_shared<bcostars::protocol::BlockFactoryImpl>(
+              cryptoSuite, blockHeaderFactory, transactionFactory,
+              transactionReceiptFactory);
 
       bcostars::FrontServicePrx frontServiceProxy =
           Application::getCommunicator()

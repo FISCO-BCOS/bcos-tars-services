@@ -18,11 +18,11 @@ public:
       : bcos::protocol::TransactionReceipt(_cryptoSuite),
         m_inner(std::make_shared<bcostars::TransactionReceipt>()) {}
 
-  TransactionReceiptImpl(bcostars::TransactionReceipt *transactionReceipt,
+  TransactionReceiptImpl(const bcostars::TransactionReceipt *transactionReceipt,
                          bcos::crypto::CryptoSuite::Ptr _cryptoSuite)
       : bcos::protocol::TransactionReceipt(_cryptoSuite),
         m_inner(std::shared_ptr<bcostars::TransactionReceipt>(
-            transactionReceipt, [](bcostars::TransactionReceipt *) {})) {}
+            (bcostars::TransactionReceipt *)transactionReceipt, [](bcostars::TransactionReceipt *) {})) {}
   ~TransactionReceiptImpl() override {}
 
   friend class TransactionReceiptFactoryImpl;
@@ -116,6 +116,7 @@ private:
 class TransactionReceiptFactoryImpl
     : public bcos::protocol::TransactionReceiptFactory {
 public:
+  TransactionReceiptFactoryImpl(bcos::crypto::CryptoSuite::Ptr cryptoSuite): m_cryptoSuite(cryptoSuite) {}
   ~TransactionReceiptFactoryImpl() override {}
 
   TransactionReceiptImpl::Ptr
