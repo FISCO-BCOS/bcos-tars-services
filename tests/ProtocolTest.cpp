@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(block) {
     auto lhs = block->transaction(i);
     auto rhs = decodedBlock->transaction(i);
 
-    BOOST_CHECK_EQUAL(lhs->hash(), rhs->hash());
+    BOOST_CHECK_EQUAL(lhs->hash().hex(), rhs->hash().hex());
     BOOST_CHECK_EQUAL(lhs->version(), rhs->version());
     BOOST_CHECK_EQUAL(lhs->to().toString(), rhs->to().toString());
     BOOST_CHECK_EQUAL(bcos::asString(lhs->input()),

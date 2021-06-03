@@ -33,7 +33,7 @@ class PBFTServiceServer : public bcostars::PBFTService {
 public:
   void initialize() override {
     std::call_once(m_pbftFlag, [this]() {
-      // ---- Params from config
+      // ---- Params from config -------
       std::string groupID;
       std::string chainID;
       int64_t blockLimit;
