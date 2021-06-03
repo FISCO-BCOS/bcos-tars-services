@@ -53,10 +53,6 @@ public:
 
   void clear() override {}
 
-  void populateEmptyBlock(int64_t _timestamp) override {
-    m_inner->timestamp = _timestamp;
-  }
-
   int32_t version() const override { return m_inner->version; }
 
   gsl::span<const bcos::protocol::ParentInfo> parentInfo() const override {}

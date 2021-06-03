@@ -16,7 +16,7 @@ find_package(Protobuf CONFIG QUIET REQUIRED)
 
 add_executable(PBFTServiceServer PBFTServiceServer.cpp Application.cpp)
 target_compile_options(PBFTServiceServer PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
-add_dependencies(PBFTServiceServer bcostars bcos-framework bcos-storage bcos-front)
+add_dependencies(PBFTServiceServer bcostars bcos-framework bcos-front)
 
 target_link_libraries(PBFTServiceServer libsealerd.a libbcos-pbftd.a libbcos-consensus-cored.a
 libbcos-txpoold.a libsyncd.a libbcos-frontd.a libbcos-ledgerd.a libbcos-storage.a

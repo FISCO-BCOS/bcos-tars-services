@@ -7,7 +7,7 @@
 #include "bcos-framework/interfaces/front/FrontServiceInterface.h"
 #include <bcos-front/front/FrontService.h>
 #include <bcos-front/front/FrontServiceFactory.h>
-// #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
+#include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 
 namespace bcostars {
 class FrontServiceServer : public FrontService {
@@ -27,7 +27,7 @@ class FrontServiceServer : public FrontService {
       m_front = frontServiceFactory.buildFrontService();
     });
 
-    // m_keyFactory = std::make_shared<bcos::crypto::KeyFactoryImpl>();
+    m_keyFactory = std::make_shared<bcos::crypto::KeyFactoryImpl>();
   }
 
   void destroy() override {}

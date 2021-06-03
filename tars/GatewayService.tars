@@ -1,0 +1,11 @@
+#include "Common.tars"
+
+module bcostars {
+    interface GatewayService {
+        Error asyncSendMessageByNodeID(string groupID, vector<unsigned byte> srcNodeID, vector<unsigned byte> dstNodeID, vector<unsigned byte> payload);
+
+        Error asyncSendMessageByNodeIDs(string groupID, vector<unsigned byte> srcNodeID, vector<vector<unsigned byte>> dstNodeID, vector<unsigned byte> payload);
+
+        Error asyncSendBroadcastMessage(string groupID, vector<unsigned byte> srcNodeID, vector<unsigned byte> payload);
+    };
+};
