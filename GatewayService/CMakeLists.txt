@@ -21,7 +21,7 @@ target_link_libraries(GatewayServiceServer
 libbcos-gatewayd.a libnetworkd.a libp2pd.a libutilitiesd.a jsoncpp_lib_static
 tarsservant tarsutil OpenSSL::SSL OpenSSL::Crypto Microsoft.GSL::GSL Boost::serialization Boost::log Boost::thread Boost::chrono Boost::filesystem tbb::tbb)
 
-# add_library(FrontServiceClient FrontServiceClient.cpp)
-# target_compile_options(FrontServiceClient PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
-# add_dependencies(FrontServiceClient bcostars bcos-framework bcos-front)
-# target_link_libraries(FrontServiceClient tarsservant tarsutil Microsoft.GSL::GSL)
+add_library(GatewayServiceClient GatewayServiceClient.cpp)
+target_compile_options(GatewayServiceClient PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
+add_dependencies(GatewayServiceClient bcostars bcos-framework bcos-front)
+target_link_libraries(GatewayServiceClient tarsservant tarsutil Microsoft.GSL::GSL)
