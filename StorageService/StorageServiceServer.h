@@ -11,6 +11,7 @@
 #include <bcos-storage/RocksDBAdapter/RocksDBAdapterFactory.h>
 #include <bcos-storage/Storage.h>
 #include <memory>
+#include <mutex>
 
 namespace bcostars {
 

@@ -4,6 +4,7 @@
 
 module bcostars {
     interface ExecutorService {
+        Error asyncGetCode(string address, out vector<unsigned byte> code);
         Error asyncExecuteTransaction(Transaction transaction, out TransactionReceipt receipt);
     };
 };

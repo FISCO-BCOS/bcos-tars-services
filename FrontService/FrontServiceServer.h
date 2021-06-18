@@ -24,7 +24,9 @@ class FrontServiceServer : public FrontService {
       frontServiceFactory.setGatewayInterface(
           nullptr); // TODO: set the gateway interface
 
-      m_front = frontServiceFactory.buildFrontService();
+      auto front = frontServiceFactory.buildFrontService();
+      // front->registerModuleMessageDispatcher(int moduleID, std::function<void (bcos::crypto::NodeIDPtr, bytesConstRef)> _dispatcher)
+      m_front = front;
     });
 
     m_keyFactory = std::make_shared<bcos::crypto::KeyFactoryImpl>();

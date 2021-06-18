@@ -75,10 +75,6 @@ public:
   }
 
   int32_t version() const override { return m_inner->version; }
-  bcos::crypto::HashType const &stateRoot() const override {
-    return *(
-        reinterpret_cast<bcos::crypto::HashType *>(m_inner->stateRoot.data()));
-  }
   bcos::u256 const &gasUsed() const override { return m_gasUsed; }
 
   bcos::bytesConstRef contractAddress() const override {
@@ -135,16 +131,13 @@ public:
   }
 
   TransactionReceiptImpl::Ptr createReceipt(
-      int32_t _version, bcos::crypto::HashType const &_stateRoot,
       bcos::u256 const &_gasUsed, bcos::bytes const &_contractAddress,
       std::shared_ptr<std::vector<bcos::protocol::LogEntry>> _logEntries,
       int32_t _status, bcos::bytes const &_output,
       bcos::protocol::BlockNumber _blockNumber) override {
     auto transactionReceipt =
         std::make_shared<TransactionReceiptImpl>(m_cryptoSuite);
-    transactionReceipt->m_inner->version = _version;
-    transactionReceipt->m_inner->stateRoot.assign(_stateRoot.begin(),
-                                                  _stateRoot.end());
+    transactionReceipt->m_inner->version = 0;
     transactionReceipt->m_inner->contractAddress = _contractAddress;
     transactionReceipt->m_inner->status = _status;
     transactionReceipt->m_inner->output = _output;
@@ -157,12 +150,11 @@ public:
   }
 
   TransactionReceiptImpl::Ptr createReceipt(
-      int32_t _version, bcos::crypto::HashType const &_stateRoot,
       bcos::u256 const &_gasUsed, bcos::bytes const &_contractAddress,
       std::shared_ptr<std::vector<bcos::protocol::LogEntry>> _logEntries,
       int32_t _status, bcos::bytes &&_output,
       bcos::protocol::BlockNumber _blockNumber) override {
-    return createReceipt(_version, _stateRoot, _gasUsed, _contractAddress,
+    return createReceipt(_gasUsed, _contractAddress,
                          _logEntries, _status, _output, _blockNumber);
   }
 

@@ -4,12 +4,14 @@
 #include "PBFTService.h"
 #include "servant/Application.h"
 #include "servant/Communicator.h"
+#include "../Common/ProxyDesc.h"
 #include "../Common/ErrorConverter.h"
 #include "../FrontService/FrontServiceClient.h"
 #include "../StorageService/StorageServiceClient.h"
 #include "../protocols/BlockImpl.h"
 #include "../protocols/TransactionImpl.h"
 #include "../protocols/TransactionReceiptImpl.h"
+#include "bcos-framework/interfaces/crypto/KeyFactory.h"
 #include "bcos-crypto/hash/SM3.h"
 #include "bcos-crypto/signature/sm2/SM2Crypto.h"
 #include "bcos-framework/interfaces/crypto/CryptoSuite.h"
@@ -22,6 +24,8 @@
 #include "bcos-framework/libprotocol/TransactionSubmitResultFactoryImpl.h"
 #include "bcos-framework/libsealer/Sealer.h"
 #include "bcos-framework/libsealer/SealerFactory.h"
+#include "bcos-framework/interfaces/sync/BlockSyncInterface.h"
+#include "bcos-sync/BlockSyncFactory.h"
 #include "bcos-ledger/ledger/Ledger.h"
 #include "bcos-pbft/pbft/PBFTFactory.h"
 #include "bcos-txpool/TxPoolFactory.h"
@@ -40,8 +44,6 @@ public:
       std::string groupID;
       std::string chainID;
       int64_t blockLimit;
-      std::string frontServiceDesc;
-      std::string storageServiceDesc;
       bcos::bytes keyData;
       auto key = keyPairFactory->createKey(keyData);
       // ------------------
@@ -62,12 +64,15 @@ public:
       auto blockFactory =
           std::make_shared<bcostars::protocol::BlockFactoryImpl>(cryptoSuite, blockHeaderFactory, transactionFactory, transactionReceiptFactory);
 
-      bcostars::FrontServicePrx frontServiceProxy = Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(frontServiceDesc);
+      bcostars::FrontServicePrx frontServiceProxy = Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(getProxyDesc("StorageServiceObj"));
       bcos::front::FrontServiceInterface::Ptr frontServiceClient =
           std::make_shared<bcostars::FrontServiceClient>(frontServiceProxy, m_cryptoSuite->keyFactory());
 
-      bcostars::StorageServicePrx storageServiceProxy = Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(storageServiceDesc);
+      bcostars::StorageServicePrx storageServiceProxy =
+          Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(getProxyDesc("FrontServiceObj"));
       bcos::storage::StorageInterface::Ptr storageServiceClient = std::make_shared<bcostars::StorageServiceClient>(storageServiceProxy);
+
+      auto transactionSubmitResultFactory = std::make_shared<bcos::protocol::TransactionSubmitResultFactoryImpl>();
 
       bcos::dispatcher::DispatcherInterface::Ptr dispatcher; // TODO: Init the dispatcher
 
@@ -79,15 +84,19 @@ public:
       auto sealerFactory = std::make_shared<bcos::sealer::SealerFactory>(blockFactory, txPoolFactory->txpool(), blockLimit);
 
       auto pbftFactory = std::make_shared<bcos::consensus::PBFTFactory>(m_cryptoSuite, keyPair, frontServiceClient, storageServiceClient, ledger,
-                                                                        txPoolFactory->txpool(), sealerFactory->sealer(), dispatcher, blockFactory);
+                                                                        txPoolFactory->txpool(), sealerFactory->sealer(), dispatcher, blockFactory, transactionSubmitResultFactory);
+
+      auto blockSyncFactory =
+          std::make_shared<bcos::sync::BlockSyncFactory>(key, key, blockFactory, ledger, frontServiceClient, dispatcher, pbftFactory->consensus());
 
       txPoolFactory->init(sealerFactory->sealer());
       sealerFactory->init(pbftFactory->consensus());
-      pbftFactory->init();
+      pbftFactory->init(blockSyncFactory->sync());
 
       txPoolFactory->txpool()->start();
       sealerFactory->sealer()->start();
       pbftFactory->consensus()->start();
+      blockSyncFactory->sync()->start();
 
       m_sealer = sealerFactory->sealer();
     });
