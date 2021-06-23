@@ -18,7 +18,7 @@ add_executable(PBFTServiceServer PBFTServiceServer.cpp Application.cpp)
 target_compile_options(PBFTServiceServer PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
 add_dependencies(PBFTServiceServer bcostars bcos-framework bcos-front)
 
-target_link_libraries(PBFTServiceServer libsealerd.a libbcos-pbftd.a libbcos-consensus-cored.a
+target_link_libraries(PBFTServiceServer libsealerd.a libbcos-pbftd.a libbcos-consensus-cored.a libblock-syncd.a
 libbcos-txpoold.a libsyncd.a libbcos-frontd.a libbcos-ledgerd.a libbcos-storage.a
 libtoold.a libtabled.a libprotocol-pbd.a libprotocold.a libcodecd.a libbcos-cryptod.a libutilitiesd.a wedpr-crypto::crypto
 tarsservant tarsutil

@@ -12,7 +12,7 @@ find_package(tbb CONFIG REQUIRED)
 
 add_executable(FrontServiceServer FrontServiceServer.cpp Application.cpp)
 target_compile_options(FrontServiceServer PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
-add_dependencies(FrontServiceServer bcostars bcos-framework bcos-storage)
+add_dependencies(FrontServiceServer bcostars bcos-framework bcos-storage bcos-front)
 target_link_libraries(FrontServiceServer
 libbcos-frontd.a libutilitiesd.a tarsservant tarsutil Microsoft.GSL::GSL Boost::serialization Boost::log Boost::thread Boost::chrono Boost::filesystem tbb::tbb)
 

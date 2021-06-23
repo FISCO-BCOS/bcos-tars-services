@@ -27,6 +27,7 @@ add_subdirectory(StorageService)
 add_subdirectory(FrontService)
 add_subdirectory(GatewayService)
 add_subdirectory(PBFTService)
+add_subdirectory(ExecutorService)
 
 if(TESTS)
     enable_testing()

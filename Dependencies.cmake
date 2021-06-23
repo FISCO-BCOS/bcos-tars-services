@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 
-set(GIT_URL_BASE "github.com.cnpmjs.org")
+if (NOT DEFINED GIT_URL_BASE)
+    set(GIT_URL_BASE "github.com")
+   endif()
+# set(GIT_URL_BASE "github.com.cnpmjs.org")
 set (DEPENDENCIES_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 include(FetchContent)
@@ -24,7 +27,7 @@ include_directories(${DEPENDENCIES_DIR}/tarscpp-install/include)
 link_directories(${DEPENDENCIES_DIR}/tarscpp-install/lib)
 set(TARS2CPP ${DEPENDENCIES_DIR}/tarscpp-install/tools/tars2cpp)
 
-foreach(BCOS_MODULE framework storage ledger front gateway pbft sync txpool executor crypto)
+foreach(BCOS_MODULE framework front storage dispatcher ledger gateway pbft sync txpool executor crypto)
     ExternalProject_Add(bcos-${BCOS_MODULE}
         GIT_REPOSITORY https://${GIT_URL_BASE}/FISCO-BCOS/bcos-${BCOS_MODULE}.git
         GIT_TAG dev

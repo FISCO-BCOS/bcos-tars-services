@@ -74,11 +74,6 @@ public:
         m_inner.transactionsHash[_index].data()));
   }
 
-  bcos::crypto::HashType const &receiptHash(size_t _index) const override {
-    return *(reinterpret_cast<const bcos::crypto::HashType *>(
-        m_inner.receiptsHash[_index].data()));
-  }
-
   void setBlockType(bcos::protocol::BlockType _blockType) override {
     m_inner.type = (int32_t)_blockType;
   }
@@ -121,21 +116,10 @@ public:
             ->inner());
   }
 
-  void setTransactionHash(size_t _index,
-                          bcos::crypto::HashType const &_txHash) override {
-    m_inner.transactionsHash[_index].assign(_txHash.begin(), _txHash.end());
-  }
   void appendTransactionHash(bcos::crypto::HashType const &_txHash) override {
     m_inner.transactionsHash.emplace_back(_txHash.begin(), _txHash.end());
   }
 
-  void setReceiptHash(size_t _index,
-                      bcos::crypto::HashType const &_receptHash) override {
-    m_inner.receiptsHash[_index].assign(_receptHash.begin(), _receptHash.end());
-  }
-  void appendReceiptHash(bcos::crypto::HashType const &_receiptHash) override {
-    m_inner.receiptsHash.emplace_back(_receiptHash.begin(), _receiptHash.end());
-  }
   // get transactions size
   size_t transactionsSize() const override {
     return m_inner.transactions.size();
@@ -145,9 +129,6 @@ public:
   }
   // get receipts size
   size_t receiptsSize() const override { return m_inner.receipts.size(); }
-  size_t receiptsHashSize() const override {
-    return m_inner.receiptsHash.size();
-  }
 
   void setNonceList(bcos::protocol::NonceList const &_nonceList) override {
     m_inner.nonceList.clear();

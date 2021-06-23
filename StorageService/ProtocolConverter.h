@@ -69,7 +69,7 @@ inline bcos::storage::TableFactoryInterface::Ptr toBcosTableFactory(const bcosta
     tableDatas.emplace_back(bcosTableData);
   }
 
-  bcosTableFactory->importData(tableInfos, tableDatas);
+  bcosTableFactory->importData(tableInfos, tableDatas, true);
 
   return bcosTableFactory;
 }

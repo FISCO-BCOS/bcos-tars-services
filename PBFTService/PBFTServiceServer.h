@@ -64,12 +64,12 @@ public:
       auto blockFactory =
           std::make_shared<bcostars::protocol::BlockFactoryImpl>(cryptoSuite, blockHeaderFactory, transactionFactory, transactionReceiptFactory);
 
-      bcostars::FrontServicePrx frontServiceProxy = Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(getProxyDesc("StorageServiceObj"));
+      bcostars::FrontServicePrx frontServiceProxy = Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(getProxyDesc("FrontServiceObj"));
       bcos::front::FrontServiceInterface::Ptr frontServiceClient =
           std::make_shared<bcostars::FrontServiceClient>(frontServiceProxy, m_cryptoSuite->keyFactory());
 
       bcostars::StorageServicePrx storageServiceProxy =
-          Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(getProxyDesc("FrontServiceObj"));
+          Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(getProxyDesc("StorageServiceObj"));
       bcos::storage::StorageInterface::Ptr storageServiceClient = std::make_shared<bcostars::StorageServiceClient>(storageServiceProxy);
 
       auto transactionSubmitResultFactory = std::make_shared<bcos::protocol::TransactionSubmitResultFactoryImpl>();
@@ -87,7 +87,7 @@ public:
                                                                         txPoolFactory->txpool(), sealerFactory->sealer(), dispatcher, blockFactory, transactionSubmitResultFactory);
 
       auto blockSyncFactory =
-          std::make_shared<bcos::sync::BlockSyncFactory>(key, key, blockFactory, ledger, frontServiceClient, dispatcher, pbftFactory->consensus());
+          std::make_shared<bcos::sync::BlockSyncFactory>(key, blockFactory, transactionSubmitResultFactory, ledger, txPoolFactory->txpool(), frontServiceClient, dispatcher, pbftFactory->consensus());
 
       txPoolFactory->init(sealerFactory->sealer());
       sealerFactory->init(pbftFactory->consensus());

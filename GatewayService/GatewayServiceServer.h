@@ -2,6 +2,7 @@
 
 #include "GatewayService.h"
 #include "../Common/ErrorConverter.h"
+#include "bcos-crypto/signature/key/KeyFactoryImpl.h"
 #include "bcos-framework/interfaces/crypto/KeyInterface.h"
 #include "bcos-gateway/Gateway.h"
 #include "bcos-gateway/GatewayFactory.h"
@@ -14,7 +15,9 @@ public:
     std::call_once(m_initFlag, [this]() {
       // bcos::gateway::Gat
       bcos::gateway::GatewayFactory factory;
-      // m_gateway = factory.buildGateway();
+
+      // TODO: add config path
+      m_gateway = factory.buildGateway("");
     });
 
     m_keyFactory = std::make_shared<bcos::crypto::KeyFactoryImpl>();

@@ -1,10 +1,20 @@
 #pragma once
 
+#include "Block.h"
 #include "ExecutorService.h"
 #include "../Common/ErrorConverter.h"
+#include "../Common/ProxyDesc.h"
 #include "../protocols/TransactionImpl.h"
 #include "../protocols/TransactionReceiptImpl.h"
 #include "bcos-framework/interfaces/executor/ExecutorInterface.h"
+#include "bcos-executor/Executor.h"
+#include "../protocols/BlockImpl.h"
+#include "bcos-crypto/signature/key/KeyFactoryImpl.h"
+#include "bcos-crypto/hash/SM3.h"
+#include "bcos-crypto/signature/sm2/SM2Crypto.h"
+#include "../StorageService/StorageServiceClient.h"
+#include "bcos-framework/libprotocol/TransactionSubmitResultFactoryImpl.h"
+#include "bcos-ledger/ledger/Ledger.h"
 #include <memory>
 #include <mutex>
 
@@ -13,7 +23,27 @@ class ExecutorServiceServer : public bcostars::ExecutorService {
 public:
 void initialize() override {
     std::call_once(m_initFlag, [this]() {
+      m_cryptoSuite =
+          std::make_shared<bcos::crypto::CryptoSuite>(std::make_shared<bcos::crypto::SM3>(), std::make_shared<bcos::crypto::SM2Crypto>(), nullptr);
 
+      auto transactionFactory = std::make_shared<bcostars::protocol::TransactionFactoryImpl>(m_cryptoSuite);
+      auto transactionReceiptFactory =
+          std::make_shared<bcostars::protocol::TransactionReceiptFactoryImpl>(m_cryptoSuite);
+
+      auto blockHeaderFactory = std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(m_cryptoSuite);
+      auto blockFactory = std::make_shared<bcostars::protocol::BlockFactoryImpl>(m_cryptoSuite, blockHeaderFactory, transactionFactory, transactionReceiptFactory);
+
+      // TODO: add dispatcher
+      // auto dispatcherProxy = Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(getProxyDesc(DispatcherServiceObj"));
+
+      bcostars::StorageServicePrx storageServiceProxy =
+          Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(getProxyDesc("StorageServiceObj"));
+      bcos::storage::StorageInterface::Ptr storageServiceClient = std::make_shared<bcostars::StorageServiceClient>(storageServiceProxy);
+
+      auto ledger = std::make_shared<bcos::ledger::Ledger>(blockFactory, storageServiceClient);
+
+      bcos::dispatcher::DispatcherInterface::Ptr dispatcher; // TODO: Init the dispatcher
+      m_executor = std::make_shared<bcos::executor::Executor>(blockFactory, nullptr, ledger, true);
     });
   }
 
@@ -32,12 +62,14 @@ void initialize() override {
       async_response_asyncExecuteTransaction(current, toTarsError(error),
                                              std::dynamic_pointer_cast<bcostars::protocol::TransactionReceiptImpl>(receipt)->inner());
     });
+
+    return bcostars::Error();
   }
 
   bcostars::Error asyncGetCode(const std::string &address, vector<tars::UInt8> &code, tars::TarsCurrentPtr current) override {
     current->setResponse(false);
 
-    m_executor->asyncGetCode(std::make_shared<std::string>(address), [current](const bcos::Error::Ptr &error, const std::shared_ptr<bcos::bytes> &code) {
+    m_executor->asyncGetCode(address, [current](const bcos::Error::Ptr &error, const std::shared_ptr<bcos::bytes> &code) {
       if (error && error->errorCode()) {
         vector<tars::UInt8> nullobj;
         async_response_asyncGetCode(current, toTarsError(error), nullobj);
@@ -46,6 +78,8 @@ void initialize() override {
 
       async_response_asyncGetCode(current, toTarsError(error), *code);
     });
+
+    return bcostars::Error();
   }
 
 private:

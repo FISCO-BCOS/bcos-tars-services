@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(transactionReceipt) {
 
   bcostars::protocol::TransactionReceiptFactoryImpl factory(cryptoSuite);
   auto receipt = factory.createReceipt(
-      1000, stateRoot, gasUsed, contractAddress,
+      1000, contractAddress,
       std::make_shared<std::vector<bcos::protocol::LogEntry>>(*logEntries), 50,
       output, 888);
 
@@ -156,11 +156,10 @@ BOOST_AUTO_TEST_CASE(block) {
     block->appendTransactionHash(transaction->hash());
 
     auto receipt = transactionReceiptFactory->createReceipt(
-        1000, stateRoot, gasUsed, contractAddress,
+        1000, contractAddress,
         std::make_shared<std::vector<bcos::protocol::LogEntry>>(*logEntries),
         50, output, i);
     block->appendReceipt(receipt);
-    block->appendReceiptHash(receipt->hash());
   }
 
   bcos::bytes buffer;
