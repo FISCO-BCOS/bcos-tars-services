@@ -1,15 +1,15 @@
 #include "servant/Application.h"
-#include "FrontServiceServer.h"
+#include "ExecutorServiceServer.h"
 
 using namespace bcostars;
 
-class FrontServiceApp : public Application {
+class ExecutorServiceApp : public Application {
 public:
-  virtual ~FrontServiceApp() override{};
+  virtual ~ExecutorServiceApp() override{};
 
   virtual void initialize() override {
     addConfig("FrontService.conf");
-    addServant<FrontServiceServer>(ServerConfig::Application + "." + ServerConfig::ServerName + ".FrontServiceObj");
+    addServant<ExecutorServiceServer>(ServerConfig::Application + "." + ServerConfig::ServerName + ".ExecutorServiceObj");
   }
 
   virtual void destroyApp() override {}
@@ -17,7 +17,7 @@ public:
 
 int main(int argc, char *argv[]) {
   try {
-    FrontServiceApp app;
+    ExecutorServiceApp app;
     app.main(argc, argv);
     app.waitForShutdown();
 

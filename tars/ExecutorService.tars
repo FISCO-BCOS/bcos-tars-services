@@ -1,0 +1,10 @@
+#include "Common.tars"
+#include "Transaction.tars"
+#include "TransactionReceipt.tars"
+
+module bcostars {
+    interface ExecutorService {
+        Error asyncGetCode(string address, out vector<unsigned byte> code);
+        Error asyncExecuteTransaction(Transaction transaction, out TransactionReceipt receipt);
+    };
+};

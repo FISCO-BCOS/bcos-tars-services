@@ -1,15 +1,15 @@
 #include "servant/Application.h"
-#include "FrontServiceServer.h"
+#include "GatewayServiceServer.h"
 
 using namespace bcostars;
 
-class FrontServiceApp : public Application {
+class GatewayServiceApp : public Application {
 public:
-  virtual ~FrontServiceApp() override{};
+  virtual ~GatewayServiceApp() override{};
 
   virtual void initialize() override {
-    addConfig("FrontService.conf");
-    addServant<FrontServiceServer>(ServerConfig::Application + "." + ServerConfig::ServerName + ".FrontServiceObj");
+    addConfig("GatewayService.conf");
+    addServant<GatewayServiceServer>(ServerConfig::Application + "." + ServerConfig::ServerName + ".GatewayServiceObj");
   }
 
   virtual void destroyApp() override {}
@@ -17,7 +17,7 @@ public:
 
 int main(int argc, char *argv[]) {
   try {
-    FrontServiceApp app;
+    GatewayServiceApp app;
     app.main(argc, argv);
     app.waitForShutdown();
 

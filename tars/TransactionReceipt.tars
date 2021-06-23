@@ -7,13 +7,12 @@ module bcostars {
 
     struct TransactionReceipt {
         1 optional int version;
-        2 optional vector<unsigned byte> stateRoot;
-        3 optional string gasUsed;
-        4 optional vector<unsigned byte> contractAddress;
-        5 optional unsigned byte bloom[256];
-        6 optional int status;
-        7 optional vector<unsigned byte> output;
-        8 optional vector<LogEntry> logEntries;
-        9 optional long blockNumber;
+        2 optional string gasUsed;
+        3 optional vector<unsigned byte> contractAddress;
+        4 optional unsigned byte bloom[256];
+        5 optional int status;
+        6 optional vector<unsigned byte> output;
+        7 optional vector<LogEntry> logEntries;
+        8 optional long blockNumber;
     };
 };

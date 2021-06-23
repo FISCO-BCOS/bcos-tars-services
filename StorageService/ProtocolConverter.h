@@ -9,14 +9,11 @@
 
 namespace bcostars {
 
-inline bcos::storage::TableInfo::Ptr
-toBcosTableInfo(const bcostars::TableInfo &tableInfo) {
-  return std::make_shared<bcos::storage::TableInfo>(
-      tableInfo.name, tableInfo._key, tableInfo.fields);
+inline bcos::storage::TableInfo::Ptr toBcosTableInfo(const bcostars::TableInfo &tableInfo) {
+  return std::make_shared<bcos::storage::TableInfo>(tableInfo.name, tableInfo._key, tableInfo.fields);
 }
 
-inline bcostars::TableInfo
-toTarsTableInfo(const bcos::storage::TableInfo::Ptr &tableInfo) {
+inline bcostars::TableInfo toTarsTableInfo(const bcos::storage::TableInfo::Ptr &tableInfo) {
   bcostars::TableInfo tarsTableInfo;
   tarsTableInfo.name = tableInfo->name;
   tarsTableInfo._key = tableInfo->key;
@@ -47,24 +44,19 @@ inline bcostars::Entry toTarsEntry(const bcos::storage::Entry::Ptr &entry) {
   return tarsEntry;
 }
 
-inline bcos::storage::TableFactoryInterface::Ptr
-toBcosTableFactory(const bcostars::TableFactory &tableFactory,
-                   bcos::storage::StorageInterface::Ptr storage,
-                   bcos::crypto::CryptoSuite::Ptr cryptoSuite) {
+inline bcos::storage::TableFactoryInterface::Ptr toBcosTableFactory(const bcostars::TableFactory &tableFactory, bcos::storage::StorageInterface::Ptr storage,
+                                                                    bcos::crypto::CryptoSuite::Ptr cryptoSuite) {
   bcos::storage::TableFactoryInterface::Ptr bcosTableFactory =
-      std::make_shared<bcos::storage::TableFactory>(
-          storage, cryptoSuite->hashImpl(), tableFactory.num);
+      std::make_shared<bcos::storage::TableFactory>(storage, cryptoSuite->hashImpl(), tableFactory.num);
 
   std::vector<bcos::storage::TableInfo::Ptr> tableInfos;
   for (auto const &tableInfo : tableFactory.tableInfos) {
     tableInfos.emplace_back(toBcosTableInfo(tableInfo));
   }
 
-  std::vector<std::shared_ptr<std::map<std::string, bcos::storage::Entry::Ptr>>>
-      tableDatas;
+  std::vector<std::shared_ptr<std::map<std::string, bcos::storage::Entry::Ptr>>> tableDatas;
   for (auto const &tableData : tableFactory.datas) {
-    auto bcosTableData =
-        std::make_shared<std::map<std::string, bcos::storage::Entry::Ptr>>();
+    auto bcosTableData = std::make_shared<std::map<std::string, bcos::storage::Entry::Ptr>>();
     for (auto const &entry : tableData) {
       auto bcosEntry = std::make_shared<bcos::storage::Entry>();
       bcosEntry->setNum(entry.second.num);
@@ -77,13 +69,12 @@ toBcosTableFactory(const bcostars::TableFactory &tableFactory,
     tableDatas.emplace_back(bcosTableData);
   }
 
-  bcosTableFactory->importData(tableInfos, tableDatas);
+  bcosTableFactory->importData(tableInfos, tableDatas, true);
 
   return bcosTableFactory;
 }
 
-inline bcostars::TableFactory toTarsTableFactory(
-    const bcos::storage::TableFactoryInterface::Ptr &tableFactory) {
+inline bcostars::TableFactory toTarsTableFactory(const bcos::storage::TableFactoryInterface::Ptr &tableFactory) {
   bcostars::TableFactory tarsTableFactory;
 
   tarsTableFactory.num = tableFactory->blockNumber();
@@ -99,27 +90,7 @@ inline bcostars::TableFactory toTarsTableFactory(
   }
 }
 
-inline bcos::Error::Ptr toBcosError(const bcostars::Error &error) {
-  if (error.errorCode == 0) {
-    return nullptr;
-  }
-
-  auto bcosError =
-      std::make_shared<bcos::Error>(error.errorCode, error.errorMessage);
-  return bcosError;
-}
-
-inline bcos::Error::Ptr toBcosError(tars::Int32 ret) {
-  if (ret == 0) {
-    return nullptr;
-  }
-
-  auto bcosError = std::make_shared<bcos::Error>(ret, "TARS error!");
-  return bcosError;
-}
-
-inline bcostars::Condition
-toTarsCondition(const bcos::storage::Condition::Ptr &condition) {
+inline bcostars::Condition toTarsCondition(const bcos::storage::Condition::Ptr &condition) {
   bcostars::Condition tarsCondition;
   tarsCondition.offset = condition->getLimit().first;
   tarsCondition.size = condition->getLimit().second;

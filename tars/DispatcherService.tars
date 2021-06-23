@@ -1,0 +1,10 @@
+#include "Common.tars"
+#include "Block.tars"
+
+module bcostars {
+    interface DispatcherService {
+        Error asyncExecuteBlock(Block block, bool verify, out BlockHeader blockHeader);
+        Error asyncGetLatestBlock(out Block block);
+        Error asyncNotifyExecutionResult(Error error, BlockHeader blockHeader);
+    };
+};
