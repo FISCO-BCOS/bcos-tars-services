@@ -23,5 +23,5 @@ tarsservant tarsutil OpenSSL::SSL OpenSSL::Crypto Microsoft.GSL::GSL Boost::seri
 
 add_library(GatewayServiceClient GatewayServiceClient.cpp)
 target_compile_options(GatewayServiceClient PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
-add_dependencies(GatewayServiceClient bcostars bcos-framework bcos-front)
+add_dependencies(GatewayServiceClient bcostars bcos-framework)
 target_link_libraries(GatewayServiceClient tarsservant tarsutil Microsoft.GSL::GSL)

@@ -18,5 +18,5 @@ libbcos-frontd.a libutilitiesd.a tarsservant tarsutil Microsoft.GSL::GSL Boost::
 
 add_library(FrontServiceClient FrontServiceClient.cpp)
 target_compile_options(FrontServiceClient PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
-add_dependencies(FrontServiceClient bcostars bcos-framework bcos-front)
+add_dependencies(FrontServiceClient bcostars bcos-framework)
 target_link_libraries(FrontServiceClient tarsservant tarsutil Microsoft.GSL::GSL)

@@ -13,7 +13,7 @@ namespace bcostars {
 class DispatcherServiceServer : public DispatcherService {
 public:
   void initialize() override {
-    std::call_once(m_initFlag, [this]() {
+    std::call_once(m_initFlag, []() {
       auto cryptoSuite =
           std::make_shared<bcos::crypto::CryptoSuite>(std::make_shared<bcos::crypto::SM3>(), std::make_shared<bcos::crypto::SM2Crypto>(), nullptr);
 

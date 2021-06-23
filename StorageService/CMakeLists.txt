@@ -23,5 +23,5 @@ libbcos-storage.a libtabled.a libutilitiesd.a zstd::libzstd_static Threads::Thre
 
 add_library(StorageServiceClient StorageServiceClient.cpp)
 target_compile_options(StorageServiceClient PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
-add_dependencies(StorageServiceClient bcostars bcos-framework bcos-storage)
+add_dependencies(StorageServiceClient bcostars bcos-framework)
 target_link_libraries(StorageServiceClient tarsservant tarsutil Microsoft.GSL::GSL)

@@ -18,5 +18,5 @@ libexecutor.a libprecompiled.a libstate.a libvm.a libutilitiesd.a tarsservant ta
 
 add_library(ExecutorServiceClient ExecutorServiceClient.cpp)
 target_compile_options(ExecutorServiceClient PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
-add_dependencies(ExecutorServiceClient bcostars bcos-framework bcos-executor bcos-crypto bcos-ledger)
+add_dependencies(ExecutorServiceClient bcostars bcos-framework)
 target_link_libraries(ExecutorServiceClient tarsservant tarsutil Microsoft.GSL::GSL)

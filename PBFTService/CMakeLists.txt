@@ -27,5 +27,5 @@ protobuf::libprotobuf Microsoft.GSL::GSL Boost::serialization Boost::log Boost::
 
 add_library(PBFTServiceClient PBFTServiceClient.cpp)
 target_compile_options(PBFTServiceClient PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
-add_dependencies(PBFTServiceClient bcostars bcos-framework bcos-front)
+add_dependencies(PBFTServiceClient bcostars bcos-framework)
 target_link_libraries(PBFTServiceClient tarsservant tarsutil Microsoft.GSL::GSL)
