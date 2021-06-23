@@ -83,8 +83,9 @@ public:
       auto txpool = txPoolFactory->createTxPool();
 
       auto sealerFactory = std::make_shared<bcos::sealer::SealerFactory>(blockFactory, txpool, blockLimit);
-      m_sealer = sealerFactory->createSealer();
-
+      auto sealer = sealerFactory->createSealer();
+      m_sealer = sealer;
+      
       auto pbftFactory = std::make_shared<bcos::consensus::PBFTFactory>(m_cryptoSuite, keyPair, frontServiceClient, storageServiceClient, ledger,
                                                                         txpool, m_sealer, dispatcher, blockFactory, transactionSubmitResultFactory);
       auto pbft = pbftFactory->createPBFT();
@@ -94,7 +95,7 @@ public:
       auto blockSync = blockSyncFactory->createBlockSync();
       
       txpool->init(m_sealer);
-      m_sealer->init(pbft);
+      sealer->init(pbft);
       pbft->init(blockSync);
 
       txpool->start();

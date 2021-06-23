@@ -35,7 +35,7 @@ public:
   void decode(bcos::bytesConstRef _txData) override {
     m_buffer.assign(_txData.begin(), _txData.end());
 
-    tars::TarsInputStream input;
+    tars::TarsInputStream<tars::BufferReader> input;
     input.setBuffer((const char *)m_buffer.data(), m_buffer.size());
 
     m_inner->readFrom(input);

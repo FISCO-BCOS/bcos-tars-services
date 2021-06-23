@@ -34,12 +34,13 @@ jobs:
           path: |
             /home/runner/.hunter
             /Users/runner/.hunter/
+            deps/src
             ccache
-          key: hunter-clang-v2-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+          key: hunter-clang-v3-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
           restore-keys: |
-            hunter-clang-v2-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
-            hunter-clang-v2-notest-${{ runner.temp }}-${{ github.base_ref }}-
-            hunter-clang-v2-notest-${{ runner.temp }}-
+            hunter-clang-v3-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+            hunter-clang-v3-notest-${{ runner.temp }}-${{ github.base_ref }}-
+            hunter-clang-v3-notest-${{ runner.temp }}-
       - name: install macOS dependencies
         if: runner.os == 'macOS'
         run: brew install ccache
@@ -69,21 +70,16 @@ jobs:
       - uses: actions/cache@v2
         id: cache
         with:
-          path: /home/runner/.hunter
-          key: hunter-gcc-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+          path: |
+            /home/runner/.hunter
+            /Users/runner/.hunter/
+            deps/src
+            ccache
+          key: hunter-gcc-v2-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
           restore-keys: |
-            hunter-gcc-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
-            hunter-gcc-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-
-            hunter-gcc-v1-notest-${{ runner.temp }}-
-      - uses: actions/cache@v2
-        id: ccache
-        with:
-          path: ccache
-          key: cache-gcc-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
-          restore-keys: |
-            ccache-gcc-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
-            cache-gcc-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-
-            cache-gcc-v1-notest-${{ runner.temp }}-
+            hunter-gcc-v2-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+            hunter-gcc-v2-notest-${{ runner.temp }}-${{ github.base_ref }}-
+            hunter-gcc-v2-notest-${{ runner.temp }}-
       - name: install Ubuntu dependencies
         run: sudo apt install -y libzstd-dev git curl build-essential cmake ccache
       - name: configure
@@ -107,21 +103,16 @@ jobs:
       - uses: actions/cache@v2
         id: cache
         with:
-          path: /home/runner/.hunter
-          key: hunter-ubuntu-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+          path: |
+            /home/runner/.hunter
+            /Users/runner/.hunter/
+            deps/src
+            ccache
+          key: hunter-ubuntu-v2-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
           restore-keys: |
-            hunter-ubuntu-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
-            hunter-ubuntu-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-
-            hunter-ubuntu-v1-notest-${{ runner.temp }}-
-      - uses: actions/cache@v2
-        id: ccache
-        with:
-          path: ccache
-          key: ccache-ubuntu-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
-          restore-keys: |
-            ccache-ubuntu-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
-            ccache-ubuntu-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-
-            ccache-ubuntu-v1-notest-${{ runner.temp }}-
+            hunter-ubuntu-v2-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+            hunter-ubuntu-v2-notest-${{ runner.temp }}-${{ github.base_ref }}-
+            hunter-ubuntu-v2-notest-${{ runner.temp }}-
       - name: install Ubuntu dependencies
         run: sudo apt-get install -y git curl build-essential cmake ccache lcov libzstd-dev
       - name: configure
@@ -156,12 +147,13 @@ jobs:
           path: |
             /home/runner/.hunter
             /github/home/.hunter
+            deps/src
             ccache
-          key: hunter-centos-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+          key: hunter-centos-v2-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
           restore-keys: |
-            hunter-centos-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
-            hunter-centos-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-
-            hunter-centos-v1-notest-${{ runner.temp }}-
+            hunter-centos-v2-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+            hunter-centos-v2-notest-${{ runner.temp }}-${{ github.base_ref }}-
+            hunter-centos-v2-notest-${{ runner.temp }}-
       - name: install CentOS dependencies
         run: |
           yum install -y epel-release centos-release-scl

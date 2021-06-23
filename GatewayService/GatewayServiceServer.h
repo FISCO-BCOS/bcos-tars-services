@@ -12,7 +12,7 @@ namespace bcostars {
 class GatewayServiceServer : public bcostars::GatewayService {
 public:
   void initialize() override {
-    std::call_once(m_initFlag, [this]() {
+    std::call_once(m_initFlag, []() {
       // bcos::gateway::Gat
       bcos::gateway::GatewayFactory factory;
 

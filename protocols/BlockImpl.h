@@ -25,7 +25,7 @@ public:
   ~BlockImpl() override{};
 
   void decode(bcos::bytesConstRef _data, bool _calculateHash, bool _checkSig) override {
-    tars::TarsInputStream input;
+    tars::TarsInputStream<tars::BufferReader> input;
     input.setBuffer((const char *)_data.data(), _data.size());
 
     m_inner.readFrom(input);
