@@ -16,7 +16,7 @@ class BlockHeaderImpl : public bcos::protocol::BlockHeader {
 public:
   virtual ~BlockHeaderImpl() {}
 
-  BlockHeaderImpl(bcos::crypto::CryptoSuite::Ptr cryptoSuite) : bcos::protocol::BlockHeader(cryptoSuite) {}
+  BlockHeaderImpl(bcos::crypto::CryptoSuite::Ptr cryptoSuite) : bcos::protocol::BlockHeader(cryptoSuite), m_inner(std::shared_ptr<bcostars::BlockHeader>()) {}
 
   BlockHeaderImpl(bcostars::BlockHeader *blockHeader, bcos::crypto::CryptoSuite::Ptr cryptoSuite)
       : bcos::protocol::BlockHeader(cryptoSuite), m_inner(std::shared_ptr<bcostars::BlockHeader>(blockHeader, [](bcostars::BlockHeader *) {})){};
@@ -47,7 +47,7 @@ public:
     }
   }
 
-  void clear() override {}
+  void clear() override { m_inner = std::make_shared<bcostars::BlockHeader>(); }
 
   int32_t version() const override { return m_inner->version; }
 
@@ -113,6 +113,8 @@ public:
   void setSignatureList(bcos::protocol::SignatureList &&_signatureList) override { setSignatureList(gsl::span(_signatureList.data(), _signatureList.size())); }
 
   const bcostars::BlockHeader &inner() const { return *m_inner; }
+
+  void setInner(const bcostars::BlockHeader &blockHeader) { *m_inner = blockHeader; }
 
 private:
   std::shared_ptr<bcostars::BlockHeader> m_inner;
