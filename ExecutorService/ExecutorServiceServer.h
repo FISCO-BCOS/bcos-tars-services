@@ -43,9 +43,11 @@ void initialize() override {
       auto ledger = std::make_shared<bcos::ledger::Ledger>(blockFactory, storageServiceClient);
 
       bcos::dispatcher::DispatcherInterface::Ptr dispatcher; // TODO: Init the dispatcher
-      m_executor = std::make_shared<bcos::executor::Executor>(blockFactory, nullptr, ledger, true);
+      m_executor = std::make_shared<bcos::executor::Executor>(blockFactory, nullptr, ledger, storageServiceClient, true);
     });
   }
+
+  void destroy() override {}
 
   bcostars::Error asyncExecuteTransaction(const bcostars::Transaction &transaction, bcostars::TransactionReceipt &receipt,
                                           tars::TarsCurrentPtr current) override {
@@ -60,7 +62,7 @@ void initialize() override {
       }
 
       async_response_asyncExecuteTransaction(current, toTarsError(error),
-                                             std::dynamic_pointer_cast<bcostars::protocol::TransactionReceiptImpl>(receipt)->inner());
+                                             std::dynamic_pointer_cast<const bcostars::protocol::TransactionReceiptImpl>(receipt)->inner());
     });
 
     return bcostars::Error();

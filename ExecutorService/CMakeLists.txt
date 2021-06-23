@@ -12,9 +12,9 @@ find_package(tbb CONFIG REQUIRED)
 
 add_executable(ExecutorServiceServer ExecutorServiceServer.cpp Application.cpp)
 target_compile_options(ExecutorServiceServer PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
-add_dependencies(ExecutorServiceServer bcostars bcos-framework bcos-storage bcos-front)
+add_dependencies(ExecutorServiceServer bcostars bcos-framework bcos-executor bcos-crypto bcos-ledger)
 target_link_libraries(ExecutorServiceServer
-libexecutor.a  libprecompiled.a  libstate.a  libvm.a libutilitiesd.a tarsservant tarsutil Microsoft.GSL::GSL Boost::serialization Boost::log Boost::thread Boost::chrono Boost::filesystem tbb::tbb)
+libexecutor.a libprecompiled.a libstate.a libvm.a libutilitiesd.a tarsservant tarsutil Microsoft.GSL::GSL Boost::serialization Boost::log Boost::thread Boost::chrono Boost::filesystem tbb::tbb)
 
 # add_library(FrontServiceClient FrontServiceClient.cpp)
 # target_compile_options(FrontServiceClient PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
