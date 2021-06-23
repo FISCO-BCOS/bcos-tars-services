@@ -80,25 +80,27 @@ public:
 
       auto txPoolFactory = std::make_shared<bcos::txpool::TxPoolFactory>(bcos::crypto::NodeIDPtr(), m_cryptoSuite, txSubmitResultFactory, blockFactory,
                                                                          frontServiceClient, ledger, groupID, chainID, blockLimit);
+      auto txpool = txPoolFactory->createTxPool();
 
-      auto sealerFactory = std::make_shared<bcos::sealer::SealerFactory>(blockFactory, txPoolFactory->txpool(), blockLimit);
+      auto sealerFactory = std::make_shared<bcos::sealer::SealerFactory>(blockFactory, txpool, blockLimit);
+      m_sealer = sealerFactory->createSealer();
 
       auto pbftFactory = std::make_shared<bcos::consensus::PBFTFactory>(m_cryptoSuite, keyPair, frontServiceClient, storageServiceClient, ledger,
-                                                                        txPoolFactory->txpool(), sealerFactory->sealer(), dispatcher, blockFactory, transactionSubmitResultFactory);
+                                                                        txpool, m_sealer, dispatcher, blockFactory, transactionSubmitResultFactory);
+      auto pbft = pbftFactory->createPBFT();
 
       auto blockSyncFactory =
-          std::make_shared<bcos::sync::BlockSyncFactory>(key, blockFactory, transactionSubmitResultFactory, ledger, txPoolFactory->txpool(), frontServiceClient, dispatcher, pbftFactory->consensus());
+          std::make_shared<bcos::sync::BlockSyncFactory>(key, blockFactory, transactionSubmitResultFactory, ledger, txpool, frontServiceClient, dispatcher, pbft);
+      auto blockSync = blockSyncFactory->createBlockSync();
+      
+      txpool->init(m_sealer);
+      m_sealer->init(pbft);
+      pbft->init(blockSync);
 
-      txPoolFactory->init(sealerFactory->sealer());
-      sealerFactory->init(pbftFactory->consensus());
-      pbftFactory->init(blockSyncFactory->sync());
-
-      txPoolFactory->txpool()->start();
-      sealerFactory->sealer()->start();
-      pbftFactory->consensus()->start();
-      blockSyncFactory->sync()->start();
-
-      m_sealer = sealerFactory->sealer();
+      txpool->start();
+      m_sealer->start();
+      pbft->start();
+      blockSync->start();
     });
   }
 

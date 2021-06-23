@@ -5,7 +5,7 @@ include (Dependencies.cmake)
 
 include(HunterGate)
 HunterGate(
-    URL "https://$${GIT_URL_BASE}/FISCO-BCOS/hunter/archive/7268240de829ba351c98d574db9dd7dfddb1ad2e.tar.gz"
+    URL "https://${GIT_URL_BASE}/FISCO-BCOS/hunter/archive/7268240de829ba351c98d574db9dd7dfddb1ad2e.tar.gz"
     SHA1 "29a725d3fac8b23f255530b7e40ffb47b34973f9"
     FILEPATH "${CMAKE_SOURCE_DIR}/hunterConfig.cmake"
 )

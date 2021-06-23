@@ -92,12 +92,12 @@ jobs:
         run: make -j4
       - name: run test
         run: CTEST_OUTPUT_ON_FAILURE=TRUE make test
-  ubuntu16_04_build_with_gcc:
-    name: ubuntu16_04_build_with_gcc
+  ubuntu18_04_build_with_gcc:
+    name: ubuntu18_04_build_with_gcc
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-16.04]
+        os: [ubuntu-18.04]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -123,7 +123,7 @@ jobs:
             ccache-ubuntu-v1-notest-${{ runner.temp }}-${{ github.base_ref }}-
             ccache-ubuntu-v1-notest-${{ runner.temp }}-
       - name: install Ubuntu dependencies
-        run: sudo apt-get install -y libzstd-dev software-properties-common python-software-properties && sudo add-apt-repository ppa:ubuntu-toolchain-r/test && sudo apt-get update && sudo apt install -y git curl build-essential cmake ccache gcc-7 g++-7 lcov&& sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 --slave /usr/bin/g++ g++ /usr/bin/g++-7 && sudo update-alternatives --config gcc
+        run: sudo apt-get install -y git curl build-essential cmake ccache lcov libzstd-dev
       - name: configure
         run: cmake . -DTESTS=ON -DCOVERAGE=ON
       - name: compile
@@ -165,7 +165,7 @@ jobs:
       - name: install CentOS dependencies
         run: |
           yum install -y epel-release centos-release-scl
-          yum install -y git make gcc gcc-c++ glibc-static glibc-devel cmake3 ccache devtoolset-7 && source /opt/rh/devtoolset-7/enable
+          yum install -y git make gcc gcc-c++ glibc-static glibc-devel cmake3 ccache devtoolset-7 libzstd-devel && source /opt/rh/devtoolset-7/enable
           alias cmake='cmake3'
       - name: configure and compile
         run: |
