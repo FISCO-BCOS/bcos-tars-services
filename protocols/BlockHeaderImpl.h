@@ -24,7 +24,7 @@ public:
   virtual void decode(bcos::bytesConstRef _data) override {
     m_buffer.assign(_data.begin(), _data.end());
 
-    tars::TarsInputStream input;
+    tars::TarsInputStream<tars::BufferReader> input;
     input.setBuffer((const char *)_data.data(), _data.size());
 
     m_inner->readFrom(input);

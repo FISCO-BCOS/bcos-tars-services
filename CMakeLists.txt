@@ -1,16 +1,33 @@
 cmake_minimum_required(VERSION 3.15)
+if (NOT DEFINED URL_BASE)
+    set(URL_BASE "github.com")
+   endif()
+# set(URL_BASE "github.com.cnpmjs.org")
+set (DEPENDENCIES_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
-# import dependencies
-include (Dependencies.cmake)
+set(BCOS_TARS_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake" CACHE PATH "The cmake path for the library")
+set(BCOS_CMAKE_SCRIPTS_DIR ${CMAKE_CURRENT_BINARY_DIR}/bcos-cmake-scripts)
+include(FetchContent)
+FetchContent_Declare(bcos-cmake-scripts
+    GIT_REPOSITORY https://${URL_BASE}/FISCO-BCOS/bcos-cmake-scripts.git
+    GIT_TAG dev
+    SOURCE_DIR ${BCOS_CMAKE_SCRIPTS_DIR}
+)
+FetchContent_MakeAvailable(bcos-cmake-scripts)
+list(APPEND CMAKE_MODULE_PATH ${BCOS_CMAKE_SCRIPTS_DIR})
+list(APPEND CMAKE_MODULE_PATH ${BCOS_TARS_CMAKE_DIR})
 
 include(HunterGate)
 HunterGate(
-    URL "https://$${GIT_URL_BASE}/FISCO-BCOS/hunter/archive/7268240de829ba351c98d574db9dd7dfddb1ad2e.tar.gz"
-    SHA1 "29a725d3fac8b23f255530b7e40ffb47b34973f9"
+    URL "https://${URL_BASE}/FISCO-BCOS/hunter/archive/f88ce89a9fcd557b7fb2aa0f7abaa3c541dc6903.tar.gz"
+    SHA1 "b7792231bf64539602e696e32bfc163c9bc1812a"
     FILEPATH "${CMAKE_SOURCE_DIR}/hunterConfig.cmake"
 )
 
 project(Bcos-Tars-Service)
+
+# import dependencies
+include (Dependencies.cmake)
 
 include_directories(${DEPENDENCIES_DIR}/tarscpp-install/thirdparty/include)
 link_directories(${DEPENDENCIES_DIR}/tarscpp-install/thirdparty/lib)
@@ -19,7 +36,6 @@ set(TARS_HEADER_DIR ${CMAKE_CURRENT_BINARY_DIR}/tars-generated)
 include_directories(${TARS_HEADER_DIR})
 
 include(CompilerSettings)
-
 # import tars project
 add_subdirectory(tars)
 add_subdirectory(protocols)
@@ -35,3 +51,9 @@ if(TESTS)
     add_subdirectory(tests)
     add_subdirectory(testClients)
 endif()
+
+# for code coverage
+if (COVERAGE)
+    include(Coverage)
+    config_coverage("coverage" "'/usr*' '${CMAKE_CURRENT_SOURCE_DIR}/bcos-cmake-scripts*' '${CMAKE_CURRENT_SOURCE_DIR}/test/bcos-test*'")
+endif ()
