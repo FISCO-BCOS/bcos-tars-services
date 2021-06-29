@@ -7,6 +7,11 @@
 namespace bcostars {
 class GatewayServiceClient : public bcos::gateway::GatewayInterface {
 public:
+  GatewayServiceClient(bcostars::GatewayServicePrx proxy) : bcos::gateway::GatewayInterface(), m_proxy(proxy) {}
+
+  void start() override {}
+  void stop() override {}
+
   void asyncSendMessageByNodeID(const std::string &_groupID, bcos::crypto::NodeIDPtr _srcNodeID, bcos::crypto::NodeIDPtr _dstNodeID,
                                 bcos::bytesConstRef _payload, bcos::gateway::ErrorRespFunc _errorRespFunc) override {
     class Callback : public bcostars::GatewayServicePrxCallback {

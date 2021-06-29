@@ -10,6 +10,9 @@
 namespace bcostars {
 class DispatcherServiceClient : public bcos::dispatcher::DispatcherInterface {
 public:
+  DispatcherServiceClient(bcostars::DispatcherServicePrx proxy, bcostars::protocol::BlockHeaderFactoryImpl::Ptr blockHeaderFactory,
+                          bcostars::protocol::BlockFactoryImpl::Ptr blockFactory)
+      : bcos::dispatcher::DispatcherInterface(), m_proxy(proxy), m_blockHeaderFactory(blockHeaderFactory), m_blockFactory(blockFactory) {}
   ~DispatcherServiceClient() override {}
 
   void asyncExecuteBlock(const bcos::protocol::Block::Ptr &_block, bool _verify,

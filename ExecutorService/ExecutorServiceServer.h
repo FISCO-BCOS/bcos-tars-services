@@ -6,6 +6,7 @@
 #include "../Common/ProxyDesc.h"
 #include "../protocols/TransactionImpl.h"
 #include "../protocols/TransactionReceiptImpl.h"
+#include "../DispatcherService/DispatcherServiceClient.h"
 #include "bcos-framework/interfaces/executor/ExecutorInterface.h"
 #include "bcos-executor/Executor.h"
 #include "../protocols/BlockImpl.h"
@@ -33,17 +34,16 @@ void initialize() override {
       auto blockHeaderFactory = std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(m_cryptoSuite);
       auto blockFactory = std::make_shared<bcostars::protocol::BlockFactoryImpl>(m_cryptoSuite, blockHeaderFactory, transactionFactory, transactionReceiptFactory);
 
-      // TODO: add dispatcher
-      // auto dispatcherProxy = Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(getProxyDesc(DispatcherServiceObj"));
+      auto dispatcherProxy = Application::getCommunicator()->stringToProxy<bcostars::DispatcherServicePrx>(getProxyDesc("DispatcherServiceObj"));
+      auto dispatcher = std::make_shared<bcostars::DispatcherServiceClient>(dispatcherProxy, blockHeaderFactory, blockFactory);
 
       bcostars::StorageServicePrx storageServiceProxy =
           Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(getProxyDesc("StorageServiceObj"));
       bcos::storage::StorageInterface::Ptr storageServiceClient = std::make_shared<bcostars::StorageServiceClient>(storageServiceProxy);
 
       auto ledger = std::make_shared<bcos::ledger::Ledger>(blockFactory, storageServiceClient);
-
-      bcos::dispatcher::DispatcherInterface::Ptr dispatcher; // TODO: Init the dispatcher
-      m_executor = std::make_shared<bcos::executor::Executor>(blockFactory, nullptr, ledger, storageServiceClient, true);
+      
+      m_executor = std::make_shared<bcos::executor::Executor>(blockFactory, dispatcher, ledger, storageServiceClient, true);
     });
   }
 

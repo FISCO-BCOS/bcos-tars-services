@@ -5,12 +5,22 @@
 #include "bcos-framework/interfaces/crypto/KeyFactory.h"
 #include "bcos-framework/interfaces/crypto/KeyInterface.h"
 #include "bcos-framework/interfaces/front/FrontServiceInterface.h"
+#include "bcos-framework/interfaces/crypto/CryptoSuite.h"
+#include "../protocols/TransactionImpl.h"
+#include "../protocols/TransactionReceiptImpl.h"
 #include <bcos-front/FrontService.h>
 #include <bcos-front/FrontServiceFactory.h>
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
+#include "../protocols/BlockHeaderImpl.h"
+#include "../protocols/BlockImpl.h"
+#include "bcos-crypto/hash/SM3.h"
+#include "bcos-crypto/signature/sm2/SM2Crypto.h"
 #include "../GatewayService/GatewayServiceClient.h"
+#include "../Common/ProxyDesc.h"
 #include "servant/Communicator.h"
 #include "servant/Global.h"
+#include "../PBFTService/PBFTServiceClient.h"
+
 
 namespace bcostars {
 class FrontServiceServer : public FrontService {
@@ -23,13 +33,27 @@ class FrontServiceServer : public FrontService {
 
       bcos::front::FrontServiceFactory frontServiceFactory;
 
-      // TODO: set the gateway interface
-      frontServiceFactory.setGatewayInterface(nullptr);
+      auto cryptoSuite =
+          std::make_shared<bcos::crypto::CryptoSuite>(std::make_shared<bcos::crypto::SM3>(), std::make_shared<bcos::crypto::SM2Crypto>(), nullptr);
+      auto transactionFactory = std::make_shared<bcostars::protocol::TransactionFactoryImpl>(cryptoSuite);
+      auto transactionReceiptFactory = std::make_shared<bcostars::protocol::TransactionReceiptFactoryImpl>(cryptoSuite);
+      auto blockHeaderFactory = std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(cryptoSuite);
+      auto blockFactory =
+          std::make_shared<bcostars::protocol::BlockFactoryImpl>(cryptoSuite, blockHeaderFactory, transactionFactory, transactionReceiptFactory);
+
+      auto gatewayProxy = Application::getCommunicator()->stringToProxy<bcostars::GatewayServicePrx>(getProxyDesc("GatewayServiceObj"));
+      auto gateway = std::make_shared<bcostars::GatewayServiceClient>(gatewayProxy);
+
+      frontServiceFactory.setGatewayInterface(gateway);
 
       auto front = frontServiceFactory.buildFrontService(groupID, nodeID);
 
-      // TODO: add the module dispatcher
-      // front->registerModuleMessageDispatcher(int moduleID, std::function<void (bcos::crypto::NodeIDPtr, bytesConstRef)> _dispatcher)
+      auto pbftProxy = Application::getCommunicator()->stringToProxy<bcostars::GatewayServicePrx>(getProxyDesc("PBFTServiceObj"));
+      auto pbft = std::make_shared<PBFTServiceClient>(pbftProxy);
+
+      // TODO: add serval module id pbft
+      // front->registerModuleNodeIDsDispatcher(int _moduleID, std::function<void (std::shared_ptr<const crypto::NodeIDs>, ReceiveMsgFunc)> _dispatcher)
+
       m_front = front;
     });
 
@@ -88,6 +112,8 @@ class FrontServiceServer : public FrontService {
                                     tars::TarsCurrentPtr current) override {
     m_front->asyncSendResponse(id, moduleID, m_keyFactory->createKey(nodeID), bcos::ref(data),
                                [current](bcos::Error::Ptr error) { async_response_asyncSendResponse(current, toTarsError(error)); });
+
+    return bcostars::Error();
   }
 
   bcostars::Error onReceiveBroadcastMessage(const std::string &groupID, const vector<tars::UInt8> &nodeID, const vector<tars::UInt8> &data,
