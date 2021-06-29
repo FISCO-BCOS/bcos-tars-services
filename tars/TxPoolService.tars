@@ -1,7 +1,18 @@
 #include "Common.tars"
+#include "Transaction.tars"
+#include "TransactionSubmitResult.tars"
 
 module bcostars {
     interface TxPoolService {
-        // Error asyncCommit(vector<unsigned byte> tx, )
+        Error asyncSubmit(vector<unsigned byte> tx, out TransactionSubmitResult result);
+        Error asyncSealTxs(long txsLimit, vector<vector<unsigned byte>> avoidTxs, out vector<vector<unsigned byte>> return1, out vector<vector<unsigned byte>> return2);
+        Error asyncMarkTxs(vector<vector<unsigned byte>> txHashs, bool sealedFlag);
+        Error asyncVerifyBlock(vector<unsigned byte> generatedNodeID, vector<unsigned byte> block, out bool result);
+        Error asyncFillBlock(vector<vector<unsigned byte>> txHashs, out vector<Transaction> filled);
+        Error asyncNotifyBlockResult(long blockNumber, TransactionSubmitResult result);
+        Error asyncNotifyTxsSyncMessage(vector<unsigned byte> nodeID, vector<unsigned byte> data, out vector<unsigned byte> respData);
+        Error notifyConnectedNodes(vector<vector<unsigned byte>> connectedNodes);
+        Error notifyConsensusNodeList(vector<vector<unsigned byte>> consensusNodeList);
+        Error notifyObserverNodeList(vector<vector<unsigned byte>> observerNodeList);
     };
 };
