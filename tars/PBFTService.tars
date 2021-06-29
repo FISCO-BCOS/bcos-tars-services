@@ -1,9 +1,14 @@
 #include "Common.tars"
+#include "Block.tars"
+#include "LedgerConfig.tars"
 
 module bcostars {
     interface PBFTService {
-        Error asyncNotifySealProposal(long proposalIndex, long proposalEndIndex, long maxTxsToSeal);
-
-        Error asyncNoteUnSealedTxsSize(long unsealedTxsSize);
+        Error asyncSubmitProposal(vector<unsigned byte> _proposalData, long _proposalIndex, vector<unsigned byte> _proposalHash);
+        Error asyncGetPBFTView(out long _view);
+        Error asyncCheckBlock(Block _block, out bool _verifyResult);
+        Error asyncNotifyNewBlock(LedgerConfig _ledgerConfig);
+        Error asyncNotifyConsensusMessage(string _uuid, vector<unsigned byte> _nodeId, vector<unsigned byte> _data);
+        Error asyncNoteUnSealedTxsSize(long _unsealedTxsSize);
     };
 };
