@@ -1,0 +1,7 @@
+#include "Common.tars"
+
+module bcostars {
+    interface TxPoolService {
+        // Error asyncCommit(vector<unsigned byte> tx, )
+    };
+};
