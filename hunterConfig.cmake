@@ -1,7 +1,8 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/98a2530574ebf546fe38f92bddf3fe33305d9057.tar.gz"
-    SHA1 be626ecd549151564dcec75cd4f2b2579188c237
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/e2193a04b6f5d6299839dc465b1e679802eb3675.tar.gz"
+    SHA1 d1075dc7c3645dc9191b39d3931e8bd096a93fd4
+    CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON #DEBUG=ON
 )
 hunter_config(bcos-crypto VERSION 3.0.0-local-43df7523
     URL "https://${URL_BASE}/FISCO-BCOS/bcos-crypto/archive/25c8edb7d5cbadb514bbce9733573c8ffdb3600d.tar.gz"
@@ -9,18 +10,18 @@ hunter_config(bcos-crypto VERSION 3.0.0-local-43df7523
 )
 
 hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/ee6dd57a668edaa0f5e67693c86d37183922860f.tar.gz"
-    SHA1 1a05a49aa20bcf50261ef4dca9efa5098755e064
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/1a3c7763e19263aad21a4c5ba57a0f028b5138e4.tar.gz"
+    SHA1 3e93aeca3b6469cff4b51baaead3365fcb76a1fc
 )
 
 hunter_config(bcos-pbft VERSION 3.0.0-local-bddd4b4e
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/4cada40e01afec155ea06f574a7ccb2e8269be90.tar.gz"
-    SHA1 e1e63f52de883fe3ee662408ad5cdb56e47b9a73
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/01b455df5973da4458bd70ad3475f8a78ac19755.tar.gz"
+    SHA1 dc97b56939d21a92ca257d1d10820f1c4efe075f
 )
 
 hunter_config(bcos-sync VERSION 3.0.0-local-50e0e264
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/42b4c5a0b9a4472f62f4b20d7c7b02c831edee3c.tar.gz"
-    SHA1 4b1082b008bcbc174053cbe88c1b709bf3f5375f
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/432db818df69ae4fa57632aa4861642385eeda33.tar.gz"
+    SHA1 188db879b47efa088bed5483c48108b1f11e37cb
 )
 
 hunter_config(bcos-storage VERSION 3.0.0-local
@@ -45,13 +46,14 @@ hunter_config(bcos-gateway VERSION 3.0.0-local-1fb592e4
 )
 
 hunter_config(bcos-dispatcher VERSION 3.0.0-local-2903b298
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-dispatcher/archive/4b9e0b3db816ae5902e79b4777637e6d2d114386.tar.gz"
-    SHA1 4a1b6a063a079caf5b7062bb66187d387df3b3cc
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-dispatcher/archive/4fbc714b9ce38da0b8bc3a1e051dde53563113e3.tar.gz"
+    SHA1 6d027b862f5b39f94e6fc68aa8234d6723f3b6f6
 )
 
-hunter_config(bcos-executor VERSION 3.0.0-local-d02a7649
+hunter_config(bcos-executor VERSION 3.0.0-local-ac6d5d18
     URL "https://${URL_BASE}/FISCO-BCOS/bcos-executor/archive/ac6d5d18bddfee86bcc41bedc5636bf7e11dc02e.tar.gz"
     SHA1 69bfbeeb058f07fc7af4139b4e6923c533a78305
+    CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON #DEBUG=ON
 )
 
 hunter_config(evmc VERSION 7.3.0-d951b1ef

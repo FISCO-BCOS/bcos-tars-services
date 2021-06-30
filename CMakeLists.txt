@@ -29,6 +29,9 @@ project(Bcos-Tars-Service)
 # import dependencies
 include (Dependencies.cmake)
 
+# copy .clang-format into the project path
+include(CopyClangFormat)
+
 include_directories(${DEPENDENCIES_DIR}/tarscpp-install/thirdparty/include)
 link_directories(${DEPENDENCIES_DIR}/tarscpp-install/thirdparty/lib)
 
@@ -39,6 +42,7 @@ include(CompilerSettings)
 # import tars project
 add_subdirectory(tars)
 add_subdirectory(protocols)
+add_subdirectory(libinitializer)
 add_subdirectory(StorageService)
 add_subdirectory(FrontService)
 add_subdirectory(GatewayService)
