@@ -10,7 +10,7 @@ module bcostars {
         Error asyncVerifyBlock(vector<unsigned byte> generatedNodeID, vector<unsigned byte> block, out bool result);
         Error asyncFillBlock(vector<vector<unsigned byte>> txHashs, out vector<Transaction> filled);
         Error asyncNotifyBlockResult(long blockNumber, vector<TransactionSubmitResult> result);
-        Error asyncNotifyTxsSyncMessage(Error error, vector<unsigned byte> nodeID, vector<unsigned byte> data, out vector<unsigned byte> respData);
+        Error asyncNotifyTxsSyncMessage(Error error, string id, vector<unsigned byte> nodeID, vector<unsigned byte> data);
         Error notifyConnectedNodes(vector<vector<unsigned byte>> connectedNodes);
         Error notifyConsensusNodeList(vector<vector<unsigned byte>> consensusNodeList);
         Error notifyObserverNodeList(vector<vector<unsigned byte>> observerNodeList);
