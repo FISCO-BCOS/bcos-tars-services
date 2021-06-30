@@ -1,7 +1,10 @@
 #pragma once
 
 #include "../Common/ErrorConverter.h"
+#include "../Common/ProxyDesc.h"
 #include "../GatewayService/GatewayServiceClient.h"
+#include "../PBFTService/PBFTServiceClient.h"
+#include "../libinitializer/ProtocolInitializer.h"
 #include "FrontService.h"
 #include "bcos-framework/interfaces/crypto/KeyFactory.h"
 #include "bcos-framework/interfaces/crypto/KeyInterface.h"
@@ -9,8 +12,12 @@
 #include "servant/Communicator.h"
 #include "servant/Global.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
+#include <bcos-framework/interfaces/protocol/Protocol.h>
+#include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-front/FrontService.h>
 #include <bcos-front/FrontServiceFactory.h>
+
+#define FRONTSERVICE_LOG(LEVEL) BCOS_LOG(LEVEL) << "[FRONTSERVICE]"
 
 namespace bcostars
 {
@@ -21,23 +28,77 @@ class FrontServiceServer : public FrontService
     void initialize() override
     {
         std::call_once(m_onceFlag, [this]() {
-            std::string groupID;
-            bcos::crypto::NodeIDPtr nodeID;
-
             bcos::front::FrontServiceFactory frontServiceFactory;
+            // load the config
+            auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
+            auto iniConfigPath = ServerConfig::BasePath + "config.ini";
+            nodeConfig->loadConfig(iniConfigPath);
 
-            // TODO: set the gateway interface
-            frontServiceFactory.setGatewayInterface(nullptr);
+            auto protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
+            auto privateKeyPath = ServerConfig::BasePath + "node.pem";
+            protocolInitializer->loadKeyPair(privateKeyPath);
+            m_keyFactory = protocolInitializer->keyFactory();
 
-            auto front = frontServiceFactory.buildFrontService(groupID, nodeID);
+            // set the gateway interface
+            auto gateWayProxy = Application::getCommunicator()->stringToProxy<GatewayServicePrx>(
+                getProxyDesc("GatewayServiceObj"));
+            auto gateWay = std::make_shared<GatewayServiceClient>(gateWayProxy);
+            frontServiceFactory.setGatewayInterface(gateWay);
 
-            // TODO: add the module dispatcher
-            // front->registerModuleMessageDispatcher(int moduleID, std::function<void
-            // (bcos::crypto::NodeIDPtr, bytesConstRef)> _dispatcher)
+            auto front = frontServiceFactory.buildFrontService(
+                nodeConfig->groupId(), protocolInitializer->keyPair()->publicKey());
+            // add the module dispatcher
+            auto pbftProxy = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
+                getProxyDesc("PBFTServiceObj"));
+            auto pbft = std::make_shared<PBFTServiceClient>(pbftProxy);
+            // register the message dispatcher for PBFT module
+            std::weak_ptr<bcos::consensus::ConsensusInterface> weakPBFT = pbft;
+            front->registerModuleMessageDispatcher(bcos::protocol::ModuleID::PBFT,
+                [weakPBFT](bcos::crypto::NodeIDPtr _nodeID, const std::string& _id,
+                    bcos::bytesConstRef _data) {
+                    try
+                    {
+                        auto pbft = weakPBFT.lock();
+                        if (!pbft)
+                        {
+                            return;
+                        }
+                        pbft->asyncNotifyConsensusMessage(nullptr, _id, _nodeID, _data, nullptr);
+                    }
+                    catch (std::exception const& e)
+                    {
+                        FRONTSERVICE_LOG(WARNING)
+                            << LOG_DESC("call PBFT message dispatcher exception")
+                            << LOG_KV("error", boost::diagnostic_information(e));
+                    }
+                });
+            // TODO: register the message dispatcher for the txsSync module
+            // register the message dispatcher for the block sync module
+            auto blockSync = std::make_shared<BlockSyncServiceClient>(pbftProxy);
+            std::weak_ptr<bcos::sync::BlockSyncInterface> weakSync = blockSync;
+            front->registerModuleMessageDispatcher(bcos::protocol::ModuleID::BlockSync,
+                [weakSync](bcos::crypto::NodeIDPtr _nodeID, std::string const& _id,
+                    bcos::bytesConstRef _data) {
+                    try
+                    {
+                        auto sync = weakSync.lock();
+                        if (!sync)
+                        {
+                            return;
+                        }
+                        sync->asyncNotifyBlockSyncMessage(nullptr, _id, _nodeID, _data, nullptr);
+                    }
+                    catch (std::exception const& e)
+                    {
+                        FRONTSERVICE_LOG(WARNING)
+                            << LOG_DESC("call block sync message dispatcher exception")
+                            << LOG_KV("error", boost::diagnostic_information(e));
+                    }
+                });
             m_front = front;
+            // start the front service
+            m_front->start();
         });
-
-        m_keyFactory = std::make_shared<bcos::crypto::KeyFactoryImpl>();
     }
 
     void destroy() override {}

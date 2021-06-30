@@ -12,6 +12,7 @@ public:
     {
         addConfig("config.genesis");
         addConfig("config.ini");
+        addConfig("node.pem");
         addServant<PBFTServiceServer>(
             ServerConfig::Application + "." + ServerConfig::ServerName + ".PBFTServiceObj");
     }

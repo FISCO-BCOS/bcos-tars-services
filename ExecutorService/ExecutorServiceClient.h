@@ -11,6 +11,11 @@ namespace bcostars
 class ExecutorServiceClient : public bcos::executor::ExecutorInterface
 {
 public:
+    ExecutorServiceClient(
+        bcostars::ExecutorServicePrx _proxy, bcos::crypto::CryptoSuite::Ptr _cryptoSuite)
+      : m_proxy(_proxy), m_cryptoSuite(_cryptoSuite)
+    {}
+
     ~ExecutorServiceClient() override{};
     void asyncGetCode(const std::string_view& _address,
         std::function<void(const bcos::Error::Ptr&, const std::shared_ptr<bcos::bytes>&)> _callback)

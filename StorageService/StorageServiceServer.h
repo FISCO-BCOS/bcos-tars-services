@@ -6,6 +6,7 @@
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/interfaces/storage/TableInterface.h>
 #include <bcos-framework/libtable/TableFactory.h>
+#include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-storage/KVDBImpl.h>
 #include <bcos-storage/RocksDBAdapter/RocksDBAdapter.h>
 #include <bcos-storage/RocksDBAdapter/RocksDBAdapterFactory.h>
@@ -24,14 +25,22 @@ public:
     {
         std::call_once(m_storageFlag, []() {
             // load the config
-            bcos::storage::RocksDBAdapterFactory rocksdbAdapterFactory(
-                ServerConfig::DataPath + "/db");
-            auto rocksdbAdapter = rocksdbAdapterFactory.createAdapter("bcos_storage");
-            auto ret = rocksdbAdapterFactory.createRocksDB("kv_storage");
+            auto configPath = ServerConfig::BasePath + "config.ini";
+            auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
+            nodeConfig->loadConfig(configPath);
+
+            bcos::storage::RocksDBAdapterFactory rocksdbAdapterFactory(nodeConfig->storagePath());
+
+            auto ret = rocksdbAdapterFactory.createRocksDB(
+                nodeConfig->storageDBName(), bcos::storage::RocksDBAdapter::TABLE_PERFIX_LENGTH);
+            if (!ret.first)
+            {
+                throw std::runtime_error("createRocksDB failed!");
+            }
             auto kvDB = std::make_shared<bcos::storage::KVDBImpl>(ret.first);
-
-            auto storageImpl = std::make_shared<bcos::storage::StorageImpl>(rocksdbAdapter, kvDB);
-
+            auto adapter = rocksdbAdapterFactory.createAdapter(
+                nodeConfig->stateDBName(), bcos::storage::RocksDBAdapter::TABLE_PERFIX_LENGTH);
+            auto storageImpl = std::make_shared<bcos::storage::StorageImpl>(adapter, kvDB);
             m_storage = storageImpl;
         });
     }
