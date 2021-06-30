@@ -6,6 +6,7 @@
 #include "../protocols/TransactionSubmitResultImpl.h"
 #include "../protocols/TransactionImpl.h"
 #include "../Common/ErrorConverter.h"
+#include "libutilities/Common.h"
 #include <memory>
 
 namespace bcostars {
@@ -164,13 +165,20 @@ public:
     public:
       Callback(std::function<void(bcos::bytesConstRef _respData)> callback) : m_callback(callback) {}
 
-      void callback_asyncNotifyTxsSyncMessage(const bcostars::Error& ret,  const vector<tars::UInt8>& respData) override {}
+      void callback_asyncNotifyTxsSyncMessage(const bcostars::Error& ret,  const vector<tars::UInt8>& respData) override {
+        m_callback(bcos::ref(respData));
+      }
 
-      void callback_asyncNotifyTxsSyncMessage_exception(tars::Int32 ret) override {}
+      void callback_asyncNotifyTxsSyncMessage_exception(tars::Int32 ret) override {
+        bcos::bytes empty;
+        m_callback(bcos::ref(empty));
+      }
 
     private:
       std::function<void(bcos::bytesConstRef _respData)> m_callback;
     };
+
+    m_proxy->async_asyncNotifyTxsSyncMessage(new Callback(_sendResponse), toTarsError(_error), _nodeID->data(), _data.toBytes());
   }
 
   void notifyConnectedNodes(bcos::crypto::NodeIDSet const &_connectedNodes, std::function<void(bcos::Error::Ptr)> _onRecvResponse) override {}

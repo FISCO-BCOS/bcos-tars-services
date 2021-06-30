@@ -1,131 +1,95 @@
+/**
+ *  Copyright (C) 2021 FISCO BCOS.
+ *  SPDX-License-Identifier: Apache-2.0
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ * @brief server for the PBFTService
+ * @file PBFTService.h
+ * @author: yujiechen
+ * @date 2021-06-29
+ */
+
 #pragma once
 
-#include "FrontService.h"
+
+#include "../libinitializer/ProtocolInitializer.h"
 #include "PBFTService.h"
 #include "servant/Application.h"
 #include "servant/Communicator.h"
-#include "../Common/ProxyDesc.h"
-#include "../Common/ErrorConverter.h"
-#include "../FrontService/FrontServiceClient.h"
-#include "../StorageService/StorageServiceClient.h"
-#include "../protocols/BlockImpl.h"
-#include "../protocols/TransactionImpl.h"
-#include "../protocols/TransactionReceiptImpl.h"
-#include "bcos-framework/interfaces/crypto/KeyFactory.h"
-#include "bcos-crypto/hash/SM3.h"
-#include "bcos-crypto/signature/sm2/SM2Crypto.h"
-#include "bcos-framework/interfaces/crypto/CryptoSuite.h"
-#include "bcos-framework/interfaces/front/FrontServiceInterface.h"
-#include "bcos-framework/interfaces/protocol/BlockFactory.h"
-#include "bcos-framework/interfaces/protocol/TransactionFactory.h"
-#include "bcos-framework/interfaces/protocol/TransactionReceiptFactory.h"
-#include "bcos-framework/interfaces/sealer/SealerInterface.h"
-#include "bcos-framework/interfaces/storage/StorageInterface.h"
-#include "bcos-framework/libprotocol/TransactionSubmitResultFactoryImpl.h"
-#include "bcos-framework/libsealer/Sealer.h"
-#include "bcos-framework/libsealer/SealerFactory.h"
-#include "bcos-framework/interfaces/sync/BlockSyncInterface.h"
-#include "bcos-sync/BlockSyncFactory.h"
-#include "bcos-ledger/ledger/Ledger.h"
-#include "bcos-pbft/pbft/PBFTFactory.h"
-#include "bcos-txpool/TxPoolFactory.h"
-#include "bcos-crypto/signature/key/KeyFactoryImpl.h"
+#include <bcos-framework/interfaces/crypto/KeyFactory.h>
+#include <bcos-framework/libsealer/SealerFactory.h>
+#include <bcos-framework/libtool/NodeConfig.h>
+#include <bcos-ledger/ledger/Ledger.h>
+#include <bcos-pbft/pbft/PBFTFactory.h>
+#include <bcos-sync/BlockSyncFactory.h>
+#include <bcos-txpool/TxPoolFactory.h>
 #include <mutex>
 
-namespace bcostars {
-
-class PBFTServiceServer : public bcostars::PBFTService {
+namespace bcostars
+{
+class PBFTServiceServer : public bcostars::PBFTService
+{
 public:
-  void initialize() override {
-    std::call_once(m_pbftFlag, [this]() {
-      auto keyPairFactory = std::make_shared<bcos::crypto::KeyFactoryImpl>();
+    using Ptr = std::shared_ptr<PBFTServiceServer>;
+    PBFTServiceServer() {}
+    ~PBFTServiceServer() override {}
 
-      // ---- Params from config -------
-      std::string groupID;
-      std::string chainID;
-      int64_t blockLimit;
-      bcos::bytes keyData;
-      auto key = keyPairFactory->createKey(keyData);
-      // ------------------
+    void initialize() override;
+    void destroy() override {}
 
-      bcos::crypto::CryptoSuite::Ptr cryptoSuite =
-          std::make_shared<bcos::crypto::CryptoSuite>(std::make_shared<bcos::crypto::SM3>(), std::make_shared<bcos::crypto::SM2Crypto>(), nullptr);
+    bcostars::Error asyncCheckBlock(
+        const bcostars::Block& _block, tars::Bool&, tars::TarsCurrentPtr _current) override;
+    bcostars::Error asyncGetPBFTView(tars::Int64& _view, tars::TarsCurrentPtr _current) override;
 
-      auto keyPair = cryptoSuite->signatureImpl()->createKeyPair(key);
+    // Note: since the sealer is intergrated with the PBFT, this interfaces is useless now
+    bcostars::Error asyncNoteUnSealedTxsSize(
+        tars::Int64 _unsealedTxsSize, tars::TarsCurrentPtr _current) override;
 
-      bcos::protocol::BlockHeaderFactory::Ptr blockHeaderFactory = std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(cryptoSuite);
+    bcostars::Error asyncNotifyConsensusMessage(std::string const& _uuid,
+        const vector<tars::UInt8>& _nodeId, const vector<tars::UInt8>& _data,
+        tars::TarsCurrentPtr _current) override;
 
-      bcos::protocol::TransactionFactory::Ptr transactionFactory = std::make_shared<bcostars::protocol::TransactionFactoryImpl>(cryptoSuite);
+    // Note: since the blockSync module is intergrated with the PBFT, this interfaces is useless now
+    bcostars::Error asyncNotifyNewBlock(
+        const bcostars::LedgerConfig& _ledgerConfig, tars::TarsCurrentPtr _current) override;
 
-      bcos::protocol::TransactionReceiptFactory::Ptr transactionReceiptFactory =
-          std::make_shared<bcostars::protocol::TransactionReceiptFactoryImpl>(cryptoSuite);
+    // Note: since the sealer module is intergrated with the PBFT, the interface is useless now
+    bcostars::Error asyncSubmitProposal(const vector<tars::UInt8>& _proposalData,
+        tars::Int64 _proposalIndex, const vector<tars::UInt8>& _proposalHash,
+        tars::TarsCurrentPtr _current) override;
 
-      auto txSubmitResultFactory = std::make_shared<bcos::protocol::TransactionSubmitResultFactoryImpl>();
-      auto blockFactory =
-          std::make_shared<bcostars::protocol::BlockFactoryImpl>(cryptoSuite, blockHeaderFactory, transactionFactory, transactionReceiptFactory);
-
-      bcostars::FrontServicePrx frontServiceProxy = Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(getProxyDesc("FrontServiceObj"));
-      bcos::front::FrontServiceInterface::Ptr frontServiceClient =
-          std::make_shared<bcostars::FrontServiceClient>(frontServiceProxy, m_cryptoSuite->keyFactory());
-
-      bcostars::StorageServicePrx storageServiceProxy =
-          Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(getProxyDesc("StorageServiceObj"));
-      bcos::storage::StorageInterface::Ptr storageServiceClient = std::make_shared<bcostars::StorageServiceClient>(storageServiceProxy);
-
-      auto transactionSubmitResultFactory = std::make_shared<bcos::protocol::TransactionSubmitResultFactoryImpl>();
-
-      bcos::dispatcher::DispatcherInterface::Ptr dispatcher; // TODO: Init the dispatcher
-
-      auto ledger = std::make_shared<bcos::ledger::Ledger>(blockFactory, storageServiceClient);
-
-      auto txPoolFactory = std::make_shared<bcos::txpool::TxPoolFactory>(bcos::crypto::NodeIDPtr(), m_cryptoSuite, txSubmitResultFactory, blockFactory,
-                                                                         frontServiceClient, ledger, groupID, chainID, blockLimit);
-      auto txpool = txPoolFactory->createTxPool();
-
-      auto sealerFactory = std::make_shared<bcos::sealer::SealerFactory>(blockFactory, txpool, blockLimit);
-      auto sealer = sealerFactory->createSealer();
-      m_sealer = sealer;
-      
-      auto pbftFactory = std::make_shared<bcos::consensus::PBFTFactory>(m_cryptoSuite, keyPair, frontServiceClient, storageServiceClient, ledger,
-                                                                        txpool, m_sealer, dispatcher, blockFactory, transactionSubmitResultFactory);
-      auto pbft = pbftFactory->createPBFT();
-
-      auto blockSyncFactory =
-          std::make_shared<bcos::sync::BlockSyncFactory>(key, blockFactory, transactionSubmitResultFactory, ledger, txpool, frontServiceClient, dispatcher, pbft);
-      auto blockSync = blockSyncFactory->createBlockSync();
-      
-      txpool->init(m_sealer);
-      sealer->init(pbft);
-      pbft->init(blockSync);
-
-      txpool->start();
-      m_sealer->start();
-      pbft->start();
-      blockSync->start();
-    });
-  }
-
-  void destroy() override {}
-
-  bcostars::Error asyncNoteUnSealedTxsSize(tars::Int64 unsealedTxsSize, tars::TarsCurrentPtr current) override {
-    current->setResponse(false);
-
-    m_sealer->asyncNoteUnSealedTxsSize(unsealedTxsSize,
-                                       [current](bcos::Error::Ptr error) { async_response_asyncNoteUnSealedTxsSize(current, toTarsError(error)); });
-  }
-
-  bcostars::Error asyncNotifySealProposal(tars::Int64 proposalIndex, tars::Int64 proposalEndIndex, tars::Int64 maxTxsToSeal,
-                                          tars::TarsCurrentPtr current) override {
-    current->setResponse(false);
-
-    m_sealer->asyncNotifySealProposal(proposalIndex, proposalEndIndex, maxTxsToSeal,
-                                      [current](bcos::Error::Ptr error) { async_response_asyncNotifySealProposal(current, toTarsError(error)); });
-  }
+protected:
+    // TODO: create the txpool client only
+    virtual void createTxPool(bcos::tool::NodeConfig::Ptr _nodeConfig);
+    virtual void createSealer(bcos::tool::NodeConfig::Ptr _nodeConfig);
+    virtual void createBlockSync(bcos::tool::NodeConfig::Ptr _nodeConfig);
+    virtual void createPBFT(bcos::tool::NodeConfig::Ptr _nodeConfig);
 
 private:
-  static std::once_flag m_pbftFlag;
-  static bcos::sealer::SealerInterface::Ptr m_sealer;
-  static bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
+    bcos::txpool::TxPool::Ptr m_txpool;
+    bcos::consensus::PBFTImpl::Ptr m_pbft;
+    bcos::sealer::Sealer::Ptr m_sealer;
+    bcos::sync::BlockSync::Ptr m_blockSync;
+
+    bcos::front::FrontServiceInterface::Ptr m_frontService;
+    bcos::storage::StorageInterface::Ptr m_storage;
+    bcos::ledger::LedgerInterface::Ptr m_ledger;
+    bcos::dispatcher::DispatcherInterface::Ptr m_dispatcher;
+
+    bcos::initializer::ProtocolInitializer::Ptr m_protocolInitializer;
+
+    bcos::protocol::BlockFactory::Ptr m_blockFactory;
+    bcos::crypto::KeyFactory::Ptr m_keyFactory;
 };
 
-} // namespace bcostars
+}  // namespace bcostars

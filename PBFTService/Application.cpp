@@ -3,29 +3,39 @@
 
 using namespace bcostars;
 
-class PBFTServiceApp : public Application {
+class PBFTServiceApp : public Application
+{
 public:
-  virtual ~PBFTServiceApp() override{};
+    virtual ~PBFTServiceApp() override{};
 
-  virtual void initialize() override {
-    addConfig("PBFTService.conf");
-    addServant<PBFTServiceServer>(ServerConfig::Application + "." + ServerConfig::ServerName + ".PBFTServiceObj");
-  }
+    virtual void initialize() override
+    {
+        addConfig("config.genesis");
+        addConfig("config.ini");
+        addServant<PBFTServiceServer>(
+            ServerConfig::Application + "." + ServerConfig::ServerName + ".PBFTServiceObj");
+    }
 
-  virtual void destroyApp() override {}
+    virtual void destroyApp() override {}
 };
 
-int main(int argc, char *argv[]) {
-  try {
-    PBFTServiceApp app;
-    app.main(argc, argv);
-    app.waitForShutdown();
+int main(int argc, char* argv[])
+{
+    try
+    {
+        PBFTServiceApp app;
+        app.main(argc, argv);
+        app.waitForShutdown();
 
-    return 0;
-  } catch (std::exception &e) {
-    cerr << "std::exception:" << e.what() << std::endl;
-  } catch (...) {
-    cerr << "unknown exception." << std::endl;
-  }
-  return -1;
+        return 0;
+    }
+    catch (std::exception& e)
+    {
+        cerr << "std::exception:" << e.what() << std::endl;
+    }
+    catch (...)
+    {
+        cerr << "unknown exception." << std::endl;
+    }
+    return -1;
 }
