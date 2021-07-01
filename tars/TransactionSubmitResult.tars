@@ -1,0 +1,14 @@
+#include "Common.tars"
+#include "TransactionReceipt.tars"
+
+module bcostars {
+    struct TransactionSubmitResult {
+        1 optional int status;
+        2 optional TransactionReceipt receipt;
+        3 optional vector<unsigned byte> txHash;
+        4 optional vector<unsigned byte> from;
+        5 optional vector<unsigned byte> blockHash;
+        6 optional vector<unsigned byte> to;
+        7 optional long transactionIndex;
+    };
+};

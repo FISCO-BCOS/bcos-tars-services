@@ -110,6 +110,8 @@ public:
 
     const bcostars::Transaction& inner() const { return *m_inner; }
 
+  void setInner(const bcostars::Transaction &inner) { *m_inner = inner; }
+
 private:
     mutable std::shared_ptr<bcostars::Transaction> m_inner;
     mutable bcos::bytes m_buffer;
