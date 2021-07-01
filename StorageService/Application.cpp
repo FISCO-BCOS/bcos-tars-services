@@ -9,6 +9,7 @@ public:
 
     virtual void initialize() override
     {
+        addConfig("config.ini");
         addServant<StorageServiceServer>(
             ServerConfig::Application + "." + ServerConfig::ServerName + ".StorageServiceObj");
     }

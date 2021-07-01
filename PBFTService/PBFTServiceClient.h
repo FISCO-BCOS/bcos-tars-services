@@ -25,6 +25,7 @@
 #include "PBFTService.h"
 #include "bcos-framework/interfaces/sealer/SealerInterface.h"
 #include <bcos-framework/interfaces/consensus/ConsensusInterface.h>
+#include <bcos-framework/interfaces/sync/BlockSyncInterface.h>
 
 namespace bcostars
 {
@@ -131,6 +132,35 @@ public:
     {
         throw std::runtime_error("asyncNoteLatestBlockNumber: unimplemented interface!");
     }
+
+private:
+    bcostars::PBFTServicePrx m_proxy;
+};
+
+class BlockSyncServiceClient : virtual public bcos::sync::BlockSyncInterface
+{
+public:
+    using Ptr = std::shared_ptr<BlockSyncServiceClient>;
+    BlockSyncServiceClient(bcostars::PBFTServicePrx _proxy) : m_proxy(_proxy) {}
+    ~BlockSyncServiceClient() override {}
+
+    // called by the consensus module when commit a new block
+    void asyncNotifyNewBlock(
+        bcos::ledger::LedgerConfig::Ptr, std::function<void(bcos::Error::Ptr)>) override
+    {}
+
+    // called by the frontService to dispatch message
+    void asyncNotifyBlockSyncMessage(bcos::Error::Ptr _error, std::string const& _uuid,
+        bcos::crypto::NodeIDPtr _nodeID, bcos::bytesConstRef _data,
+        std::function<void(bcos::Error::Ptr _error)> _onRecv) override
+    {
+        m_proxy->async_asyncNotifyBlockSyncMessage(
+            new PBFTServiceCommonCallback(_onRecv), _uuid, _nodeID->data(), _data.toBytes());
+    }
+
+protected:
+    void start() override {}
+    void stop() override {}
 
 private:
     bcostars::PBFTServicePrx m_proxy;

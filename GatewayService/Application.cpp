@@ -10,7 +10,8 @@ public:
 
     virtual void initialize() override
     {
-        addConfig("GatewayService.conf");
+        addConfig("config.ini");
+        addConfig("node.pem");
         addServant<GatewayServiceServer>(
             ServerConfig::Application + "." + ServerConfig::ServerName + ".GatewayServiceObj");
     }

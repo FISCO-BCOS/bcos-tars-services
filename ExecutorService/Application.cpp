@@ -10,7 +10,7 @@ public:
 
     virtual void initialize() override
     {
-        addConfig("FrontService.conf");
+        addConfig("config.ini");
         addServant<ExecutorServiceServer>(
             ServerConfig::Application + "." + ServerConfig::ServerName + ".ExecutorServiceObj");
     }

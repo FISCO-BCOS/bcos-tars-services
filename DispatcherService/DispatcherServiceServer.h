@@ -1,11 +1,13 @@
 #pragma once
-
 #include "../Common/ErrorConverter.h"
+#include "../libinitializer/ProtocolInitializer.h"
 #include "../protocols/BlockImpl.h"
 #include "DispatcherService.h"
 #include "bcos-crypto/hash/SM3.h"
 #include "bcos-crypto/signature/sm2/SM2Crypto.h"
 #include "bcos-dispatcher/DispatcherImpl.h"
+#include "servant/Application.h"
+#include <bcos-framework/libtool/NodeConfig.h>
 #include <memory>
 
 namespace bcostars
@@ -16,20 +18,17 @@ public:
     void initialize() override
     {
         std::call_once(m_initFlag, []() {
-            auto cryptoSuite =
-                std::make_shared<bcos::crypto::CryptoSuite>(std::make_shared<bcos::crypto::SM3>(),
-                    std::make_shared<bcos::crypto::SM2Crypto>(), nullptr);
+            auto configPath = ServerConfig::BasePath + "config.ini";
+            auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
+            nodeConfig->loadConfig(configPath);
 
-            auto transactionFactory =
-                std::make_shared<bcostars::protocol::TransactionFactoryImpl>(cryptoSuite);
-            auto transactionReceiptFactory =
-                std::make_shared<bcostars::protocol::TransactionReceiptFactoryImpl>(cryptoSuite);
+            auto protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
+            protocolInitializer->init(nodeConfig);
 
-            m_blockHeaderFactory =
-                std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(cryptoSuite);
-            m_blockFactory = std::make_shared<bcostars::protocol::BlockFactoryImpl>(
-                cryptoSuite, m_blockHeaderFactory, transactionFactory, transactionReceiptFactory);
+            m_blockFactory = protocolInitializer->blockFactory();
             m_dispatcher = std::make_shared<bcos::dispatcher::DispatcherImpl>();
+            // TODO: set the txpool to the dispatcher
+            m_dispatcher->start();
         });
     }
 
@@ -71,7 +70,7 @@ public:
     {
         current->setResponse(false);
 
-        auto bcosBlockHeader = m_blockHeaderFactory->createBlockHeader();
+        auto bcosBlockHeader = m_blockFactory->blockHeaderFactory()->createBlockHeader();
         std::dynamic_pointer_cast<bcostars::protocol::BlockHeaderImpl>(bcosBlockHeader)
             ->setInner(blockHeader);
         m_dispatcher->asyncNotifyExecutionResult(
@@ -84,7 +83,6 @@ public:
 private:
     static std::once_flag m_initFlag;
     static bcos::dispatcher::DispatcherImpl::Ptr m_dispatcher;
-    static bcostars::protocol::BlockHeaderFactoryImpl::Ptr m_blockHeaderFactory;
     static bcostars::protocol::BlockFactoryImpl::Ptr m_blockFactory;
 };
 

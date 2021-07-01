@@ -3,7 +3,7 @@ if (NOT DEFINED URL_BASE)
     set(URL_BASE "github.com")
    endif()
 # set(URL_BASE "github.com.cnpmjs.org")
-set (DEPENDENCIES_DIR ${CMAKE_CURRENT_BINARY_DIR})
+set (DEPENDENCIES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/src)
 
 set(BCOS_TARS_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake" CACHE PATH "The cmake path for the library")
 set(BCOS_CMAKE_SCRIPTS_DIR ${CMAKE_CURRENT_BINARY_DIR}/bcos-cmake-scripts)
@@ -32,8 +32,9 @@ include (Dependencies.cmake)
 # copy .clang-format into the project path
 include(CopyClangFormat)
 
-include_directories(${DEPENDENCIES_DIR}/tarscpp-install/thirdparty/include)
-link_directories(${DEPENDENCIES_DIR}/tarscpp-install/thirdparty/lib)
+set(TARS_GENERATE_DIR ${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${TARS_GENERATE_DIR}/tarscpp-install/thirdparty/include)
+link_directories(${TARS_GENERATE_DIR}/tarscpp-install/thirdparty/lib)
 
 set(TARS_HEADER_DIR ${CMAKE_CURRENT_BINARY_DIR}/tars-generated)
 include_directories(${TARS_HEADER_DIR})

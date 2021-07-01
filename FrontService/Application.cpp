@@ -10,7 +10,8 @@ public:
 
     virtual void initialize() override
     {
-        addConfig("FrontService.conf");
+        addConfig("config.ini");
+        addConfig("node.pem");
         addServant<FrontServiceServer>(
             ServerConfig::Application + "." + ServerConfig::ServerName + ".FrontServiceObj");
     }
