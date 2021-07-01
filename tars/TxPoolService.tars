@@ -3,6 +3,11 @@
 #include "TransactionSubmitResult.tars"
 
 module bcostars {
+    struct ConsensusNode {
+        1 optional vector<unsigned byte> nodeID;
+        2 optional long weight;
+    };
+
     interface TxPoolService {
         Error asyncSubmit(vector<unsigned byte> tx, out TransactionSubmitResult result);
         Error asyncSealTxs(long txsLimit, vector<vector<unsigned byte>> avoidTxs, out vector<vector<unsigned byte>> return1, out vector<vector<unsigned byte>> return2);
@@ -12,7 +17,7 @@ module bcostars {
         Error asyncNotifyBlockResult(long blockNumber, vector<TransactionSubmitResult> result);
         Error asyncNotifyTxsSyncMessage(Error error, string id, vector<unsigned byte> nodeID, vector<unsigned byte> data);
         Error notifyConnectedNodes(vector<vector<unsigned byte>> connectedNodes);
-        Error notifyConsensusNodeList(vector<vector<unsigned byte>> consensusNodeList);
-        Error notifyObserverNodeList(vector<vector<unsigned byte>> observerNodeList);
+        Error notifyConsensusNodeList(vector<ConsensusNode> consensusNodeList);
+        Error notifyObserverNodeList(vector<ConsensusNode> observerNodeList);
     };
 };

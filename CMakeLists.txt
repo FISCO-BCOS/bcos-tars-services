@@ -49,6 +49,7 @@ add_subdirectory(GatewayService)
 add_subdirectory(PBFTService)
 add_subdirectory(ExecutorService)
 add_subdirectory(DispatcherService)
+add_subdirectory(TxPoolService)
 
 if(TESTS)
     enable_testing()

@@ -6,6 +6,7 @@
 #include "Common.h"
 #include "TxPoolService.h"
 #include "bcos-txpool/TxPool.h"
+#include "interfaces/consensus/ConsensusNode.h"
 #include "interfaces/crypto/CommonType.h"
 #include "interfaces/crypto/Hash.h"
 #include "interfaces/crypto/KeyInterface.h"
@@ -18,6 +19,12 @@ namespace bcostars
 class TxPoolServiceServer : public bcostars::TxPoolService
 {
 public:
+    void initialize() override
+    {
+        // TODO: add initialize
+    }
+    void destroy() override {}
+
     bcostars::Error asyncFillBlock(const vector<vector<tars::UInt8>>& txHashs,
         vector<bcostars::Transaction>& filled, tars::TarsCurrentPtr current) override
     {
@@ -155,6 +162,63 @@ public:
             pk, bcos::ref(block), [current](bcos::Error::Ptr error, bool result) {
                 async_response_asyncVerifyBlock(current, toTarsError(error), result);
             });
+
+        return bcostars::Error();
+    }
+
+    bcostars::Error notifyConnectedNodes(
+        const vector<vector<tars::UInt8>>& connectedNodes, tars::TarsCurrentPtr current) override
+    {
+        current->setResponse(false);
+
+        bcos::crypto::NodeIDSet bcosNodeIDSet;
+        for (auto const& it : connectedNodes)
+        {
+            bcosNodeIDSet.insert(m_cryptoSuite->keyFactory()->createKey(it));
+        }
+
+        m_txpool->notifyConnectedNodes(bcosNodeIDSet, [current](bcos::Error::Ptr error) {
+            async_response_notifyConnectedNodes(current, toTarsError(error));
+        });
+
+        return bcostars::Error();
+    }
+
+    bcostars::Error notifyConsensusNodeList(
+        const vector<bcostars::ConsensusNode>& consensusNodeList,
+        tars::TarsCurrentPtr current) override
+    {
+        current->setResponse(false);
+
+        bcos::consensus::ConsensusNodeList bcosNodeList;
+        for (auto const& it : consensusNodeList)
+        {
+            bcos::consensus::ConsensusNode node(
+                m_cryptoSuite->keyFactory()->createKey(it.nodeID), it.weight);
+        }
+
+        m_txpool->notifyConsensusNodeList(bcosNodeList, [current](bcos::Error::Ptr error) {
+            async_response_notifyConsensusNodeList(current, toTarsError(error));
+        });
+
+        return bcostars::Error();
+    }
+
+    bcostars::Error notifyObserverNodeList(const vector<bcostars::ConsensusNode>& observerNodeList,
+        tars::TarsCurrentPtr current) override
+    {
+        current->setResponse(false);
+
+        bcos::consensus::ConsensusNodeList bcosObserverNodeList;
+        for (auto const& it : observerNodeList)
+        {
+            bcos::consensus::ConsensusNode node(
+                m_cryptoSuite->keyFactory()->createKey(it.nodeID), it.weight);
+        }
+
+        m_txpool->notifyObserverNodeList(bcosObserverNodeList, [current](bcos::Error::Ptr error) {
+            async_response_notifyObserverNodeList(current, toTarsError(error));
+        });
 
         return bcostars::Error();
     }

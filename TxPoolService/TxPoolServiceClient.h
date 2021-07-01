@@ -267,14 +267,104 @@ public:
 
     void notifyConnectedNodes(bcos::crypto::NodeIDSet const& _connectedNodes,
         std::function<void(bcos::Error::Ptr)> _onRecvResponse) override
-    {}
+    {
+        class Callback : public bcostars::TxPoolServicePrxCallback
+        {
+        public:
+            Callback(std::function<void(bcos::Error::Ptr _error)> callback) : m_callback(callback)
+            {}
+
+            void callback_notifyConnectedNodes(const bcostars::Error& ret) override
+            {
+                m_callback(toBcosError(ret));
+            }
+
+            void callback_notifyConnectedNodes_exception(tars::Int32 ret) override
+            {
+                m_callback(toBcosError(ret));
+            }
+
+        private:
+            std::function<void(bcos::Error::Ptr _error)> m_callback;
+        };
+
+        std::vector<vector<tars::UInt8>> tarsConnectedNodes;
+        for (auto const& it : _connectedNodes)
+        {
+            tarsConnectedNodes.push_back(it->data());
+        }
+        m_proxy->async_notifyConnectedNodes(new Callback(_onRecvResponse), tarsConnectedNodes);
+    }
 
     void notifyConsensusNodeList(bcos::consensus::ConsensusNodeList const& _consensusNodeList,
         std::function<void(bcos::Error::Ptr)> _onRecvResponse) override
-    {}
+    {
+        class Callback : public bcostars::TxPoolServicePrxCallback
+        {
+        public:
+            Callback(std::function<void(bcos::Error::Ptr _error)> callback) : m_callback(callback)
+            {}
+
+            void callback_notifyConsensusNodeList(const bcostars::Error& ret) override
+            {
+                m_callback(toBcosError(ret));
+            }
+
+            void callback_notifyConsensusNodeList_exception(tars::Int32 ret) override
+            {
+                m_callback(toBcosError(ret));
+            }
+
+        private:
+            std::function<void(bcos::Error::Ptr _error)> m_callback;
+        };
+
+        std::vector<bcostars::ConsensusNode> tarsConsensusNodeList;
+        for (auto const& it : _consensusNodeList)
+        {
+            bcostars::ConsensusNode node;
+            node.nodeID = it->nodeID()->data();
+            node.weight = it->weight();
+            tarsConsensusNodeList.emplace_back(node);
+        }
+
+        m_proxy->async_notifyConsensusNodeList(new Callback(_onRecvResponse), tarsConsensusNodeList);
+    }
+
     void notifyObserverNodeList(bcos::consensus::ConsensusNodeList const& _observerNodeList,
         std::function<void(bcos::Error::Ptr)> _onRecvResponse) override
-    {}
+    {
+        class Callback : public bcostars::TxPoolServicePrxCallback
+        {
+        public:
+            Callback(std::function<void(bcos::Error::Ptr _error)> callback) : m_callback(callback)
+            {}
+
+            void callback_notifyObserverNodeList(const bcostars::Error& ret) override
+            {
+                m_callback(toBcosError(ret));
+            }
+
+            void callback_notifyObserverNodeList_exception(tars::Int32 ret) override
+            {
+                m_callback(toBcosError(ret));
+            }
+
+        private:
+            std::function<void(bcos::Error::Ptr _error)> m_callback;
+        };
+
+        std::vector<bcostars::ConsensusNode> tarsConsensusNodeList;
+        for (auto const& it : _observerNodeList)
+        {
+            bcostars::ConsensusNode node;
+            node.nodeID = it->nodeID()->data();
+            node.weight = it->weight();
+            tarsConsensusNodeList.emplace_back(node);
+        }
+
+        m_proxy->async_notifyObserverNodeList(new Callback(_onRecvResponse), tarsConsensusNodeList);
+    }
 
 private:
     bcostars::TxPoolServicePrx m_proxy;
