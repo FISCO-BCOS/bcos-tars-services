@@ -1,11 +1,15 @@
 #pragma once
 
 #include "../Common/ErrorConverter.h"
+#include "../Common/ProxyDesc.h"
+#include "../FrontService/FrontServiceClient.h"
+#include "../libinitializer/ProtocolInitializer.h"
 #include "GatewayService.h"
 #include "bcos-crypto/signature/key/KeyFactoryImpl.h"
 #include "bcos-framework/interfaces/crypto/KeyInterface.h"
 #include "bcos-gateway/Gateway.h"
 #include "bcos-gateway/GatewayFactory.h"
+#include <bcos-framework/libtool/NodeConfig.h>
 #include <mutex>
 
 namespace bcostars
@@ -16,11 +20,24 @@ public:
     void initialize() override
     {
         std::call_once(m_initFlag, []() {
-            // bcos::gateway::Gat
             bcos::gateway::GatewayFactory factory;
+            auto configPath = ServerConfig::BasePath + "config.ini";
+            m_gateway = factory.buildGateway(configPath);
 
-            // TODO: add config path
-            m_gateway = factory.buildGateway("");
+            auto protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
+            auto privateKeyPath = ServerConfig::BasePath + "node.pem";
+            protocolInitializer->loadKeyPair(privateKeyPath);
+
+            auto frontServiceProxy =
+                Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
+                    getProxyDesc("FrontServiceObj"));
+            auto frontService = std::make_shared<bcostars::FrontServiceClient>(
+                frontServiceProxy, protocolInitializer->keyFactory());
+            auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
+            nodeConfig->loadConfig(configPath);
+            m_gateway->registerFrontService(
+                nodeConfig->groupId(), protocolInitializer->keyPair()->publicKey(), frontService);
+            m_gateway->start();
         });
 
         m_keyFactory = std::make_shared<bcos::crypto::KeyFactoryImpl>();

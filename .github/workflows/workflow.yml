@@ -39,11 +39,11 @@ jobs:
             /Users/runner/.hunter/
             deps/src
             ccache
-          key: hunter-clang-v4-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+          key: hunter-clang-v5-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
           restore-keys: |
-            hunter-clang-v4-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
-            hunter-clang-v4-notest-${{ runner.temp }}-${{ github.base_ref }}-
-            hunter-clang-v4-notest-${{ runner.temp }}-
+            hunter-clang-v5-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+            hunter-clang-v5-notest-${{ runner.temp }}-${{ github.base_ref }}-
+            hunter-clang-v5-notest-${{ runner.temp }}-
       - name: install macOS dependencies
         if: runner.os == 'macOS'
         run: brew install ccache
@@ -78,11 +78,11 @@ jobs:
             /Users/runner/.hunter/
             deps/src
             ccache
-          key: hunter-gcc-v3-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+          key: hunter-gcc-v4-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
           restore-keys: |
-            hunter-gcc-v3-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
-            hunter-gcc-v3-notest-${{ runner.temp }}-${{ github.base_ref }}-
-            hunter-gcc-v3-notest-${{ runner.temp }}-
+            hunter-gcc-v4-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+            hunter-gcc-v4-notest-${{ runner.temp }}-${{ github.base_ref }}-
+            hunter-gcc-v4-notest-${{ runner.temp }}-
       - name: install Ubuntu dependencies
         run: sudo apt install -y libzstd-dev git curl build-essential cmake ccache
       - name: configure
@@ -114,11 +114,11 @@ jobs:
             /Users/runner/.hunter/
             deps/src
             ccache
-          key: hunter-ubuntu-v3-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+          key: hunter-ubuntu-v4-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
           restore-keys: |
-            hunter-ubuntu-v3-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
-            hunter-ubuntu-v3-notest-${{ runner.temp }}-${{ github.base_ref }}-
-            hunter-ubuntu-v3-notest-${{ runner.temp }}-
+            hunter-ubuntu-v4-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+            hunter-ubuntu-v4-notest-${{ runner.temp }}-${{ github.base_ref }}-
+            hunter-ubuntu-v4-notest-${{ runner.temp }}-
       - name: install Ubuntu dependencies
         run: sudo apt-get install -y git curl build-essential cmake ccache lcov libzstd-dev
       - name: configure
@@ -155,18 +155,20 @@ jobs:
             /github/home/.hunter
             deps/src
             ccache
-          key: hunter-centos-v3-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+          key: hunter-centos-v4-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
           restore-keys: |
-            hunter-centos-v3-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
-            hunter-centos-v3-notest-${{ runner.temp }}-${{ github.base_ref }}-
-            hunter-centos-v3-notest-${{ runner.temp }}-
+            hunter-centos-v4-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+            hunter-centos-v4-notest-${{ runner.temp }}-${{ github.base_ref }}-
+            hunter-centos-v4-notest-${{ runner.temp }}-
       - name: install CentOS dependencies
         run: |
           yum install -y epel-release centos-release-scl
-          yum install -y git make gcc gcc-c++ glibc-static glibc-devel cmake3 ccache devtoolset-7 libzstd-devel && source /opt/rh/devtoolset-7/enable
+          yum install -y git make gcc gcc-c++ glibc-static glibc-devel cmake3 ccache devtoolset-7 libzstd-devel zlib-devel && source /opt/rh/devtoolset-7/enable
           alias cmake='cmake3'
       - name: configure and compile
         run: |
+          git config --global user.email "test@test.com"
+          git config --global user.name "test"
           source /opt/rh/devtoolset-7/enable
           # mkdir -p build && cd build
           cmake3 . -DTESTS=ON

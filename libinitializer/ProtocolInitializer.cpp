@@ -34,7 +34,7 @@ using namespace bcos::initializer;
 using namespace bcos::crypto;
 using namespace bcos::tool;
 
-void ProtocolInitializer::init(NodeConfig::Ptr _nodeConfig, bool _loadKeyPair)
+void ProtocolInitializer::init(NodeConfig::Ptr _nodeConfig)
 {
     // TODO: hsm/ed25519
     if (_nodeConfig->smCryptoType())
@@ -52,15 +52,10 @@ void ProtocolInitializer::init(NodeConfig::Ptr _nodeConfig, bool _loadKeyPair)
     m_blockFactory = std::make_shared<BlockFactoryImpl>(
         m_cryptoSuite, blockHeaderFactory, transactionFactory, receiptFactory);
 
-    m_cryptoSuite->setKeyFactory(_nodeConfig->keyFactory());
+    m_cryptoSuite->setKeyFactory(m_keyFactory);
     m_txResultFactory = std::make_shared<bcos::protocol::TransactionSubmitResultFactoryImpl>();
 
     INITIALIZER_LOG(INFO) << LOG_DESC("init blockFactory success");
-
-    if (_loadKeyPair)
-    {
-        loadKeyPair(_nodeConfig);
-    }
 }
 
 void ProtocolInitializer::createCryptoSuite()
@@ -79,12 +74,12 @@ void ProtocolInitializer::createSMCryptoSuite()
     m_cryptoSuite = std::make_shared<CryptoSuite>(hashImpl, signatureImpl, encryptImpl);
 }
 
-void ProtocolInitializer::loadKeyPair(NodeConfig::Ptr _nodeConfig)
+void ProtocolInitializer::loadKeyPair(std::string const& _privateKeyPath)
 {
-    auto privateKeyData = loadPrivateKey(_nodeConfig->privateKeyPath());
-    auto privateKey = _nodeConfig->keyFactory()->createKey(*privateKeyData);
+    auto privateKeyData = loadPrivateKey(_privateKeyPath);
+    auto privateKey = m_keyFactory->createKey(*privateKeyData);
     m_keyPair = m_cryptoSuite->signatureImpl()->createKeyPair(privateKey);
 
     INITIALIZER_LOG(INFO) << LOG_DESC("loadKeyPair success")
-                          << LOG_KV("privateKeyPath", _nodeConfig->privateKeyPath());
+                          << LOG_KV("privateKeyPath", _privateKeyPath);
 }

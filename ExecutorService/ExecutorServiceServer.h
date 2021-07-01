@@ -2,7 +2,9 @@
 
 #include "../Common/ErrorConverter.h"
 #include "../Common/ProxyDesc.h"
+#include "../DispatcherService/DispatcherServiceClient.h"
 #include "../StorageService/StorageServiceClient.h"
+#include "../libinitializer/ProtocolInitializer.h"
 #include "../protocols/BlockImpl.h"
 #include "../protocols/TransactionImpl.h"
 #include "../protocols/TransactionReceiptImpl.h"
@@ -15,6 +17,7 @@
 #include "bcos-framework/interfaces/executor/ExecutorInterface.h"
 #include "bcos-framework/libprotocol/TransactionSubmitResultFactoryImpl.h"
 #include "bcos-ledger/ledger/Ledger.h"
+#include <bcos-framework/libtool/NodeConfig.h>
 #include <memory>
 #include <mutex>
 
@@ -26,23 +29,12 @@ public:
     void initialize() override
     {
         std::call_once(m_initFlag, [this]() {
-            m_cryptoSuite =
-                std::make_shared<bcos::crypto::CryptoSuite>(std::make_shared<bcos::crypto::SM3>(),
-                    std::make_shared<bcos::crypto::SM2Crypto>(), nullptr);
+            auto configPath = ServerConfig::BasePath + "config.ini";
+            auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
+            nodeConfig->loadConfig(configPath);
 
-            auto transactionFactory =
-                std::make_shared<bcostars::protocol::TransactionFactoryImpl>(m_cryptoSuite);
-            auto transactionReceiptFactory =
-                std::make_shared<bcostars::protocol::TransactionReceiptFactoryImpl>(m_cryptoSuite);
-
-            auto blockHeaderFactory =
-                std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(m_cryptoSuite);
-            auto blockFactory = std::make_shared<bcostars::protocol::BlockFactoryImpl>(
-                m_cryptoSuite, blockHeaderFactory, transactionFactory, transactionReceiptFactory);
-
-            // TODO: add dispatcher
-            // auto dispatcherProxy =
-            // Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(getProxyDesc(DispatcherServiceObj"));
+            auto protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
+            protocolInitializer->init(nodeConfig);
 
             bcostars::StorageServicePrx storageServiceProxy =
                 Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(
@@ -50,12 +42,18 @@ public:
             bcos::storage::StorageInterface::Ptr storageServiceClient =
                 std::make_shared<bcostars::StorageServiceClient>(storageServiceProxy);
 
-            auto ledger =
-                std::make_shared<bcos::ledger::Ledger>(blockFactory, storageServiceClient);
+            auto ledger = std::make_shared<bcos::ledger::Ledger>(
+                protocolInitializer->blockFactory(), storageServiceClient);
 
-            bcos::dispatcher::DispatcherInterface::Ptr dispatcher;  // TODO: Init the dispatcher
-            m_executor = std::make_shared<bcos::executor::Executor>(
-                blockFactory, nullptr, ledger, storageServiceClient, true);
+            auto dispatcherProxy =
+                Application::getCommunicator()->stringToProxy<bcostars::DispatcherServicePrx>(
+                    getProxyDesc("DispatcherServiceObj"));
+            auto dispatcher = std::make_shared<bcostars::DispatcherServiceClient>(dispatcherProxy);
+
+            m_executor =
+                std::make_shared<bcos::executor::Executor>(protocolInitializer->blockFactory(),
+                    dispatcher, ledger, storageServiceClient, nodeConfig->isWasm());
+            m_executor->start();
         });
     }
 

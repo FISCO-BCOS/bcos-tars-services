@@ -35,6 +35,8 @@
 #include <bcos-txpool/TxPoolFactory.h>
 #include <mutex>
 
+#define PBFTSERVICE_LOG(LEVEL) BCOS_LOG(LEVEL) << "[PBFTSERVICE]"
+
 namespace bcostars
 {
 class PBFTServiceServer : public bcostars::PBFTService
@@ -59,6 +61,10 @@ public:
         const vector<tars::UInt8>& _nodeId, const vector<tars::UInt8>& _data,
         tars::TarsCurrentPtr _current) override;
 
+    bcostars::Error asyncNotifyBlockSyncMessage(std::string const& _uuid,
+        const vector<tars::UInt8>& _nodeId, const vector<tars::UInt8>& _data,
+        tars::TarsCurrentPtr _current) override;
+
     // Note: since the blockSync module is intergrated with the PBFT, this interfaces is useless now
     bcostars::Error asyncNotifyNewBlock(
         const bcostars::LedgerConfig& _ledgerConfig, tars::TarsCurrentPtr _current) override;
@@ -69,6 +75,8 @@ public:
         tars::TarsCurrentPtr _current) override;
 
 protected:
+    virtual void registerHandlers();
+
     // TODO: create the txpool client only
     virtual void createTxPool(bcos::tool::NodeConfig::Ptr _nodeConfig);
     virtual void createSealer(bcos::tool::NodeConfig::Ptr _nodeConfig);
@@ -76,11 +84,13 @@ protected:
     virtual void createPBFT(bcos::tool::NodeConfig::Ptr _nodeConfig);
 
 private:
+    // the local dependencies
     bcos::txpool::TxPool::Ptr m_txpool;
     bcos::consensus::PBFTImpl::Ptr m_pbft;
     bcos::sealer::Sealer::Ptr m_sealer;
     bcos::sync::BlockSync::Ptr m_blockSync;
 
+    // the client dependencies used to access the remote server service
     bcos::front::FrontServiceInterface::Ptr m_frontService;
     bcos::storage::StorageInterface::Ptr m_storage;
     bcos::ledger::LedgerInterface::Ptr m_ledger;
