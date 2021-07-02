@@ -19,7 +19,7 @@ public:
     virtual ~BlockHeaderImpl() {}
 
     BlockHeaderImpl(bcos::crypto::CryptoSuite::Ptr cryptoSuite)
-      : bcos::protocol::BlockHeader(cryptoSuite), m_inner(std::shared_ptr<bcostars::BlockHeader>())
+      : bcos::protocol::BlockHeader(cryptoSuite), m_inner(std::make_shared<bcostars::BlockHeader>())
     {}
 
     BlockHeaderImpl(bcostars::BlockHeader* blockHeader, bcos::crypto::CryptoSuite::Ptr cryptoSuite)
@@ -47,16 +47,18 @@ public:
 
     bcos::bytesConstRef encode(bool _onlyHashFieldsData = false) const override
     {
-        (void)_onlyHashFieldsData;
-
-        if (m_buffer.empty())
+        if (_onlyHashFieldsData)
         {
+            vector<Signature> emptyList;
+            m_inner->signatureList.swap(emptyList);
             encode(m_buffer);
+            emptyList.swap(m_inner->signatureList);
         }
         else
         {
-            return bcos::ref(m_buffer);
+            encode(m_buffer);
         }
+        return bcos::ref(m_buffer);
     }
 
     void clear() override { m_inner = std::make_shared<bcostars::BlockHeader>(); }
@@ -192,7 +194,7 @@ public:
     ~BlockHeaderFactoryImpl() override {}
     bcos::protocol::BlockHeader::Ptr createBlockHeader() override
     {
-        return std::make_shared<BlockHeaderImpl>(m_cryptoSuite);
+        return std::make_shared<bcostars::protocol::BlockHeaderImpl>(m_cryptoSuite);
     }
     bcos::protocol::BlockHeader::Ptr createBlockHeader(bcos::bytes const& _data) override
     {

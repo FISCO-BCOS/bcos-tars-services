@@ -226,7 +226,29 @@ BOOST_AUTO_TEST_CASE(block)
     }
 }
 
-BOOST_AUTO_TEST_CASE(emptyBlockHeader) {
+BOOST_AUTO_TEST_CASE(blockHeader)
+{
+    auto blockHeaderFactory =
+        std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(cryptoSuite);
+
+    auto header = blockHeaderFactory->createBlockHeader();
+
+    header->setNumber(100);
+    header->setTimestamp(200);
+
+    for (auto flag : { false, true })
+    {
+        auto buffer = header->encode(flag);
+
+        auto decodedHeader = blockHeaderFactory->createBlockHeader(buffer);
+
+        BOOST_CHECK_EQUAL(header->number(), decodedHeader->number());
+        BOOST_CHECK_EQUAL(header->timestamp(), decodedHeader->timestamp());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(emptyBlockHeader)
+{
     auto blockHeaderFactory =
         std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(cryptoSuite);
     auto transactionFactory =
