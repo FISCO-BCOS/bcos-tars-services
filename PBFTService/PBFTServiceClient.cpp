@@ -125,13 +125,14 @@ void BlockSyncServiceClient::asyncGetSyncInfo(
         {}
         ~Callback() override {}
 
-        void callback_asyncGetSyncInfo(const bcostars::Error& ret, string _syncInfo) override
+        void callback_asyncGetSyncInfo(
+            const bcostars::Error& ret, const std::string& _syncInfo) override
         {
             m_callback(toBcosError(ret), _syncInfo);
         }
         void callback_asyncGetSyncInfo_exception(tars::Int32 ret) override
         {
-            m_callback(toBcosError(ret), false);
+            m_callback(toBcosError(ret), "callback_asyncGetSyncInfo_exception");
         }
 
     private:

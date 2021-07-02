@@ -14,6 +14,12 @@ namespace bcostars
 class TxPoolServiceClient : public bcos::txpool::TxPoolInterface
 {
 public:
+    TxPoolServiceClient(
+        bcostars::TxPoolServicePrx _proxy, bcos::crypto::CryptoSuite::Ptr _cryptoSuite)
+      : m_proxy(_proxy), m_cryptoSuite(_cryptoSuite)
+    {}
+    ~TxPoolServiceClient() override {}
+
     void asyncSubmit(
         bcos::bytesPointer _tx, bcos::protocol::TxSubmitCallback _txSubmitCallback) override
     {
@@ -372,29 +378,33 @@ public:
     void asyncGetPendingTransactionSize(
         std::function<void(bcos::Error::Ptr, size_t)> _onGetTxsSize) override
     {
-        class Callback : public TxPoolServicePrx
+        class Callback : public TxPoolServicePrxCallback
         {
         public:
             explicit Callback(std::function<void(bcos::Error::Ptr, size_t)> _callback)
-              : TxPoolServicePrx(), m_callback(_callback)
+              : TxPoolServicePrxCallback(), m_callback(_callback)
             {}
             ~Callback() override {}
 
             void callback_asyncGetPendingTransactionSize(
-                const bcostars::Error& ret, size_t _pendingTxsSize) override
+                const bcostars::Error& ret, tars::Int64 _txsSize) override
             {
-                m_callback(toBcosError(ret), _pendingTxsSize);
+                m_callback(toBcosError(ret), _txsSize);
             }
             void callback_asyncGetPendingTransactionSize_exception(tars::Int32 ret) override
             {
-                m_callback(toBcosError(ret), false);
+                m_callback(toBcosError(ret), 0);
             }
 
         private:
             std::function<void(bcos::Error::Ptr, size_t)> m_callback;
         };
-        m_proxy->async_asyncGetSyncInfo(new Callback(_onGetTxsSize));
+        m_proxy->async_asyncGetPendingTransactionSize(new Callback(_onGetTxsSize));
     }
+
+protected:
+    void start() override {}
+    void stop() override {}
 
 private:
     bcostars::TxPoolServicePrx m_proxy;

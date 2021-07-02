@@ -25,6 +25,7 @@
 #include "../DispatcherService/DispatcherServiceClient.h"
 #include "../FrontService/FrontServiceClient.h"
 #include "../StorageService/StorageServiceClient.h"
+#include "../TxPoolService/TxPoolServiceClient.h"
 #include "../protocols/BlockImpl.h"
 #include "Common.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
@@ -79,7 +80,7 @@ void PBFTServiceServer::initialize()
     ledger->buildGenesisBlock(
         nodeConfig->ledgerConfig(), nodeConfig->txGasLimit(), nodeConfig->genesisData());
 
-    // TODO: create the txpool client only
+    // create the txpool client only
     createTxPool(nodeConfig);
 
     createSealer(nodeConfig);
@@ -88,12 +89,10 @@ void PBFTServiceServer::initialize()
     registerHandlers();
 
     // init and start all the modules
-    m_txpool->init();
     m_sealer->init(m_pbft);
     m_blockSync->init();
     m_pbft->init();
 
-    m_txpool->start();
     m_sealer->start();
     m_blockSync->start();
     m_pbft->start();
@@ -102,104 +101,36 @@ void PBFTServiceServer::initialize()
 
 void PBFTServiceServer::registerHandlers()
 {
-    // register handlers for the txpool to interact with the sealer
-    std::weak_ptr<SealerInterface> weakedSealer = m_sealer;
-    m_txpool->registerUnsealedTxsNotifier(
-        [weakedSealer](size_t _unsealedTxsSize, std::function<void(bcos::Error::Ptr)> _onRecv) {
-            try
-            {
-                auto sealer = weakedSealer.lock();
-                if (!sealer)
-                {
-                    return;
-                }
-                sealer->asyncNoteUnSealedTxsSize(_unsealedTxsSize, _onRecv);
-            }
-            catch (std::exception const& e)
-            {
-                PBFTSERVICE_LOG(WARNING)
-                    << LOG_DESC("call UnsealedTxsNotifier to the sealer exception")
-                    << LOG_KV("error", boost::diagnostic_information(e));
-            }
-        });
-
     // register handlers for the consensus to interact with the sealer
+    auto sealer = m_sealer;
     m_pbft->registerSealProposalNotifier(
-        [weakedSealer](size_t _proposalIndex, size_t _proposalEndIndex, size_t _maxTxsToSeal,
+        [sealer](size_t _proposalIndex, size_t _proposalEndIndex, size_t _maxTxsToSeal,
             std::function<void(bcos::Error::Ptr)> _onRecvResponse) {
-            try
-            {
-                auto sealer = weakedSealer.lock();
-                if (!sealer)
-                {
-                    return;
-                }
-                sealer->asyncNotifySealProposal(
-                    _proposalIndex, _proposalEndIndex, _maxTxsToSeal, _onRecvResponse);
-            }
-            catch (std::exception const& e)
-            {
-                PBFTSERVICE_LOG(WARNING) << LOG_DESC("call notify proposal sealing exception")
-                                         << LOG_KV("error", boost::diagnostic_information(e));
-            }
+            sealer->asyncNotifySealProposal(
+                _proposalIndex, _proposalEndIndex, _maxTxsToSeal, _onRecvResponse);
         });
 
     // the consensus module notify the latest blockNumber to the sealer
-    m_pbft->registerStateNotifier([weakedSealer](bcos::protocol::BlockNumber _blockNumber) {
-        try
-        {
-            auto sealer = weakedSealer.lock();
-            if (!sealer)
-            {
-                return;
-            }
-            sealer->asyncNoteLatestBlockNumber(_blockNumber);
-        }
-        catch (std::exception const& e)
-        {
-            PBFTSERVICE_LOG(WARNING)
-                << LOG_DESC("call notify the latest block number to the sealer exception")
-                << LOG_KV("error", boost::diagnostic_information(e));
-        }
+    m_pbft->registerStateNotifier([sealer](bcos::protocol::BlockNumber _blockNumber) {
+        sealer->asyncNoteLatestBlockNumber(_blockNumber);
     });
 
     // the consensus moudle notify new block to the sync module
-    std::weak_ptr<BlockSyncInterface> weakedSync = m_blockSync;
-    m_pbft->registerNewBlockNotifier([weakedSync](bcos::ledger::LedgerConfig::Ptr _ledgerConfig,
+    auto blockSync = m_blockSync;
+    m_pbft->registerNewBlockNotifier([blockSync](bcos::ledger::LedgerConfig::Ptr _ledgerConfig,
                                          std::function<void(bcos::Error::Ptr)> _onRecv) {
-        try
-        {
-            auto sync = weakedSync.lock();
-            if (!sync)
-            {
-                return;
-            }
-            sync->asyncNotifyNewBlock(_ledgerConfig, _onRecv);
-        }
-        catch (std::exception const& e)
-        {
-            PBFTSERVICE_LOG(WARNING)
-                << LOG_DESC("call notify the latest block to the sync module exception")
-                << LOG_KV("error", boost::diagnostic_information(e));
-        }
+        blockSync->asyncNotifyNewBlock(_ledgerConfig, _onRecv);
     });
 }
 
 void PBFTServiceServer::createTxPool(bcos::tool::NodeConfig::Ptr _nodeConfig)
 {
     PBFTSERVICE_LOG(INFO) << LOG_DESC("createTxPool");
-    auto txpoolFactory =
-        std::make_shared<TxPoolFactory>(m_protocolInitializer->keyPair()->publicKey(),
-            m_protocolInitializer->cryptoSuite(), m_protocolInitializer->txResultFactory(),
-            m_protocolInitializer->blockFactory(), m_frontService, m_ledger, _nodeConfig->groupId(),
-            _nodeConfig->chainId(), _nodeConfig->blockLimit());
-
-    m_txpool = txpoolFactory->createTxPool();
-    auto txpoolConfig = m_txpool->txpoolConfig();
-    txpoolConfig->setPoolLimit(_nodeConfig->txpoolLimit());
-    txpoolConfig->setNotifierWorkerNum(_nodeConfig->notifyWorkerNum());
-    txpoolConfig->setVerifyWorkerNum(_nodeConfig->verifierWorkerNum());
-    PBFTSERVICE_LOG(INFO) << LOG_DESC("createTxPool success");
+    auto txpoolProxy = Application::getCommunicator()->stringToProxy<bcostars::TxPoolServicePrx>(
+        getProxyDesc("TxPoolServiceObj"));
+    m_txpool = std::make_shared<bcostars::TxPoolServiceClient>(
+        txpoolProxy, m_protocolInitializer->cryptoSuite());
+    PBFTSERVICE_LOG(INFO) << LOG_DESC("create TxPool client success");
 }
 
 void PBFTServiceServer::createSealer(bcos::tool::NodeConfig::Ptr _nodeConfig)
@@ -321,10 +252,12 @@ Error PBFTServiceServer::asyncSubmitProposal(const vector<tars::UInt8>& _proposa
         });
 }
 
-bcostars::Error PBFTServiceServer::asyncGetSyncInfo(std::string& _syncInfo)
+bcostars::Error PBFTServiceServer::asyncGetSyncInfo(
+    std::string& _syncInfo, tars::TarsCurrentPtr _current)
 {
     _current->setResponse(false);
-    m_pbft->asyncGetSyncInfo([_current](bcos::Error::Ptr _error, std::string const& _syncInfo) {
-        async_response_asyncGetSyncInfo(_current, toTarsError(_error), _syncInfo);
-    });
+    m_blockSync->asyncGetSyncInfo(
+        [_current](bcos::Error::Ptr _error, std::string const& _syncInfo) {
+            async_response_asyncGetSyncInfo(_current, toTarsError(_error), _syncInfo);
+        });
 }

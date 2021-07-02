@@ -56,7 +56,8 @@ public:
 
     // for the rpc module to get the pbft view
     bcostars::Error asyncGetPBFTView(tars::Int64& _view, tars::TarsCurrentPtr _current) override;
-    bcostars::Error asyncGetSyncInfo(std::string& _syncInfo) override;
+    bcostars::Error asyncGetSyncInfo(
+        std::string& _syncInfo, tars::TarsCurrentPtr _current) override;
 
     // Note: since the sealer is intergrated with the PBFT, this interfaces is useless now
     bcostars::Error asyncNoteUnSealedTxsSize(
@@ -90,7 +91,7 @@ protected:
 
 private:
     // the local dependencies
-    bcos::txpool::TxPool::Ptr m_txpool;
+    bcos::txpool::TxPoolInterface::Ptr m_txpool;
     bcos::consensus::PBFTImpl::Ptr m_pbft;
     bcos::sealer::Sealer::Ptr m_sealer;
     bcos::sync::BlockSync::Ptr m_blockSync;
