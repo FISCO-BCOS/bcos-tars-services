@@ -158,6 +158,11 @@ public:
             new PBFTServiceCommonCallback(_onRecv), _uuid, _nodeID->data(), _data.toBytes());
     }
 
+    void asyncGetSyncInfo(std::function<void(bcos::Error::Ptr, std::string)> _onGetSyncInfo) override {}
+
+    void asyncNotifyCommittedIndex(
+        bcos::protocol::BlockNumber _number, std::function<void(bcos::Error::Ptr _error)> _onRecv) override {}
+
 protected:
     void start() override {}
     void stop() override {}
