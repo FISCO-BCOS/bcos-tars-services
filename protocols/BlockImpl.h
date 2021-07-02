@@ -85,8 +85,12 @@ public:
     // set blockHeader
     void setBlockHeader(bcos::protocol::BlockHeader::Ptr _blockHeader) override
     {
-        m_inner.blockHeader =
-            std::dynamic_pointer_cast<bcostars::protocol::BlockHeaderImpl>(_blockHeader)->inner();
+        if (_blockHeader)
+        {
+            m_inner.blockHeader =
+                std::dynamic_pointer_cast<bcostars::protocol::BlockHeaderImpl>(_blockHeader)
+                    ->inner();
+        }
     }
 
     void setTransaction(size_t _index, bcos::protocol::Transaction::Ptr _transaction) override
