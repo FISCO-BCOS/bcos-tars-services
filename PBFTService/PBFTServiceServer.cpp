@@ -320,3 +320,11 @@ Error PBFTServiceServer::asyncSubmitProposal(const vector<tars::UInt8>& _proposa
             async_response_asyncSubmitProposal(_current, toTarsError(_error));
         });
 }
+
+bcostars::Error PBFTServiceServer::asyncGetSyncInfo(std::string& _syncInfo)
+{
+    _current->setResponse(false);
+    m_pbft->asyncGetSyncInfo([_current](bcos::Error::Ptr _error, std::string const& _syncInfo) {
+        async_response_asyncGetSyncInfo(_current, toTarsError(_error), _syncInfo);
+    });
+}

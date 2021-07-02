@@ -1,6 +1,9 @@
 #pragma once
 
 #include "../Common/ErrorConverter.h"
+#include "../FrontService/FrontServiceClient.h"
+#include "../StorageService/StorageServiceClient.h"
+#include "../libinitializer/ProtocolInitializer.h"
 #include "../protocols/TransactionImpl.h"
 #include "../protocols/TransactionSubmitResultImpl.h"
 #include "Common.h"
@@ -12,6 +15,9 @@
 #include "interfaces/crypto/KeyInterface.h"
 #include "libutilities/Common.h"
 #include "libutilities/FixedBytes.h"
+#include <bcos-framework/libtool/NodeConfig.h>
+#include <bcos-ledger/ledger/Ledger.h>
+#include <bcos-txpool/txpool/TxPoolFactory.h>
 #include <memory>
 
 namespace bcostars
@@ -21,7 +27,50 @@ class TxPoolServiceServer : public bcostars::TxPoolService
 public:
     void initialize() override
     {
-        // TODO: add initialize
+        // load the configuration for txpool
+        auto configPath = ServerConfig::BasePath + "config.ini";
+        auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
+        nodeConfig->loadConfig(configPath);
+
+        // create the protocolInitializer
+        auto protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
+        protocolInitializer->init();
+        auto privateKeyPath = ServerConfig::BasePath + "node.pem";
+        protocolInitializer->loadKeyPair(privateKeyPath);
+
+        // create the storage client
+        auto storageProxy =
+            Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(
+                getProxyDesc("StorageServiceObj"));
+        auto storage = std::make_shared<bcostars::StorageServiceClient>(storageProxy);
+
+        // create the ledger
+        auto ledger =
+            std::make_shared<bcos::ledger::Ledger>(m_protocolInitializer->blockFactory(), storage);
+
+        // create the frontService client
+        auto frontServiceProxy =
+            Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
+                getProxyDesc("FrontServiceObj"));
+        auto frontService =
+            std::make_shared<bcostars::FrontServiceClient>(frontServiceProxy, m_keyFactory);
+
+
+        // create txpoolFactory
+        auto txpoolFactory = std::make_shared<bcos::txpool::TxPoolFactory>(
+            protocolInitializer->keyPair()->publicKey(), protocolInitializer->txResultFactory(),
+            protocolInitializer->blockFactory(), frontService, ledger, nodeConfig->groupId(),
+            nodeConfig->chainId(), nodeConfig->blockLimit());
+
+        auto txpool = txpoolFactory->createTxPool();
+        m_txpool = txpool;
+        auto txpoolConfig = txpool->txpoolConfig();
+        txpoolConfig->setPoolLimit(nodeConfig->txpoolLimit());
+        txpoolConfig->setNotifierWorkerNum(nodeConfig->notifyWorkerNum());
+        txpoolConfig->setVerifyWorkerNum(nodeConfig->verifierWorkerNum());
+        // init and start the txpool
+        txpool->init();
+        m_txpool->start();
     }
     void destroy() override {}
 
@@ -221,6 +270,16 @@ public:
         });
 
         return bcostars::Error();
+    }
+
+    bcostars::Error asyncGetPendingTransactionSize(
+        tars::Int64& _pendingTxsSize, tars::TarsCurrentPtr _current)
+    {
+        _current->setResponse(false);
+        m_txpool->asyncGetPendingTransactionSize([_current](
+                                                     bcos::Error::Ptr _error, size_t _txsSize) {
+            async_response_asyncGetPendingTransactionSize(_current, toTarsError(_error), _txsSize);
+        });
     }
 
 private:

@@ -328,7 +328,8 @@ public:
             tarsConsensusNodeList.emplace_back(node);
         }
 
-        m_proxy->async_notifyConsensusNodeList(new Callback(_onRecvResponse), tarsConsensusNodeList);
+        m_proxy->async_notifyConsensusNodeList(
+            new Callback(_onRecvResponse), tarsConsensusNodeList);
     }
 
     void notifyObserverNodeList(bcos::consensus::ConsensusNodeList const& _observerNodeList,
@@ -364,6 +365,35 @@ public:
         }
 
         m_proxy->async_notifyObserverNodeList(new Callback(_onRecvResponse), tarsConsensusNodeList);
+    }
+
+
+    // for RPC to get pending transactions
+    void asyncGetPendingTransactionSize(
+        std::function<void(bcos::Error::Ptr, size_t)> _onGetTxsSize) override
+    {
+        class Callback : public TxPoolServicePrx
+        {
+        public:
+            explicit Callback(std::function<void(bcos::Error::Ptr, size_t)> _callback)
+              : TxPoolServicePrx(), m_callback(_callback)
+            {}
+            ~Callback() override {}
+
+            void callback_asyncGetPendingTransactionSize(
+                const bcostars::Error& ret, size_t _pendingTxsSize) override
+            {
+                m_callback(toBcosError(ret), _pendingTxsSize);
+            }
+            void callback_asyncGetPendingTransactionSize_exception(tars::Int32 ret) override
+            {
+                m_callback(toBcosError(ret), false);
+            }
+
+        private:
+            std::function<void(bcos::Error::Ptr, size_t)> m_callback;
+        };
+        m_proxy->async_asyncGetSyncInfo(new Callback(_onGetTxsSize));
     }
 
 private:

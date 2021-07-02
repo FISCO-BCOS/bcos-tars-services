@@ -52,17 +52,11 @@ class FrontServiceServer : public FrontService
                 getProxyDesc("PBFTServiceObj"));
             auto pbft = std::make_shared<PBFTServiceClient>(pbftProxy);
             // register the message dispatcher for PBFT module
-            std::weak_ptr<bcos::consensus::ConsensusInterface> weakPBFT = pbft;
             front->registerModuleMessageDispatcher(bcos::protocol::ModuleID::PBFT,
-                [weakPBFT](bcos::crypto::NodeIDPtr _nodeID, const std::string& _id,
+                [pbft](bcos::crypto::NodeIDPtr _nodeID, const std::string& _id,
                     bcos::bytesConstRef _data) {
                     try
                     {
-                        auto pbft = weakPBFT.lock();
-                        if (!pbft)
-                        {
-                            return;
-                        }
                         pbft->asyncNotifyConsensusMessage(nullptr, _id, _nodeID, _data, nullptr);
                     }
                     catch (std::exception const& e)
@@ -75,18 +69,13 @@ class FrontServiceServer : public FrontService
             // TODO: register the message dispatcher for the txsSync module
             // register the message dispatcher for the block sync module
             auto blockSync = std::make_shared<BlockSyncServiceClient>(pbftProxy);
-            std::weak_ptr<bcos::sync::BlockSyncInterface> weakSync = blockSync;
             front->registerModuleMessageDispatcher(bcos::protocol::ModuleID::BlockSync,
-                [weakSync](bcos::crypto::NodeIDPtr _nodeID, std::string const& _id,
+                [blockSync](bcos::crypto::NodeIDPtr _nodeID, std::string const& _id,
                     bcos::bytesConstRef _data) {
                     try
                     {
-                        auto sync = weakSync.lock();
-                        if (!sync)
-                        {
-                            return;
-                        }
-                        sync->asyncNotifyBlockSyncMessage(nullptr, _id, _nodeID, _data, nullptr);
+                        blockSync->asyncNotifyBlockSyncMessage(
+                            nullptr, _id, _nodeID, _data, nullptr);
                     }
                     catch (std::exception const& e)
                     {

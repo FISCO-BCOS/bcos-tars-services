@@ -113,3 +113,29 @@ void PBFTServiceClient::asyncNoteUnSealedTxsSize(
     m_proxy->async_asyncNoteUnSealedTxsSize(
         new PBFTServiceCommonCallback(_onRecv), _unsealedTxsSize);
 }
+
+void BlockSyncServiceClient::asyncGetSyncInfo(
+    std::function<void(bcos::Error::Ptr, std::string)> _onGetSyncInfo)
+{
+    class Callback : public PBFTServicePrxCallback
+    {
+    public:
+        explicit Callback(std::function<void(bcos::Error::Ptr, std::string)> _callback)
+          : PBFTServicePrxCallback(), m_callback(_callback)
+        {}
+        ~Callback() override {}
+
+        void callback_asyncGetSyncInfo(const bcostars::Error& ret, string _syncInfo) override
+        {
+            m_callback(toBcosError(ret), _syncInfo);
+        }
+        void callback_asyncGetSyncInfo_exception(tars::Int32 ret) override
+        {
+            m_callback(toBcosError(ret), false);
+        }
+
+    private:
+        std::function<void(bcos::Error::Ptr, std::string)> m_callback;
+    };
+    m_proxy->async_asyncGetSyncInfo(new Callback(_onGetSyncInfo));
+}

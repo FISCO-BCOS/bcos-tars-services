@@ -49,9 +49,14 @@ public:
     void initialize() override;
     void destroy() override {}
 
+    // for the sync module to check block
+    // Node: since the sync module is intergrated with the PBFT, this interfaces is useless now
     bcostars::Error asyncCheckBlock(
         const bcostars::Block& _block, tars::Bool&, tars::TarsCurrentPtr _current) override;
+
+    // for the rpc module to get the pbft view
     bcostars::Error asyncGetPBFTView(tars::Int64& _view, tars::TarsCurrentPtr _current) override;
+    bcostars::Error asyncGetSyncInfo(std::string& _syncInfo) override;
 
     // Note: since the sealer is intergrated with the PBFT, this interfaces is useless now
     bcostars::Error asyncNoteUnSealedTxsSize(

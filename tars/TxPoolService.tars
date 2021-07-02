@@ -19,5 +19,7 @@ module bcostars {
         Error notifyConnectedNodes(vector<vector<unsigned byte>> connectedNodes);
         Error notifyConsensusNodeList(vector<ConsensusNode> consensusNodeList);
         Error notifyObserverNodeList(vector<ConsensusNode> observerNodeList);
+        
+        Error asyncGetPendingTransactionSize(out long _txsSize);
     };
 };
