@@ -9,6 +9,7 @@
 #include "bcos-framework/libutilities/DataConvertUtility.h"
 #include "bcos-framework/testutils/crypto/HashImpl.h"
 #include "bcos-framework/testutils/crypto/SignatureImpl.h"
+#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 #include <memory>
 
@@ -225,7 +226,20 @@ BOOST_AUTO_TEST_CASE(block)
     }
 }
 
-BOOST_AUTO_TEST_CASE(blockHeader) {}
+BOOST_AUTO_TEST_CASE(emptyBlockHeader) {
+    auto blockHeaderFactory =
+        std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(cryptoSuite);
+    auto transactionFactory =
+        std::make_shared<bcostars::protocol::TransactionFactoryImpl>(cryptoSuite);
+    auto transactionReceiptFactory =
+        std::make_shared<bcostars::protocol::TransactionReceiptFactoryImpl>(cryptoSuite);
+    bcostars::protocol::BlockFactoryImpl blockFactory(
+        cryptoSuite, blockHeaderFactory, transactionFactory, transactionReceiptFactory);
+
+    auto block = blockFactory.createBlock();
+
+    BOOST_CHECK_NO_THROW(block->setBlockHeader(nullptr));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
