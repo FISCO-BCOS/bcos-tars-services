@@ -7,6 +7,7 @@
 #include <bcos-framework/interfaces/protocol/Transaction.h>
 #include <bcos-framework/interfaces/protocol/TransactionFactory.h>
 #include <bcos-framework/libutilities/Common.h>
+#include <memory>
 
 namespace bcostars
 {
@@ -110,7 +111,7 @@ public:
 
     const bcostars::Transaction& inner() const { return *m_inner; }
 
-  void setInner(const bcostars::Transaction &inner) { *m_inner = inner; }
+    void setInner(const bcostars::Transaction& inner) { *m_inner = inner; }
 
 private:
     mutable std::shared_ptr<bcostars::Transaction> m_inner;
@@ -162,6 +163,19 @@ public:
         transaction->m_inner->data.nonce = boost::lexical_cast<std::string>(_nonce);
 
         return transaction;
+    }
+
+    bcos::protocol::Transaction::Ptr createTransaction(int32_t const& _version,
+        bcos::bytes const& _to, bcos::bytes const& _input, bcos::u256 const& _nonce,
+        int64_t const& _blockLimit, std::string const& _chainId, std::string const& _groupId,
+        int64_t const& _importTime, bcos::crypto::KeyPairInterface::Ptr keyPair) override
+    {
+        auto tx = createTransaction(_version, _to, _input, _nonce, _blockLimit, _chainId, _groupId, _importTime);
+        auto sign = m_cryptoSuite->signatureImpl()->sign(keyPair, tx->hash(), true);
+
+        sign->swap(std::dynamic_pointer_cast<bcostars::protocol::TransactionImpl>(tx)->m_inner->signature);
+
+        return tx;
     }
 
     void setCryptoSuite(bcos::crypto::CryptoSuite::Ptr cryptoSuite) { m_cryptoSuite = cryptoSuite; }

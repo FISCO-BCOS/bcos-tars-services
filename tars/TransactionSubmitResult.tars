@@ -10,5 +10,6 @@ module bcostars {
         5 optional vector<unsigned byte> blockHash;
         6 optional vector<unsigned byte> to;
         7 optional long transactionIndex;
+        8 optional string nonce;
     };
 };
