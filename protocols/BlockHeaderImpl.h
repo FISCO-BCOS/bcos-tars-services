@@ -79,7 +79,11 @@ public:
         return *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner.receiptRoot.data()));
     }
     bcos::protocol::BlockNumber number() const override { return m_inner.blockNumber; }
-    bcos::u256 const& gasUsed() override { return *((bcos::u256*)(m_inner.gasUsed.data())); }
+    bcos::u256 const& gasUsed() override
+    {
+        m_gasUsed = boost::lexical_cast<bcos::u256>(m_inner.gasUsed);
+        return m_gasUsed;
+    }
     int64_t timestamp() override { return m_inner.timestamp; }
     int64_t sealer() override { return m_inner.sealer; }
     gsl::span<const bcos::bytes> sealerList() const override { return m_inner.sealerList; }
@@ -135,7 +139,10 @@ public:
     {
         m_inner.blockNumber = _blockNumber;
     }
-    void setGasUsed(bcos::u256 const& _gasUsed) override {}
+    void setGasUsed(bcos::u256 const& _gasUsed) override
+    {
+        m_inner.gasUsed = boost::lexical_cast<std::string>(_gasUsed);
+    }
     void setTimestamp(int64_t _timestamp) override { m_inner.timestamp = _timestamp; }
     void setSealer(int64_t _sealerId) override { m_inner.sealer = _sealerId; }
     void setSealerList(gsl::span<const bcos::bytes> const& _sealerList) override
@@ -182,6 +189,7 @@ public:
     void setInner(const bcostars::BlockHeader&& blockHeader) { m_inner = std::move(blockHeader); }
 
 private:
+    mutable bcos::u256 m_gasUsed;
     mutable bcostars::BlockHeader m_inner;
     mutable bcos::bytes m_buffer;
 };

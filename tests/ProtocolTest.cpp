@@ -236,6 +236,10 @@ BOOST_AUTO_TEST_CASE(blockHeader)
     header->setNumber(100);
     header->setTimestamp(200);
 
+    bcos::u256 gasUsed(1000);
+    header->setGasUsed(gasUsed);
+    // header->setExtraData("hello!");
+
     for (auto flag : { false, true })
     {
         auto buffer = header->encode(flag);
@@ -244,6 +248,7 @@ BOOST_AUTO_TEST_CASE(blockHeader)
 
         BOOST_CHECK_EQUAL(header->number(), decodedHeader->number());
         BOOST_CHECK_EQUAL(header->timestamp(), decodedHeader->timestamp());
+        BOOST_CHECK_EQUAL(header->gasUsed(), decodedHeader->gasUsed());
     }
 
     BOOST_CHECK_NO_THROW(header->setExtraData(header->extraData().toBytes()));

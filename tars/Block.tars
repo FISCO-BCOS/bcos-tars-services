@@ -19,7 +19,7 @@ module bcostars {
         5 optional vector<unsigned byte> receiptRoot;
         6 optional vector<unsigned byte> stateRoot;
         7 optional long blockNumber;
-        8 optional vector<unsigned byte> gasUsed;
+        8 optional string gasUsed;
         9 optional long timestamp;
         10 optional long sealer;
         11 optional vector<vector<unsigned byte>> sealerList;
