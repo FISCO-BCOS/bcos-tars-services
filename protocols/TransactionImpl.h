@@ -22,14 +22,6 @@ public:
         m_inner = std::make_shared<bcostars::Transaction>();
     }
 
-    explicit TransactionImpl(
-        const bcostars::Transaction* transaction, bcos::crypto::CryptoSuite::Ptr _cryptoSuite)
-      : bcos::protocol::Transaction(_cryptoSuite)
-    {
-        m_inner = std::shared_ptr<bcostars::Transaction>(
-            (bcostars::Transaction*)transaction, [](bcostars::Transaction*) {});
-    }
-
     ~TransactionImpl() {}
 
     friend class TransactionFactoryImpl;
@@ -113,6 +105,8 @@ public:
 
     void setInner(const bcostars::Transaction& inner) { *m_inner = inner; }
 
+    void setInner(bcostars::Transaction&& inner) { *m_inner = std::move(inner); }
+
 private:
     mutable std::shared_ptr<bcostars::Transaction> m_inner;
     mutable bcos::bytes m_buffer;
@@ -170,10 +164,12 @@ public:
         int64_t const& _blockLimit, std::string const& _chainId, std::string const& _groupId,
         int64_t const& _importTime, bcos::crypto::KeyPairInterface::Ptr keyPair) override
     {
-        auto tx = createTransaction(_version, _to, _input, _nonce, _blockLimit, _chainId, _groupId, _importTime);
+        auto tx = createTransaction(
+            _version, _to, _input, _nonce, _blockLimit, _chainId, _groupId, _importTime);
         auto sign = m_cryptoSuite->signatureImpl()->sign(keyPair, tx->hash(), true);
 
-        sign->swap(std::dynamic_pointer_cast<bcostars::protocol::TransactionImpl>(tx)->m_inner->signature);
+        sign->swap(
+            std::dynamic_pointer_cast<bcostars::protocol::TransactionImpl>(tx)->m_inner->signature);
 
         return tx;
     }

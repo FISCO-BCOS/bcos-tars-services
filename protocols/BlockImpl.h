@@ -61,14 +61,18 @@ public:
 
     bcos::protocol::Transaction::ConstPtr transaction(size_t _index) const override
     {
-        return std::make_shared<const bcostars::protocol::TransactionImpl>(
-            &(m_inner.transactions[_index]), m_transactionFactory->cryptoSuite());
+        auto tx = std::make_shared<bcostars::protocol::TransactionImpl>(m_transactionFactory->cryptoSuite());
+        tx->setInner(m_inner.transactions[_index]);
+
+        return tx;
     }
 
     bcos::protocol::TransactionReceipt::ConstPtr receipt(size_t _index) const override
     {
-        return std::make_shared<bcostars::protocol::TransactionReceiptImpl>(
-            &(m_inner.receipts[_index]), m_transactionFactory->cryptoSuite());
+        auto receipt = std::make_shared<bcostars::protocol::TransactionReceiptImpl>(m_transactionFactory->cryptoSuite());
+        receipt->setInner(m_inner.receipts[_index]);
+
+        return receipt;
     };
 
     bcos::crypto::HashType const& transactionHash(size_t _index) const override

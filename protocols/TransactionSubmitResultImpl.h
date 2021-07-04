@@ -24,18 +24,13 @@ public:
         m_cryptoSuite(cryptoSuite)
     {}
 
-    TransactionSubmitResultImpl(
-        bcostars::TransactionSubmitResult* result, bcos::crypto::CryptoSuite::Ptr cryptoSuite)
-      : bcos::protocol::TransactionSubmitResult(),
-        m_inner(std::shared_ptr<bcostars::TransactionSubmitResult>(
-            result, [](bcostars::TransactionSubmitResult*) {})),
-        m_cryptoSuite(cryptoSuite)
-    {}
-
     uint32_t status() const override { return m_inner->status; }
     bcos::protocol::TransactionReceipt::Ptr receipt() const override
     {
-        return std::make_shared<TransactionReceiptImpl>(&m_inner->receipt, m_cryptoSuite);
+        auto receipt = std::make_shared<bcostars::protocol::TransactionReceiptImpl>(m_cryptoSuite);
+        receipt->setInner(m_inner->receipt);
+
+        return receipt;
     }
     bcos::crypto::HashType const& txHash() const override
     {

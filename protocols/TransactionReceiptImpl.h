@@ -22,13 +22,6 @@ public:
         m_inner(std::make_shared<bcostars::TransactionReceipt>())
     {}
 
-    TransactionReceiptImpl(const bcostars::TransactionReceipt* transactionReceipt,
-        bcos::crypto::CryptoSuite::Ptr _cryptoSuite)
-      : bcos::protocol::TransactionReceipt(_cryptoSuite),
-        m_inner(std::shared_ptr<bcostars::TransactionReceipt>(
-            (bcostars::TransactionReceipt*)transactionReceipt,
-            [](bcostars::TransactionReceipt*) {}))
-    {}
     ~TransactionReceiptImpl() override {}
 
     friend class TransactionReceiptFactoryImpl;
@@ -113,7 +106,9 @@ public:
     bcos::protocol::BlockNumber blockNumber() const override { return m_inner->blockNumber; }
 
     const bcostars::TransactionReceipt inner() const { return *m_inner; }
+
     void setInner(const bcostars::TransactionReceipt& inner) { *m_inner = inner; }
+    void setInner(bcostars::TransactionReceipt&& inner) { *m_inner = std::move(inner); }
 
 private:
     mutable bcos::crypto::HashType m_hash;
