@@ -20,9 +20,9 @@ public:
     friend class TransactionSubmitResultFactoryImpl;
 
     TransactionSubmitResultImpl(bcos::crypto::CryptoSuite::Ptr cryptoSuite)
-      : bcos::protocol::TransactionSubmitResult(),
-        m_cryptoSuite(cryptoSuite)
+      : bcos::protocol::TransactionSubmitResult(), m_cryptoSuite(cryptoSuite)
     {
+        m_inner.txHash.assign(bcos::crypto::HashType::size, 0);
         m_inner.blockHash.assign(bcos::crypto::HashType::size, 0);
     }
 
