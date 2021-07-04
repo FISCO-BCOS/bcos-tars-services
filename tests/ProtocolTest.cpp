@@ -234,6 +234,8 @@ BOOST_AUTO_TEST_CASE(blockHeader)
 
     auto header = blockHeaderFactory->createBlockHeader();
 
+    BOOST_CHECK_EQUAL(header->gasUsed(), bcos::u256(0));
+
     header->setNumber(100);
     header->setTimestamp(200);
 
