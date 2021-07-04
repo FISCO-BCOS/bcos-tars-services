@@ -22,11 +22,6 @@ public:
       : bcos::protocol::BlockHeader(cryptoSuite), m_inner(std::make_shared<bcostars::BlockHeader>())
     {}
 
-    BlockHeaderImpl(bcostars::BlockHeader* blockHeader, bcos::crypto::CryptoSuite::Ptr cryptoSuite)
-      : bcos::protocol::BlockHeader(cryptoSuite),
-        m_inner(
-            std::shared_ptr<bcostars::BlockHeader>(blockHeader, [](bcostars::BlockHeader*) {})){};
-
     virtual void decode(bcos::bytesConstRef _data) override
     {
         m_buffer.assign(_data.begin(), _data.end());
@@ -180,6 +175,7 @@ public:
     const bcostars::BlockHeader& inner() const { return *m_inner; }
 
     void setInner(const bcostars::BlockHeader& blockHeader) { *m_inner = blockHeader; }
+    void setInner(const bcostars::BlockHeader&& blockHeader) { *m_inner = std::move(blockHeader); }
 
 private:
     std::shared_ptr<bcostars::BlockHeader> m_inner;

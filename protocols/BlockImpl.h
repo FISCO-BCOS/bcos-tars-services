@@ -55,8 +55,10 @@ public:
     // get blockHeader
     bcos::protocol::BlockHeader::Ptr blockHeader() override
     {
-        return std::make_shared<bcostars::protocol::BlockHeaderImpl>(
-            &(m_inner.blockHeader), m_transactionFactory->cryptoSuite());
+        auto blockHeader = std::make_shared<bcostars::protocol::BlockHeaderImpl>(m_transactionFactory->cryptoSuite());
+        blockHeader->setInner(m_inner.blockHeader);
+
+        return blockHeader;
     };
 
     bcos::protocol::Transaction::ConstPtr transaction(size_t _index) const override
