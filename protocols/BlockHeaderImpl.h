@@ -159,8 +159,7 @@ public:
     }
 
     void setExtraData(bcos::bytes const& _extraData) override { m_inner.extraData = _extraData; }
-    void setExtraData(bcos::bytes&& _extraData) override { m_inner.extraData = _extraData; }
-    // void setExtraData(bcos::bytes&& _extraData) override { _extraData.swap(m_inner.extraData); }
+    void setExtraData(bcos::bytes&& _extraData) override { _extraData.swap(m_inner.extraData); }
     void setSignatureList(gsl::span<const bcos::protocol::Signature> const& _signatureList) override
     {
         for (auto& it : _signatureList)

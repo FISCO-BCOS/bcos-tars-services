@@ -245,6 +245,8 @@ BOOST_AUTO_TEST_CASE(blockHeader)
         BOOST_CHECK_EQUAL(header->number(), decodedHeader->number());
         BOOST_CHECK_EQUAL(header->timestamp(), decodedHeader->timestamp());
     }
+
+    BOOST_CHECK_NO_THROW(header->setExtraData(header->extraData().toBytes()));
 }
 
 BOOST_AUTO_TEST_CASE(emptyBlockHeader)
