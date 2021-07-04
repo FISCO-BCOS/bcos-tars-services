@@ -19,13 +19,14 @@ class BlockHeaderImpl : public bcos::protocol::BlockHeader
 public:
     virtual ~BlockHeaderImpl() {}
 
+    BlockHeaderImpl() = delete;
+
     BlockHeaderImpl(bcos::crypto::CryptoSuite::Ptr cryptoSuite)
       : bcos::protocol::BlockHeader(cryptoSuite)
     {
         m_inner.txsRoot.assign(bcos::crypto::HashType::size, 0);
         m_inner.stateRoot.assign(bcos::crypto::HashType::size, 0);
         m_inner.receiptRoot.assign(bcos::crypto::HashType::size, 0);
-        m_inner.gasUsed = "0";
     }
 
     virtual void decode(bcos::bytesConstRef _data) override
@@ -68,7 +69,6 @@ public:
         m_inner.txsRoot.assign(bcos::crypto::HashType::size, 0);
         m_inner.stateRoot.assign(bcos::crypto::HashType::size, 0);
         m_inner.receiptRoot.assign(bcos::crypto::HashType::size, 0);
-        m_inner.gasUsed = "0";
     }
 
     int32_t version() const override { return m_inner.version; }
@@ -106,7 +106,14 @@ public:
     bcos::protocol::BlockNumber number() const override { return m_inner.blockNumber; }
     bcos::u256 const& gasUsed() override
     {
-        m_gasUsed = boost::lexical_cast<bcos::u256>(m_inner.gasUsed);
+        if (m_inner.gasUsed.empty())
+        {
+            m_gasUsed = bcos::u256(0);
+        }
+        else
+        {
+            m_gasUsed = boost::lexical_cast<bcos::u256>(m_inner.gasUsed);
+        }
         return m_gasUsed;
     }
     int64_t timestamp() override { return m_inner.timestamp; }

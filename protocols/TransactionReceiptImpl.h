@@ -19,9 +19,7 @@ class TransactionReceiptImpl : public bcos::protocol::TransactionReceipt
 public:
     TransactionReceiptImpl(bcos::crypto::CryptoSuite::Ptr _cryptoSuite)
       : bcos::protocol::TransactionReceipt(_cryptoSuite)
-    {
-        m_inner.gasUsed = "0";
-    }
+    {}
 
     ~TransactionReceiptImpl() override {}
 
@@ -83,7 +81,14 @@ public:
     int32_t version() const override { return m_inner.version; }
     bcos::u256 const& gasUsed() const override
     {
-        m_gasUsed = boost::lexical_cast<bcos::u256>(m_inner.gasUsed);
+        if (m_inner.gasUsed.empty())
+        {
+            m_gasUsed = bcos::u256(0);
+        }
+        else
+        {
+            m_gasUsed = boost::lexical_cast<bcos::u256>(m_inner.gasUsed);
+        }
         return m_gasUsed;
     }
 

@@ -20,7 +20,6 @@ public:
       : bcos::protocol::Transaction(_cryptoSuite)
     {
         // m_inner.dataHash.assign(bcos::crypto::HashType::size, 0);
-        m_inner.data.nonce = "0";
     }
 
     ~TransactionImpl() {}
@@ -85,7 +84,14 @@ public:
     int64_t blockLimit() const override { return m_inner.data.blockLimit; }
     bcos::u256 const& nonce() const override
     {
-        m_nonce = boost::lexical_cast<bcos::u256>(m_inner.data.nonce);
+        if (m_inner.data.nonce.empty())
+        {
+            m_nonce = bcos::u256(0);
+        }
+        else
+        {
+            m_nonce = boost::lexical_cast<bcos::u256>(m_inner.data.nonce);
+        }
         return m_nonce;
     }
     bcos::bytesConstRef to() const override
