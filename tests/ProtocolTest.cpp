@@ -9,6 +9,7 @@
 #include "bcos-framework/libutilities/DataConvertUtility.h"
 #include "bcos-framework/testutils/crypto/HashImpl.h"
 #include "bcos-framework/testutils/crypto/SignatureImpl.h"
+#include "interfaces/protocol/ProtocolTypeDef.h"
 #include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 #include <memory>
@@ -238,7 +239,15 @@ BOOST_AUTO_TEST_CASE(blockHeader)
 
     bcos::u256 gasUsed(1000);
     header->setGasUsed(gasUsed);
-    // header->setExtraData("hello!");
+
+    bcos::protocol::ParentInfo parentInfo;
+    parentInfo.blockHash = bcos::crypto::HashType(10000);
+    parentInfo.blockNumber = 2000;
+
+    std::vector<bcos::protocol::ParentInfo> parentInfoList;
+    parentInfoList.emplace_back(parentInfo);
+
+    header->setParentInfo(parentInfoList);
 
     for (auto flag : { false, true })
     {
@@ -249,6 +258,11 @@ BOOST_AUTO_TEST_CASE(blockHeader)
         BOOST_CHECK_EQUAL(header->number(), decodedHeader->number());
         BOOST_CHECK_EQUAL(header->timestamp(), decodedHeader->timestamp());
         BOOST_CHECK_EQUAL(header->gasUsed(), decodedHeader->gasUsed());
+        BOOST_CHECK_EQUAL(header->parentInfo().size(), decodedHeader->parentInfo().size());
+        for(size_t i = 0; i < decodedHeader->parentInfo().size(); ++i) {
+            BOOST_CHECK_EQUAL(header->parentInfo()[i].blockHash.asBytes(), decodedHeader->parentInfo()[i].blockHash.asBytes());
+            BOOST_CHECK_EQUAL(header->parentInfo()[i].blockNumber, decodedHeader->parentInfo()[i].blockNumber);
+        }
     }
 
     BOOST_CHECK_NO_THROW(header->setExtraData(header->extraData().toBytes()));
