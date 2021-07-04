@@ -3,6 +3,7 @@
 #include "TransactionReceipt.h"
 #include "TransactionReceiptImpl.h"
 #include "TransactionSubmitResult.h"
+#include "interfaces/crypto/CommonType.h"
 #include "libutilities/Common.h"
 #include <bcos-framework/interfaces/protocol/TransactionSubmitResult.h>
 #include <bcos-framework/interfaces/protocol/TransactionSubmitResultFactory.h>
@@ -20,51 +21,52 @@ public:
 
     TransactionSubmitResultImpl(bcos::crypto::CryptoSuite::Ptr cryptoSuite)
       : bcos::protocol::TransactionSubmitResult(),
-        m_inner(std::make_shared<bcostars::TransactionSubmitResult>()),
         m_cryptoSuite(cryptoSuite)
-    {}
+    {
+        m_inner.blockHash.assign(bcos::crypto::HashType::size, 0);
+    }
 
-    uint32_t status() const override { return m_inner->status; }
+    uint32_t status() const override { return m_inner.status; }
     bcos::protocol::TransactionReceipt::Ptr receipt() const override
     {
         auto receipt = std::make_shared<bcostars::protocol::TransactionReceiptImpl>(m_cryptoSuite);
-        receipt->setInner(m_inner->receipt);
+        receipt->setInner(m_inner.receipt);
 
         return receipt;
     }
     bcos::crypto::HashType const& txHash() const override
     {
-        return *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner->txHash.data()));
+        return *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner.txHash.data()));
     }
     bcos::bytesConstRef from() const override
     {
-        return bcos::bytesConstRef(m_inner->from.data(), m_inner->from.size());
+        return bcos::bytesConstRef(m_inner.from.data(), m_inner.from.size());
     }
     bcos::crypto::HashType const& blockHash() const override
     {
-        return *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner->blockHash.data()));
+        return *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner.blockHash.data()));
     }
     bcos::bytesConstRef to() const override
     {
-        return bcos::bytesConstRef(m_inner->to.data(), m_inner->to.size());
+        return bcos::bytesConstRef(m_inner.to.data(), m_inner.to.size());
     }
-    int64_t transactionIndex() const override { return m_inner->transactionIndex; }
+    int64_t transactionIndex() const override { return m_inner.transactionIndex; }
     void setNonce(bcos::protocol::NonceType const& _nonce) override
     {
-        m_inner->nonce = boost::lexical_cast<std::string>(_nonce);
+        m_inner.nonce = boost::lexical_cast<std::string>(_nonce);
     }
     bcos::protocol::NonceType const& nonce() override
     {
-        m_nonce = boost::lexical_cast<bcos::protocol::NonceType>(m_inner->nonce);
+        m_nonce = boost::lexical_cast<bcos::protocol::NonceType>(m_inner.nonce);
         return m_nonce;
     }
 
 
-    bcostars::TransactionSubmitResult const& inner() { return *m_inner; }
-    void setInner(const bcostars::TransactionSubmitResult& result) { *m_inner = result; }
+    bcostars::TransactionSubmitResult const& inner() { return m_inner; }
+    void setInner(const bcostars::TransactionSubmitResult& result) { m_inner = result; }
 
 private:
-    std::shared_ptr<bcostars::TransactionSubmitResult> m_inner;
+    bcostars::TransactionSubmitResult m_inner;
     bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
     mutable bcos::protocol::NonceType m_nonce;
 };
@@ -77,9 +79,9 @@ public:
         bcos::crypto::HashType const& _txHash) override
     {
         auto result = std::make_shared<TransactionSubmitResultImpl>(m_cryptoSuite);
-        result->m_inner->txHash.assign(_txHash.begin(), _txHash.end());
+        result->m_inner.txHash.assign(_txHash.begin(), _txHash.end());
         auto blockHash = _blockHeader->hash();
-        result->m_inner->blockHash.assign(blockHash.begin(), blockHash.end());
+        result->m_inner.blockHash.assign(blockHash.begin(), blockHash.end());
 
         return result;
     }
@@ -88,8 +90,8 @@ public:
         bcos::crypto::HashType const& _txHash, int32_t _status) override
     {
         auto result = std::make_shared<TransactionSubmitResultImpl>(m_cryptoSuite);
-        result->m_inner->txHash.assign(_txHash.begin(), _txHash.end());
-        result->m_inner->status = _status;
+        result->m_inner.txHash.assign(_txHash.begin(), _txHash.end());
+        result->m_inner.status = _status;
 
         return result;
     }
@@ -100,14 +102,14 @@ public:
         bcos::bytesConstRef _to) override
     {
         auto result = std::make_shared<TransactionSubmitResultImpl>(m_cryptoSuite);
-        result->m_inner->receipt =
+        result->m_inner.receipt =
             std::dynamic_pointer_cast<bcostars::protocol::TransactionReceiptImpl>(_receipt)
                 ->inner();
-        result->m_inner->txHash.assign(_txHash.data(), _txHash.data() + _txHash.size);
-        result->m_inner->transactionIndex = _txIndex;
-        result->m_inner->blockHash.assign(_blockHash.begin(), _blockHash.end());
-        result->m_inner->from.assign(_sender.begin(), _sender.end());
-        result->m_inner->to.assign(_to.begin(), _to.end());
+        result->m_inner.txHash.assign(_txHash.data(), _txHash.data() + _txHash.size);
+        result->m_inner.transactionIndex = _txIndex;
+        result->m_inner.blockHash.assign(_blockHash.begin(), _blockHash.end());
+        result->m_inner.from.assign(_sender.begin(), _sender.end());
+        result->m_inner.to.assign(_to.begin(), _to.end());
 
         return result;
     }
@@ -118,13 +120,13 @@ public:
     {
         auto result = std::make_shared<TransactionSubmitResultImpl>(m_cryptoSuite);
         auto txHash = _tx->hash();
-        result->m_inner->txHash.assign(txHash.begin(), txHash.end());
+        result->m_inner.txHash.assign(txHash.begin(), txHash.end());
         auto to = _tx->to();
-        result->m_inner->to.assign(to.begin(), to.end());
+        result->m_inner.to.assign(to.begin(), to.end());
 
-        result->m_inner->transactionIndex = _txIndex;
+        result->m_inner.transactionIndex = _txIndex;
         auto blockHash = _blockHeader->hash();
-        result->m_inner->blockHash.assign(blockHash.begin(), blockHash.end());
+        result->m_inner.blockHash.assign(blockHash.begin(), blockHash.end());
 
         return result;
     }
