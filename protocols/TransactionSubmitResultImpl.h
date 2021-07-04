@@ -24,6 +24,7 @@ public:
     {
         m_inner.txHash.assign(bcos::crypto::HashType::size, 0);
         m_inner.blockHash.assign(bcos::crypto::HashType::size, 0);
+        m_inner.nonce = "0";
     }
 
     uint32_t status() const override { return m_inner.status; }

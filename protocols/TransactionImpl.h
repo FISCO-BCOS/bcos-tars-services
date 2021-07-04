@@ -20,6 +20,7 @@ public:
       : bcos::protocol::Transaction(_cryptoSuite)
     {
         // m_inner.dataHash.assign(bcos::crypto::HashType::size, 0);
+        m_inner.data.nonce = "0";
     }
 
     ~TransactionImpl() {}

@@ -55,7 +55,8 @@ public:
     // get blockHeader
     bcos::protocol::BlockHeader::Ptr blockHeader() override
     {
-        auto blockHeader = std::make_shared<bcostars::protocol::BlockHeaderImpl>(m_transactionFactory->cryptoSuite());
+        auto blockHeader = std::make_shared<bcostars::protocol::BlockHeaderImpl>(
+            m_transactionFactory->cryptoSuite());
         blockHeader->setInner(m_inner.blockHeader);
 
         return blockHeader;
@@ -63,7 +64,8 @@ public:
 
     bcos::protocol::Transaction::ConstPtr transaction(size_t _index) const override
     {
-        auto tx = std::make_shared<bcostars::protocol::TransactionImpl>(m_transactionFactory->cryptoSuite());
+        auto tx = std::make_shared<bcostars::protocol::TransactionImpl>(
+            m_transactionFactory->cryptoSuite());
         tx->setInner(m_inner.transactions[_index]);
 
         return tx;
@@ -71,7 +73,8 @@ public:
 
     bcos::protocol::TransactionReceipt::ConstPtr receipt(size_t _index) const override
     {
-        auto receipt = std::make_shared<bcostars::protocol::TransactionReceiptImpl>(m_transactionFactory->cryptoSuite());
+        auto receipt = std::make_shared<bcostars::protocol::TransactionReceiptImpl>(
+            m_transactionFactory->cryptoSuite());
         receipt->setInner(m_inner.receipts[_index]);
 
         return receipt;
@@ -164,7 +167,14 @@ public:
 
             for (auto const& it : m_inner.nonceList)
             {
-                m_nonceList.push_back(boost::lexical_cast<bcos::u256>(it));
+                if (it.empty())
+                {
+                    m_nonceList.push_back(bcos::protocol::NonceType(0));
+                }
+                else
+                {
+                    m_nonceList.push_back(boost::lexical_cast<bcos::u256>(it));
+                }
             }
         }
 

@@ -19,7 +19,9 @@ class TransactionReceiptImpl : public bcos::protocol::TransactionReceipt
 public:
     TransactionReceiptImpl(bcos::crypto::CryptoSuite::Ptr _cryptoSuite)
       : bcos::protocol::TransactionReceipt(_cryptoSuite)
-    {}
+    {
+        m_inner.gasUsed = "0";
+    }
 
     ~TransactionReceiptImpl() override {}
 
@@ -33,7 +35,6 @@ public:
         input.setBuffer((const char*)m_buffer.data(), m_buffer.size());
 
         m_inner.readFrom(input);
-        m_gasUsed = boost::lexical_cast<bcos::u256>(m_inner.gasUsed);
         for (auto& it : m_inner.logEntries)
         {
             std::vector<bcos::h256> topics;
@@ -50,7 +51,6 @@ public:
     {
         tars::TarsOutputStream<bcostars::protocol::BufferWriterByteVector> output;
 
-        m_inner.gasUsed = boost::lexical_cast<std::string>(m_gasUsed);
         m_inner.logEntries.clear();
         for (auto& it : m_logEntries)
         {
@@ -81,7 +81,11 @@ public:
     }
 
     int32_t version() const override { return m_inner.version; }
-    bcos::u256 const& gasUsed() const override { return m_gasUsed; }
+    bcos::u256 const& gasUsed() const override
+    {
+        m_gasUsed = boost::lexical_cast<bcos::u256>(m_inner.gasUsed);
+        return m_gasUsed;
+    }
 
     bcos::bytesConstRef contractAddress() const override
     {
@@ -114,7 +118,7 @@ private:
 
     mutable bcos::bytes m_buffer;
     mutable bcostars::TransactionReceipt m_inner;
-    bcos::u256 m_gasUsed;
+    mutable bcos::u256 m_gasUsed;
     std::vector<bcos::protocol::LogEntry> m_logEntries;
 };
 
@@ -151,7 +155,7 @@ public:
         transactionReceipt->m_inner.status = _status;
         transactionReceipt->m_inner.output = _output;
 
-        transactionReceipt->m_gasUsed = _gasUsed;
+        transactionReceipt->m_inner.gasUsed = boost::lexical_cast<std::string>(_gasUsed);
         _logEntries->swap(transactionReceipt->m_logEntries);
         transactionReceipt->m_inner.blockNumber = _blockNumber;
 
