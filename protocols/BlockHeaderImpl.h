@@ -109,7 +109,7 @@ public:
         {
             ParentInfo parentInfo;
             parentInfo.blockNumber = it.blockNumber;
-            *parentInfo.blockHash = *it.blockHash.data();
+            parentInfo.blockHash.assign(it.blockHash.begin(), it.blockHash.end());
             m_inner.parentInfo.emplace_back(parentInfo);
         }
     }

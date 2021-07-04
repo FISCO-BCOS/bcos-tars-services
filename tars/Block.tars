@@ -4,7 +4,7 @@
 module bcostars {
     struct ParentInfo {
         1 optional long blockNumber;
-        2 optional unsigned byte blockHash[32];
+        2 optional vector<unsigned byte> blockHash;
     };
 
     struct Signature {
