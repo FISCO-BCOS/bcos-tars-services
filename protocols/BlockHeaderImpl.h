@@ -89,7 +89,8 @@ public:
     gsl::span<const bcos::bytes> sealerList() const override { return m_inner.sealerList; }
     bcos::bytesConstRef extraData() const override
     {
-        return bcos::bytesConstRef(m_inner.extraData.data(), m_inner.extraData.size());
+        return bcos::bytesConstRef(m_extraData.data(), m_extraData.size());
+        // return bcos::bytesConstRef(m_inner.extraData.data(), m_inner.extraData.size());
     }
     gsl::span<const bcos::protocol::Signature> signatureList() const override
     {
@@ -165,8 +166,14 @@ public:
         setConsensusWeights(gsl::span(_weightList.data(), _weightList.size()));
     }
 
-    void setExtraData(bcos::bytes const& _extraData) override { m_inner.extraData = _extraData; }
-    void setExtraData(bcos::bytes&& _extraData) override { _extraData.swap(m_inner.extraData); }
+    void setExtraData(bcos::bytes const& _extraData) override
+    {
+        // m_inner.extraData = _extraData;
+    }
+    void setExtraData(bcos::bytes&& _extraData) override
+    {
+        //_extraData.swap(m_inner.extraData);
+    }
     void setSignatureList(gsl::span<const bcos::protocol::Signature> const& _signatureList) override
     {
         for (auto& it : _signatureList)
@@ -189,6 +196,7 @@ public:
     void setInner(const bcostars::BlockHeader&& blockHeader) { m_inner = std::move(blockHeader); }
 
 private:
+    std::vector<uint8_t> m_extraData;
     mutable bcos::u256 m_gasUsed;
     mutable bcostars::BlockHeader m_inner;
     mutable bcos::bytes m_buffer;
