@@ -25,6 +25,7 @@ public:
         m_inner.txsRoot.assign(bcos::crypto::HashType::size, 0);
         m_inner.stateRoot.assign(bcos::crypto::HashType::size, 0);
         m_inner.receiptRoot.assign(bcos::crypto::HashType::size, 0);
+        m_inner.gasUsed = "0";
     }
 
     virtual void decode(bcos::bytesConstRef _data) override
@@ -61,17 +62,28 @@ public:
         return bcos::ref(m_buffer);
     }
 
-    void clear() override { m_inner = bcostars::BlockHeader(); }
+    void clear() override
+    {
+        m_inner = bcostars::BlockHeader();
+        m_inner.txsRoot.assign(bcos::crypto::HashType::size, 0);
+        m_inner.stateRoot.assign(bcos::crypto::HashType::size, 0);
+        m_inner.receiptRoot.assign(bcos::crypto::HashType::size, 0);
+        m_inner.gasUsed = "0";
+    }
 
     int32_t version() const override { return m_inner.version; }
 
-    gsl::span<const bcos::protocol::ParentInfo> parentInfo() const override {
+    gsl::span<const bcos::protocol::ParentInfo> parentInfo() const override
+    {
         m_parentInfo.clear();
-        if(m_parentInfo.empty()) {
-            for(auto const& it: m_inner.parentInfo) {
+        if (m_parentInfo.empty())
+        {
+            for (auto const& it : m_inner.parentInfo)
+            {
                 bcos::protocol::ParentInfo parentInfo;
                 parentInfo.blockNumber = it.blockNumber;
-                parentInfo.blockHash = *(reinterpret_cast<const bcos::crypto::HashType*>(it.blockHash.data()));
+                parentInfo.blockHash =
+                    *(reinterpret_cast<const bcos::crypto::HashType*>(it.blockHash.data()));
                 m_parentInfo.emplace_back(parentInfo);
             }
         }

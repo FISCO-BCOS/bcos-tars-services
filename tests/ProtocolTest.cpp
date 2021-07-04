@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(blockHeader)
         BOOST_CHECK_EQUAL(header->gasUsed(), decodedHeader->gasUsed());
         BOOST_CHECK_EQUAL(header->parentInfo().size(), decodedHeader->parentInfo().size());
         for(size_t i = 0; i < decodedHeader->parentInfo().size(); ++i) {
-            BOOST_CHECK_EQUAL(header->parentInfo()[i].blockHash.asBytes(), decodedHeader->parentInfo()[i].blockHash.asBytes());
+            BOOST_CHECK_EQUAL(bcos::toString(header->parentInfo()[i].blockHash), bcos::toString(decodedHeader->parentInfo()[i].blockHash));
             BOOST_CHECK_EQUAL(header->parentInfo()[i].blockNumber, decodedHeader->parentInfo()[i].blockNumber);
         }
     }
