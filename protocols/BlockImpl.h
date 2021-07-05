@@ -113,6 +113,10 @@ public:
 
     void setReceipt(size_t _index, bcos::protocol::TransactionReceipt::Ptr _receipt) override
     {
+        if(_index >= m_inner.receipts.size()) {
+            m_inner.receipts.resize(m_inner.transactions.size());
+        }
+        
         m_inner.receipts[_index] =
             std::dynamic_pointer_cast<bcostars::protocol::TransactionReceiptImpl>(_receipt)
                 ->inner();
