@@ -3,6 +3,7 @@
 #include "Block.h"
 #include "Common.h"
 #include "bcos-framework/interfaces/crypto/CryptoSuite.h"
+#include "interfaces/crypto/CommonType.h"
 #include "interfaces/protocol/ProtocolTypeDef.h"
 #include <bcos-framework/interfaces/protocol/Block.h>
 #include <bcos-framework/interfaces/protocol/BlockFactory.h>
@@ -22,11 +23,15 @@ public:
     BlockHeaderImpl() = delete;
 
     BlockHeaderImpl(bcos::crypto::CryptoSuite::Ptr cryptoSuite)
+      : bcos::protocol::BlockHeader(cryptoSuite), m_inner(std::make_shared<bcostars::BlockHeader>())
+    {}
+
+    BlockHeaderImpl(bcos::crypto::CryptoSuite::Ptr cryptoSuite, bcostars::BlockHeader* header,
+        bcos::protocol::Block::Ptr blockPtr)
       : bcos::protocol::BlockHeader(cryptoSuite)
     {
-        m_inner.txsRoot.assign(bcos::crypto::HashType::size, 0);
-        m_inner.stateRoot.assign(bcos::crypto::HashType::size, 0);
-        m_inner.receiptRoot.assign(bcos::crypto::HashType::size, 0);
+        m_inner = std::shared_ptr<bcostars::BlockHeader>(header, [](bcostars::BlockHeader*) {});
+        m_blockPtr = blockPtr;
     }
 
     virtual void decode(bcos::bytesConstRef _data) override
@@ -36,14 +41,14 @@ public:
         tars::TarsInputStream<tars::BufferReader> input;
         input.setBuffer((const char*)_data.data(), _data.size());
 
-        m_inner.readFrom(input);
+        m_inner->readFrom(input);
     }
 
     virtual void encode(bcos::bytes& _encodeData) const override
     {
         tars::TarsOutputStream<bcostars::protocol::BufferWriterByteVector> output;
 
-        m_inner.writeTo(output);
+        m_inner->writeTo(output);
         output.getByteBuffer().swap(_encodeData);
     }
 
@@ -52,9 +57,9 @@ public:
         if (_onlyHashFieldsData)
         {
             vector<Signature> emptyList;
-            m_inner.signatureList.swap(emptyList);
+            m_inner->signatureList.swap(emptyList);
             encode(m_buffer);
-            emptyList.swap(m_inner.signatureList);
+            emptyList.swap(m_inner->signatureList);
         }
         else
         {
@@ -63,22 +68,15 @@ public:
         return bcos::ref(m_buffer);
     }
 
-    void clear() override
-    {
-        m_inner = bcostars::BlockHeader();
-        m_inner.txsRoot.assign(bcos::crypto::HashType::size, 0);
-        m_inner.stateRoot.assign(bcos::crypto::HashType::size, 0);
-        m_inner.receiptRoot.assign(bcos::crypto::HashType::size, 0);
-    }
+    void clear() override { *m_inner = bcostars::BlockHeader(); }
 
-    int32_t version() const override { return m_inner.version; }
+    int32_t version() const override { return inner().version; }
 
     gsl::span<const bcos::protocol::ParentInfo> parentInfo() const override
     {
-        m_parentInfo.clear();
         if (m_parentInfo.empty())
         {
-            for (auto const& it : m_inner.parentInfo)
+            for (auto const& it : m_inner->parentInfo)
             {
                 bcos::protocol::ParentInfo parentInfo;
                 parentInfo.blockNumber = it.blockNumber;
@@ -93,60 +91,71 @@ public:
 
     bcos::crypto::HashType const& txsRoot() const override
     {
-        return *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner.txsRoot.data()));
+        if (!m_inner->txsRoot.empty())
+        {
+            m_txsRoot = *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner->txsRoot.data()));
+        }
+        return m_txsRoot;
     }
     bcos::crypto::HashType const& stateRoot() const override
     {
-        return *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner.stateRoot.data()));
+        if (!m_inner->stateRoot.empty())
+        {
+            m_stateRoot =
+                *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner->stateRoot.data()));
+        }
+        return m_stateRoot;
     }
     bcos::crypto::HashType const& receiptsRoot() const override
     {
-        return *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner.receiptRoot.data()));
+        if (!m_inner->receiptRoot.empty())
+        {
+            m_receiptRoot =
+                *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner->receiptRoot.data()));
+        }
+        return m_receiptRoot;
     }
-    bcos::protocol::BlockNumber number() const override { return m_inner.blockNumber; }
+    bcos::protocol::BlockNumber number() const override { return m_inner->blockNumber; }
     bcos::u256 const& gasUsed() override
     {
-        if (m_inner.gasUsed.empty())
+        if (!m_inner->gasUsed.empty())
         {
-            m_gasUsed = bcos::u256(0);
-        }
-        else
-        {
-            m_gasUsed = boost::lexical_cast<bcos::u256>(m_inner.gasUsed);
+            m_gasUsed = boost::lexical_cast<bcos::u256>(m_inner->gasUsed);
         }
         return m_gasUsed;
     }
-    int64_t timestamp() override { return m_inner.timestamp; }
-    int64_t sealer() override { return m_inner.sealer; }
-    gsl::span<const bcos::bytes> sealerList() const override { return m_inner.sealerList; }
+    int64_t timestamp() override { return m_inner->timestamp; }
+    int64_t sealer() override { return m_inner->sealer; }
+    gsl::span<const bcos::bytes> sealerList() const override { return m_inner->sealerList; }
     bcos::bytesConstRef extraData() const override
     {
-        return bcos::bytesConstRef(m_inner.extraData.data(), m_inner.extraData.size());
+        return bcos::bytesConstRef(m_inner->extraData.data(), m_inner->extraData.size());
     }
     gsl::span<const bcos::protocol::Signature> signatureList() const override
     {
         return gsl::span(
-            reinterpret_cast<const bcos::protocol::Signature*>(m_inner.signatureList.data()),
-            m_inner.signatureList.size());
+            reinterpret_cast<const bcos::protocol::Signature*>(m_inner->signatureList.data()),
+            m_inner->signatureList.size());
     }
 
     gsl::span<const uint64_t> consensusWeights() const override
     {
-        return gsl::span(reinterpret_cast<const uint64_t*>(m_inner.consensusWeights.data()),
-            m_inner.consensusWeights.size());
+        return gsl::span(reinterpret_cast<const uint64_t*>(m_inner->consensusWeights.data()),
+            m_inner->consensusWeights.size());
     }
 
-    void setVersion(int32_t _version) override { m_inner.version = _version; }
+    void setVersion(int32_t _version) override { m_inner->version = _version; }
 
     void setParentInfo(gsl::span<const bcos::protocol::ParentInfo> const& _parentInfo) override
     {
-        m_inner.parentInfo.clear();
+        m_parentInfo.clear();
+        m_inner->parentInfo.clear();
         for (auto& it : _parentInfo)
         {
             ParentInfo parentInfo;
             parentInfo.blockNumber = it.blockNumber;
             parentInfo.blockHash.assign(it.blockHash.begin(), it.blockHash.end());
-            m_inner.parentInfo.emplace_back(parentInfo);
+            m_inner->parentInfo.emplace_back(parentInfo);
         }
     }
 
@@ -157,29 +166,29 @@ public:
 
     void setTxsRoot(bcos::crypto::HashType const& _txsRoot) override
     {
-        m_inner.txsRoot.assign(_txsRoot.begin(), _txsRoot.end());
+        m_inner->txsRoot.assign(_txsRoot.begin(), _txsRoot.end());
     }
     void setReceiptsRoot(bcos::crypto::HashType const& _receiptsRoot) override
     {
-        m_inner.receiptRoot.assign(_receiptsRoot.begin(), _receiptsRoot.end());
+        m_inner->receiptRoot.assign(_receiptsRoot.begin(), _receiptsRoot.end());
     }
     void setStateRoot(bcos::crypto::HashType const& _stateRoot) override
     {
-        m_inner.stateRoot.assign(_stateRoot.begin(), _stateRoot.end());
+        m_inner->stateRoot.assign(_stateRoot.begin(), _stateRoot.end());
     }
     void setNumber(bcos::protocol::BlockNumber _blockNumber) override
     {
-        m_inner.blockNumber = _blockNumber;
+        m_inner->blockNumber = _blockNumber;
     }
     void setGasUsed(bcos::u256 const& _gasUsed) override
     {
-        m_inner.gasUsed = boost::lexical_cast<std::string>(_gasUsed);
+        m_inner->gasUsed = boost::lexical_cast<std::string>(_gasUsed);
     }
-    void setTimestamp(int64_t _timestamp) override { m_inner.timestamp = _timestamp; }
-    void setSealer(int64_t _sealerId) override { m_inner.sealer = _sealerId; }
+    void setTimestamp(int64_t _timestamp) override { m_inner->timestamp = _timestamp; }
+    void setSealer(int64_t _sealerId) override { m_inner->sealer = _sealerId; }
     void setSealerList(gsl::span<const bcos::bytes> const& _sealerList) override
     {
-        m_inner.sealerList.assign(_sealerList.begin(), _sealerList.end());
+        m_inner->sealerList.assign(_sealerList.begin(), _sealerList.end());
     }
 
     void setSealerList(std::vector<bcos::bytes>&& _sealerList) override
@@ -189,7 +198,7 @@ public:
 
     void setConsensusWeights(gsl::span<const uint64_t> const& _weightList) override
     {
-        m_inner.consensusWeights.assign(_weightList.begin(), _weightList.end());
+        m_inner->consensusWeights.assign(_weightList.begin(), _weightList.end());
     }
 
     void setConsensusWeights(std::vector<uint64_t>&& _weightList) override
@@ -197,8 +206,8 @@ public:
         setConsensusWeights(gsl::span(_weightList.data(), _weightList.size()));
     }
 
-    void setExtraData(bcos::bytes const& _extraData) override { m_inner.extraData = _extraData; }
-    void setExtraData(bcos::bytes&& _extraData) override { _extraData.swap(m_inner.extraData); }
+    void setExtraData(bcos::bytes const& _extraData) override { m_inner->extraData = _extraData; }
+    void setExtraData(bcos::bytes&& _extraData) override { _extraData.swap(m_inner->extraData); }
     void setSignatureList(gsl::span<const bcos::protocol::Signature> const& _signatureList) override
     {
         for (auto& it : _signatureList)
@@ -206,7 +215,7 @@ public:
             Signature signature;
             signature.sealerIndex = it.index;
             signature.signature = it.signature;
-            m_inner.signatureList.emplace_back(signature);
+            m_inner->signatureList.emplace_back(signature);
         }
     }
 
@@ -215,15 +224,19 @@ public:
         setSignatureList(gsl::span(_signatureList.data(), _signatureList.size()));
     }
 
-    const bcostars::BlockHeader& inner() const { return m_inner; }
+    const bcostars::BlockHeader& inner() const { return *m_inner; }
 
-    void setInner(const bcostars::BlockHeader& blockHeader) { m_inner = blockHeader; }
-    void setInner(const bcostars::BlockHeader&& blockHeader) { m_inner = std::move(blockHeader); }
+    void setInner(const bcostars::BlockHeader& blockHeader) { *m_inner = blockHeader; }
+    void setInner(const bcostars::BlockHeader&& blockHeader) { *m_inner = std::move(blockHeader); }
 
 private:
+    mutable bcos::crypto::HashType m_txsRoot;
+    mutable bcos::crypto::HashType m_stateRoot;
+    mutable bcos::crypto::HashType m_receiptRoot;
+    bcos::protocol::Block::Ptr m_blockPtr;
     mutable std::vector<bcos::protocol::ParentInfo> m_parentInfo;
     mutable bcos::u256 m_gasUsed;
-    mutable bcostars::BlockHeader m_inner;
+    mutable std::shared_ptr<bcostars::BlockHeader> m_inner;
     mutable bcos::bytes m_buffer;
 };
 

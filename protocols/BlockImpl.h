@@ -19,13 +19,14 @@ namespace bcostars
 {
 namespace protocol
 {
-class BlockImpl : public bcos::protocol::Block
+class BlockImpl : public bcos::protocol::Block, public std::enable_shared_from_this<BlockImpl>
 {
 public:
     BlockImpl(bcos::protocol::TransactionFactory::Ptr _transactionFactory,
         bcos::protocol::TransactionReceiptFactory::Ptr _receiptFactory)
       : bcos::protocol::Block(_transactionFactory, _receiptFactory)
     {}
+
     ~BlockImpl() override{};
 
     void decode(bcos::bytesConstRef _data, bool _calculateHash, bool _checkSig) override
@@ -55,11 +56,8 @@ public:
     // get blockHeader
     bcos::protocol::BlockHeader::Ptr blockHeader() override
     {
-        auto blockHeader = std::make_shared<bcostars::protocol::BlockHeaderImpl>(
-            m_transactionFactory->cryptoSuite());
-        blockHeader->setInner(m_inner.blockHeader);
-
-        return blockHeader;
+        return std::make_shared<bcostars::protocol::BlockHeaderImpl>(
+            m_transactionFactory->cryptoSuite(), &(m_inner.blockHeader), shared_from_this());
     };
 
     bcos::protocol::Transaction::ConstPtr transaction(size_t _index) const override

@@ -19,7 +19,6 @@ public:
     explicit TransactionImpl(bcos::crypto::CryptoSuite::Ptr _cryptoSuite)
       : bcos::protocol::Transaction(_cryptoSuite)
     {
-        // m_inner.dataHash.assign(bcos::crypto::HashType::size, 0);
     }
 
     ~TransactionImpl() {}

@@ -141,6 +141,13 @@ BOOST_AUTO_TEST_CASE(block)
     bcos::u256 gasUsed(8858);
     bcos::bytes contractAddress(bcos::asBytes("contract Address!"));
 
+    // set the blockHeader
+    auto header = block->blockHeader();
+    header->setNumber(100);
+    header->setGasUsed(1000);
+    header->setStateRoot(bcos::crypto::HashType("62384386743874"));
+    header->setTimestamp(500);
+
     auto logEntries = std::make_shared<std::vector<bcos::protocol::LogEntry>>();
     for (auto i : {1, 2, 3})
     {
@@ -173,6 +180,12 @@ BOOST_AUTO_TEST_CASE(block)
     BOOST_CHECK_NO_THROW(block->encode(buffer));
 
     auto decodedBlock = blockFactory.createBlock(buffer);
+
+    BOOST_CHECK_EQUAL(block->blockHeader()->number(), decodedBlock->blockHeader()->number());
+    BOOST_CHECK_EQUAL(block->blockHeader()->gasUsed(), decodedBlock->blockHeader()->gasUsed());
+    BOOST_CHECK_EQUAL(block->blockHeader()->stateRoot(), decodedBlock->blockHeader()->stateRoot());
+    BOOST_CHECK_EQUAL(block->blockHeader()->timestamp(), block->blockHeader()->timestamp());
+
     BOOST_CHECK_EQUAL(block->version(), decodedBlock->version());
     BOOST_CHECK_EQUAL(block->blockType(), decodedBlock->blockType());
 
@@ -249,7 +262,7 @@ BOOST_AUTO_TEST_CASE(blockHeader)
     std::vector<bcos::protocol::ParentInfo> parentInfoList;
     parentInfoList.emplace_back(parentInfo);
 
-    header->setParentInfo(parentInfoList);
+    header->setParentInfo(std::move(parentInfoList));
 
     for (auto flag : { false, true })
     {
