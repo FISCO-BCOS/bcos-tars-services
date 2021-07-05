@@ -27,11 +27,11 @@ public:
     {}
 
     BlockHeaderImpl(bcos::crypto::CryptoSuite::Ptr cryptoSuite, bcostars::BlockHeader* header,
-        bcos::protocol::Block::Ptr blockPtr)
+        bcos::protocol::Block::Ptr block)
       : bcos::protocol::BlockHeader(cryptoSuite)
     {
-        m_inner = std::shared_ptr<bcostars::BlockHeader>(header, [](bcostars::BlockHeader*) {});
-        m_blockPtr = blockPtr;
+        m_inner =
+            std::shared_ptr<bcostars::BlockHeader>(header, [block](bcostars::BlockHeader*) {});
     }
 
     virtual void decode(bcos::bytesConstRef _data) override

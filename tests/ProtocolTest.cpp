@@ -36,15 +36,10 @@ BOOST_AUTO_TEST_CASE(transaction)
 {
     bcos::bytes to(bcos::asBytes("Target"));
     bcos::bytes input(bcos::asBytes("Arguments"));
-    bcos::u256 nonce(100);
+    bcos::u256 nonce(800);
 
     bcostars::protocol::TransactionFactoryImpl factory(cryptoSuite);
-    auto tx = factory.createTransaction(0, to, input, nonce, 100, "testChain", "testGroup", 1000);
-
-    auto signature = cryptoSuite->signatureImpl()->sign(
-        cryptoSuite->signatureImpl()->generateKeyPair(), tx->hash(), true);
-    std::dynamic_pointer_cast<bcostars::protocol::TransactionImpl>(tx)->setSignatureData(
-        *signature);
+    auto tx = factory.createTransaction(0, to, input, nonce, 100, "testChain", "testGroup", 1000, cryptoSuite->signatureImpl()->generateKeyPair());
 
     auto buffer = tx->encode(false);
 

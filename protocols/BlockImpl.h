@@ -3,6 +3,7 @@
 #include "Block.h"
 #include "BlockHeaderImpl.h"
 #include "Common.h"
+#include "Transaction.h"
 #include "TransactionImpl.h"
 #include "TransactionReceipt.h"
 #include "TransactionReceiptImpl.h"
@@ -53,7 +54,6 @@ public:
         return (bcos::protocol::BlockType)m_inner.type;
     }
 
-    // get blockHeader
     bcos::protocol::BlockHeader::Ptr blockHeader() override
     {
         return std::make_shared<bcostars::protocol::BlockHeaderImpl>(
@@ -62,20 +62,18 @@ public:
 
     bcos::protocol::Transaction::ConstPtr transaction(size_t _index) const override
     {
-        auto tx = std::make_shared<bcostars::protocol::TransactionImpl>(
-            m_transactionFactory->cryptoSuite());
-        tx->setInner(m_inner.transactions[_index]);
-
-        return tx;
+        return std::make_shared<bcostars::protocol::TransactionImpl>(
+            m_transactionFactory->cryptoSuite(),
+            const_cast<bcostars::Transaction*>(&(m_inner.transactions[_index])),
+            std::const_pointer_cast<bcostars::protocol::BlockImpl>(shared_from_this()));
     }
 
     bcos::protocol::TransactionReceipt::ConstPtr receipt(size_t _index) const override
     {
-        auto receipt = std::make_shared<bcostars::protocol::TransactionReceiptImpl>(
-            m_transactionFactory->cryptoSuite());
-        receipt->setInner(m_inner.receipts[_index]);
-
-        return receipt;
+        return std::make_shared<bcostars::protocol::TransactionReceiptImpl>(
+            m_transactionFactory->cryptoSuite(),
+            const_cast<bcostars::TransactionReceipt*>(&(m_inner.receipts[_index])),
+            std::const_pointer_cast<bcostars::protocol::BlockImpl>(shared_from_this()));
     };
 
     bcos::crypto::HashType const& transactionHash(size_t _index) const override
@@ -113,10 +111,11 @@ public:
 
     void setReceipt(size_t _index, bcos::protocol::TransactionReceipt::Ptr _receipt) override
     {
-        if(_index >= m_inner.receipts.size()) {
+        if (_index >= m_inner.receipts.size())
+        {
             m_inner.receipts.resize(m_inner.transactions.size());
         }
-        
+
         m_inner.receipts[_index] =
             std::dynamic_pointer_cast<bcostars::protocol::TransactionReceiptImpl>(_receipt)
                 ->inner();

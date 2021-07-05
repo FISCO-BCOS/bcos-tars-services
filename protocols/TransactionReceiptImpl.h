@@ -4,6 +4,7 @@
 #include "TransactionReceipt.h"
 #include "bcos-framework/libutilities/Common.h"
 #include "bcos-framework/libutilities/FixedBytes.h"
+#include "interfaces/protocol/Block.h"
 #include <bcos-framework/interfaces/crypto/CryptoSuite.h>
 #include <bcos-framework/interfaces/crypto/Hash.h>
 #include <bcos-framework/interfaces/protocol/TransactionReceipt.h>
@@ -18,8 +19,17 @@ class TransactionReceiptImpl : public bcos::protocol::TransactionReceipt
 {
 public:
     TransactionReceiptImpl(bcos::crypto::CryptoSuite::Ptr _cryptoSuite)
-      : bcos::protocol::TransactionReceipt(_cryptoSuite)
+      : bcos::protocol::TransactionReceipt(_cryptoSuite),
+        m_inner(std::make_shared<bcostars::TransactionReceipt>())
     {}
+
+    TransactionReceiptImpl(bcos::crypto::CryptoSuite::Ptr _cryptoSuite,
+        bcostars::TransactionReceipt* receipt, bcos::protocol::Block::Ptr block)
+      : bcos::protocol::TransactionReceipt(_cryptoSuite)
+    {
+        m_inner = std::shared_ptr<bcostars::TransactionReceipt>(
+            receipt, [block](bcostars::TransactionReceipt*) {});
+    }
 
     ~TransactionReceiptImpl() override {}
 
@@ -32,8 +42,8 @@ public:
         tars::TarsInputStream<tars::BufferReader> input;
         input.setBuffer((const char*)m_buffer.data(), m_buffer.size());
 
-        m_inner.readFrom(input);
-        for (auto& it : m_inner.logEntries)
+        m_inner->readFrom(input);
+        for (auto& it : m_inner->logEntries)
         {
             std::vector<bcos::h256> topics;
             for (auto& topicIt : it.topic)
@@ -49,7 +59,7 @@ public:
     {
         tars::TarsOutputStream<bcostars::protocol::BufferWriterByteVector> output;
 
-        m_inner.logEntries.clear();
+        m_inner->logEntries.clear();
         for (auto& it : m_logEntries)
         {
             bcostars::LogEntry logEntry;
@@ -61,10 +71,10 @@ public:
             }
             logEntry.data.assign(it.data().begin(), it.data().end());
 
-            m_inner.logEntries.emplace_back(logEntry);
+            m_inner->logEntries.emplace_back(logEntry);
         }
 
-        m_inner.writeTo(output);
+        m_inner->writeTo(output);
         output.getByteBuffer().swap(_encodedData);
     }
 
@@ -78,16 +88,12 @@ public:
         return bcos::ref(m_buffer);
     }
 
-    int32_t version() const override { return m_inner.version; }
+    int32_t version() const override { return m_inner->version; }
     bcos::u256 const& gasUsed() const override
     {
-        if (m_inner.gasUsed.empty())
+        if (!m_inner->gasUsed.empty())
         {
-            m_gasUsed = bcos::u256(0);
-        }
-        else
-        {
-            m_gasUsed = boost::lexical_cast<bcos::u256>(m_inner.gasUsed);
+            m_gasUsed = boost::lexical_cast<bcos::u256>(m_inner->gasUsed);
         }
         return m_gasUsed;
     }
@@ -95,34 +101,34 @@ public:
     bcos::bytesConstRef contractAddress() const override
     {
         return bcos::bytesConstRef(
-            (const unsigned char*)m_inner.contractAddress.data(), m_inner.contractAddress.size());
+            (const unsigned char*)m_inner->contractAddress.data(), m_inner->contractAddress.size());
     }
     bcos::LogBloom const& bloom() const override
     {
-        return *(reinterpret_cast<bcos::LogBloom*>(m_inner.bloom));
+        return *(reinterpret_cast<bcos::LogBloom*>(m_inner->bloom));
     }
-    int32_t status() const override { return m_inner.status; }
+    int32_t status() const override { return m_inner->status; }
     bcos::bytesConstRef output() const override
     {
         return bcos::bytesConstRef(
-            (const unsigned char*)m_inner.output.data(), m_inner.output.size());
+            (const unsigned char*)m_inner->output.data(), m_inner->output.size());
     }
     gsl::span<const bcos::protocol::LogEntry> logEntries() const override
     {
         return gsl::span<const bcos::protocol::LogEntry>(m_logEntries.data(), m_logEntries.size());
     }
-    bcos::protocol::BlockNumber blockNumber() const override { return m_inner.blockNumber; }
+    bcos::protocol::BlockNumber blockNumber() const override { return m_inner->blockNumber; }
 
-    const bcostars::TransactionReceipt inner() const { return m_inner; }
+    const bcostars::TransactionReceipt inner() const { return *m_inner; }
 
-    void setInner(const bcostars::TransactionReceipt& inner) { m_inner = inner; }
-    void setInner(bcostars::TransactionReceipt&& inner) { m_inner = std::move(inner); }
+    void setInner(const bcostars::TransactionReceipt& inner) { *m_inner = inner; }
+    void setInner(bcostars::TransactionReceipt&& inner) { *m_inner = std::move(inner); }
 
 private:
     mutable bcos::crypto::HashType m_hash;
 
     mutable bcos::bytes m_buffer;
-    mutable bcostars::TransactionReceipt m_inner;
+    mutable std::shared_ptr<bcostars::TransactionReceipt> m_inner;
     mutable bcos::u256 m_gasUsed;
     std::vector<bcos::protocol::LogEntry> m_logEntries;
 };
@@ -155,14 +161,14 @@ public:
         bcos::bytes const& _output, bcos::protocol::BlockNumber _blockNumber) override
     {
         auto transactionReceipt = std::make_shared<TransactionReceiptImpl>(m_cryptoSuite);
-        transactionReceipt->m_inner.version = 0;
-        transactionReceipt->m_inner.contractAddress = _contractAddress;
-        transactionReceipt->m_inner.status = _status;
-        transactionReceipt->m_inner.output = _output;
+        transactionReceipt->m_inner->version = 0;
+        transactionReceipt->m_inner->contractAddress = _contractAddress;
+        transactionReceipt->m_inner->status = _status;
+        transactionReceipt->m_inner->output = _output;
 
-        transactionReceipt->m_inner.gasUsed = boost::lexical_cast<std::string>(_gasUsed);
+        transactionReceipt->m_inner->gasUsed = boost::lexical_cast<std::string>(_gasUsed);
         _logEntries->swap(transactionReceipt->m_logEntries);
-        transactionReceipt->m_inner.blockNumber = _blockNumber;
+        transactionReceipt->m_inner->blockNumber = _blockNumber;
 
         return transactionReceipt;
     }
