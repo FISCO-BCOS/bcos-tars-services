@@ -1,8 +1,7 @@
 module bcostars
 {
-    struct ConsensusNode
-    {
-        1 optional vector<unsigned byte> nodeId;
+    struct ConsensusNode {
+        1 optional vector<unsigned byte> nodeID;
         2 optional long weight;
     };
     struct LedgerConfig

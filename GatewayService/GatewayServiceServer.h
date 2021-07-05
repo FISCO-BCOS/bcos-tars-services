@@ -37,6 +37,7 @@ public:
             nodeConfig->loadConfig(configPath);
             m_gateway->registerFrontService(
                 nodeConfig->groupId(), protocolInitializer->keyPair()->publicKey(), frontService);
+            // start the gateway
             m_gateway->start();
         });
 

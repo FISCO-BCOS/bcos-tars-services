@@ -149,6 +149,15 @@ public:
         bcos::ledger::LedgerConfig::Ptr, std::function<void(bcos::Error::Ptr)>) override
     {}
 
+    // called by the consensus module to notify the consensusing block number
+    void asyncNotifyCommittedIndex(
+        bcos::protocol::BlockNumber, std::function<void(bcos::Error::Ptr _error)>) override
+    {}
+
+    // called by the RPC to get the sync status
+    void asyncGetSyncInfo(
+        std::function<void(bcos::Error::Ptr, std::string)> _onGetSyncInfo) override;
+
     // called by the frontService to dispatch message
     void asyncNotifyBlockSyncMessage(bcos::Error::Ptr _error, std::string const& _uuid,
         bcos::crypto::NodeIDPtr _nodeID, bcos::bytesConstRef _data,
@@ -157,11 +166,6 @@ public:
         m_proxy->async_asyncNotifyBlockSyncMessage(
             new PBFTServiceCommonCallback(_onRecv), _uuid, _nodeID->data(), _data.toBytes());
     }
-
-    void asyncGetSyncInfo(std::function<void(bcos::Error::Ptr, std::string)> _onGetSyncInfo) override {}
-
-    void asyncNotifyCommittedIndex(
-        bcos::protocol::BlockNumber _number, std::function<void(bcos::Error::Ptr _error)> _onRecv) override {}
 
 protected:
     void start() override {}

@@ -10,7 +10,8 @@ public:
 
     virtual void initialize() override
     {
-        addConfig("FrontService.conf");
+        addConfig("config.ini");
+        addConfig("node.pem");
         addServant<TxPoolServiceServer>(
             ServerConfig::Application + "." + ServerConfig::ServerName + ".TxPoolServiceObj");
     }
