@@ -14,6 +14,12 @@ namespace bcostars
 class TxPoolServiceClient : public bcos::txpool::TxPoolInterface
 {
 public:
+    TxPoolServiceClient(
+        bcostars::TxPoolServicePrx _proxy, bcos::crypto::CryptoSuite::Ptr _cryptoSuite)
+      : m_proxy(_proxy), m_cryptoSuite(_cryptoSuite)
+    {}
+    ~TxPoolServiceClient() override {}
+
     void asyncSubmit(
         bcos::bytesPointer _tx, bcos::protocol::TxSubmitCallback _txSubmitCallback) override
     {
@@ -328,7 +334,8 @@ public:
             tarsConsensusNodeList.emplace_back(node);
         }
 
-        m_proxy->async_notifyConsensusNodeList(new Callback(_onRecvResponse), tarsConsensusNodeList);
+        m_proxy->async_notifyConsensusNodeList(
+            new Callback(_onRecvResponse), tarsConsensusNodeList);
     }
 
     void notifyObserverNodeList(bcos::consensus::ConsensusNodeList const& _observerNodeList,
@@ -365,6 +372,39 @@ public:
 
         m_proxy->async_notifyObserverNodeList(new Callback(_onRecvResponse), tarsConsensusNodeList);
     }
+
+
+    // for RPC to get pending transactions
+    void asyncGetPendingTransactionSize(
+        std::function<void(bcos::Error::Ptr, size_t)> _onGetTxsSize) override
+    {
+        class Callback : public TxPoolServicePrxCallback
+        {
+        public:
+            explicit Callback(std::function<void(bcos::Error::Ptr, size_t)> _callback)
+              : TxPoolServicePrxCallback(), m_callback(_callback)
+            {}
+            ~Callback() override {}
+
+            void callback_asyncGetPendingTransactionSize(
+                const bcostars::Error& ret, tars::Int64 _txsSize) override
+            {
+                m_callback(toBcosError(ret), _txsSize);
+            }
+            void callback_asyncGetPendingTransactionSize_exception(tars::Int32 ret) override
+            {
+                m_callback(toBcosError(ret), 0);
+            }
+
+        private:
+            std::function<void(bcos::Error::Ptr, size_t)> m_callback;
+        };
+        m_proxy->async_asyncGetPendingTransactionSize(new Callback(_onGetTxsSize));
+    }
+
+protected:
+    void start() override {}
+    void stop() override {}
 
 private:
     bcostars::TxPoolServicePrx m_proxy;

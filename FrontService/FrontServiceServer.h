@@ -4,6 +4,7 @@
 #include "../Common/ProxyDesc.h"
 #include "../GatewayService/GatewayServiceClient.h"
 #include "../PBFTService/PBFTServiceClient.h"
+#include "../TxPoolService/TxPoolServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include "FrontService.h"
 #include "bcos-framework/interfaces/crypto/KeyFactory.h"
@@ -47,53 +48,61 @@ class FrontServiceServer : public FrontService
 
             auto front = frontServiceFactory.buildFrontService(
                 nodeConfig->groupId(), protocolInitializer->keyPair()->publicKey());
-            // add the module dispatcher
+            // register the message dispatcher handler to the frontService
             auto pbftProxy = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
                 getProxyDesc("PBFTServiceObj"));
             auto pbft = std::make_shared<PBFTServiceClient>(pbftProxy);
             // register the message dispatcher for PBFT module
-            std::weak_ptr<bcos::consensus::ConsensusInterface> weakPBFT = pbft;
             front->registerModuleMessageDispatcher(bcos::protocol::ModuleID::PBFT,
-                [weakPBFT](bcos::crypto::NodeIDPtr _nodeID, const std::string& _id,
+                [pbft](bcos::crypto::NodeIDPtr _nodeID, const std::string& _id,
                     bcos::bytesConstRef _data) {
-                    try
-                    {
-                        auto pbft = weakPBFT.lock();
-                        if (!pbft)
-                        {
-                            return;
-                        }
-                        pbft->asyncNotifyConsensusMessage(nullptr, _id, _nodeID, _data, nullptr);
-                    }
-                    catch (std::exception const& e)
-                    {
-                        FRONTSERVICE_LOG(WARNING)
-                            << LOG_DESC("call PBFT message dispatcher exception")
-                            << LOG_KV("error", boost::diagnostic_information(e));
-                    }
+                    pbft->asyncNotifyConsensusMessage(
+                        nullptr, _id, _nodeID, _data, [](bcos::Error::Ptr _error) {
+                            if (_error)
+                            {
+                                FRONTSERVICE_LOG(WARNING)
+                                    << LOG_DESC("registerModuleMessageDispatcher failed")
+                                    << LOG_KV("code", _error->errorCode())
+                                    << LOG_KV("msg", _error->errorMessage());
+                            }
+                        });
                 });
-            // TODO: register the message dispatcher for the txsSync module
+            // register the message dispatcher for the txsSync module
+            auto txpoolProxy =
+                Application::getCommunicator()->stringToProxy<bcostars::TxPoolServicePrx>(
+                    getProxyDesc("TxPoolServiceObj"));
+            auto txpoolClient = std::make_shared<bcostars::TxPoolServiceClient>(
+                txpoolProxy, protocolInitializer->cryptoSuite());
+            front->registerModuleMessageDispatcher(bcos::protocol::ModuleID::TxsSync,
+                [txpoolClient](bcos::crypto::NodeIDPtr _nodeID, std::string const& _id,
+                    bcos::bytesConstRef _data) {
+                    txpoolClient->asyncNotifyTxsSyncMessage(
+                        nullptr, _id, _nodeID, _data, [](bcos::Error::Ptr _error) {
+                            if (_error)
+                            {
+                                FRONTSERVICE_LOG(WARNING)
+                                    << LOG_DESC("asyncNotifyTxsSyncMessage failed")
+                                    << LOG_KV("code", _error->errorCode())
+                                    << LOG_KV("msg", _error->errorMessage());
+                            }
+                        });
+                });
+
             // register the message dispatcher for the block sync module
             auto blockSync = std::make_shared<BlockSyncServiceClient>(pbftProxy);
-            std::weak_ptr<bcos::sync::BlockSyncInterface> weakSync = blockSync;
             front->registerModuleMessageDispatcher(bcos::protocol::ModuleID::BlockSync,
-                [weakSync](bcos::crypto::NodeIDPtr _nodeID, std::string const& _id,
+                [blockSync](bcos::crypto::NodeIDPtr _nodeID, std::string const& _id,
                     bcos::bytesConstRef _data) {
-                    try
-                    {
-                        auto sync = weakSync.lock();
-                        if (!sync)
-                        {
-                            return;
-                        }
-                        sync->asyncNotifyBlockSyncMessage(nullptr, _id, _nodeID, _data, nullptr);
-                    }
-                    catch (std::exception const& e)
-                    {
-                        FRONTSERVICE_LOG(WARNING)
-                            << LOG_DESC("call block sync message dispatcher exception")
-                            << LOG_KV("error", boost::diagnostic_information(e));
-                    }
+                    blockSync->asyncNotifyBlockSyncMessage(
+                        nullptr, _id, _nodeID, _data, [](bcos::Error::Ptr _error) {
+                            if (_error)
+                            {
+                                FRONTSERVICE_LOG(WARNING)
+                                    << LOG_DESC("asyncNotifyBlockSyncMessage failed")
+                                    << LOG_KV("code", _error->errorCode())
+                                    << LOG_KV("msg", _error->errorMessage());
+                            }
+                        });
                 });
             m_front = front;
             // start the front service

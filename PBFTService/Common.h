@@ -30,7 +30,7 @@ inline bcos::ledger::LedgerConfig::Ptr toLedgerConfig(
     bcos::consensus::ConsensusNodeList consensusNodeList;
     for (auto const& node : _ledgerConfig.consensusNodeList)
     {
-        auto nodeID = _keyFactory->createKey(node.nodeId);
+        auto nodeID = _keyFactory->createKey(node.nodeID);
         consensusNodeList.push_back(
             std::make_shared<bcos::consensus::ConsensusNode>(nodeID, node.weight));
     }
@@ -39,7 +39,7 @@ inline bcos::ledger::LedgerConfig::Ptr toLedgerConfig(
     bcos::consensus::ConsensusNodeList observerNodeList;
     for (auto const& node : _ledgerConfig.observerNodeList)
     {
-        auto nodeID = _keyFactory->createKey(node.nodeId);
+        auto nodeID = _keyFactory->createKey(node.nodeID);
         observerNodeList.push_back(
             std::make_shared<bcos::consensus::ConsensusNode>(nodeID, node.weight));
     }
@@ -73,7 +73,7 @@ inline bcostars::LedgerConfig toTarsLedgerConfig(bcos::ledger::LedgerConfig::Ptr
     for (auto node : consensusNodeList)
     {
         bcostars::ConsensusNode consensusNode;
-        consensusNode.nodeId = node->nodeID()->data();
+        consensusNode.nodeID = node->nodeID()->data();
         consensusNode.weight = node->weight();
         ledgerConfig.consensusNodeList.push_back(consensusNode);
     }
@@ -82,7 +82,7 @@ inline bcostars::LedgerConfig toTarsLedgerConfig(bcos::ledger::LedgerConfig::Ptr
     for (auto node : observerNodeList)
     {
         bcostars::ConsensusNode observerNode;
-        observerNode.nodeId = node->nodeID()->data();
+        observerNode.nodeID = node->nodeID()->data();
         observerNode.weight = node->weight();
         ledgerConfig.observerNodeList.push_back(observerNode);
     }
