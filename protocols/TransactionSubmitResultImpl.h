@@ -21,11 +21,7 @@ public:
 
     TransactionSubmitResultImpl(bcos::crypto::CryptoSuite::Ptr cryptoSuite)
       : bcos::protocol::TransactionSubmitResult(), m_cryptoSuite(cryptoSuite)
-    {
-        m_inner.txHash.assign(bcos::crypto::HashType::size, 0);
-        m_inner.blockHash.assign(bcos::crypto::HashType::size, 0);
-        m_inner.nonce = "0";
-    }
+    {}
 
     uint32_t status() const override { return m_inner.status; }
     bcos::protocol::TransactionReceipt::Ptr receipt() const override
@@ -37,7 +33,11 @@ public:
     }
     bcos::crypto::HashType const& txHash() const override
     {
-        return *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner.txHash.data()));
+        if (!m_inner.txHash.empty())
+        {
+            m_txHash = *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner.txHash.data()));
+        }
+        return m_txHash;
     }
     bcos::bytesConstRef from() const override
     {
@@ -45,7 +45,12 @@ public:
     }
     bcos::crypto::HashType const& blockHash() const override
     {
-        return *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner.blockHash.data()));
+        if (!m_inner.blockHash.empty())
+        {
+            m_blockHash =
+                *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner.blockHash.data()));
+        }
+        return m_blockHash;
     }
     bcos::bytesConstRef to() const override
     {
@@ -58,7 +63,11 @@ public:
     }
     bcos::protocol::NonceType const& nonce() override
     {
-        m_nonce = boost::lexical_cast<bcos::protocol::NonceType>(m_inner.nonce);
+        if (!m_inner.nonce.empty())
+        {
+            m_nonce = boost::lexical_cast<bcos::protocol::NonceType>(m_inner.nonce);
+        }
+
         return m_nonce;
     }
 
@@ -67,9 +76,11 @@ public:
     void setInner(const bcostars::TransactionSubmitResult& result) { m_inner = result; }
 
 private:
+    mutable bcos::crypto::HashType m_txHash;
+    mutable bcos::crypto::HashType m_blockHash;
+    mutable bcos::protocol::NonceType m_nonce;
     bcostars::TransactionSubmitResult m_inner;
     bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
-    mutable bcos::protocol::NonceType m_nonce;
 };
 
 class TransactionSubmitResultFactoryImpl : public bcos::protocol::TransactionSubmitResultFactory
