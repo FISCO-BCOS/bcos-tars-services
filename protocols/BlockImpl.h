@@ -3,6 +3,7 @@
 #include "Block.h"
 #include "BlockHeaderImpl.h"
 #include "Common.h"
+#include "Transaction.h"
 #include "TransactionImpl.h"
 #include "TransactionReceipt.h"
 #include "TransactionReceiptImpl.h"
@@ -19,13 +20,14 @@ namespace bcostars
 {
 namespace protocol
 {
-class BlockImpl : public bcos::protocol::Block
+class BlockImpl : public bcos::protocol::Block, public std::enable_shared_from_this<BlockImpl>
 {
 public:
     BlockImpl(bcos::protocol::TransactionFactory::Ptr _transactionFactory,
         bcos::protocol::TransactionReceiptFactory::Ptr _receiptFactory)
       : bcos::protocol::Block(_transactionFactory, _receiptFactory)
     {}
+
     ~BlockImpl() override{};
 
     void decode(bcos::bytesConstRef _data, bool _calculateHash, bool _checkSig) override
@@ -52,23 +54,26 @@ public:
         return (bcos::protocol::BlockType)m_inner.type;
     }
 
-    // get blockHeader
     bcos::protocol::BlockHeader::Ptr blockHeader() override
     {
         return std::make_shared<bcostars::protocol::BlockHeaderImpl>(
-            &(m_inner.blockHeader), m_transactionFactory->cryptoSuite());
+            m_transactionFactory->cryptoSuite(), &(m_inner.blockHeader), shared_from_this());
     };
 
     bcos::protocol::Transaction::ConstPtr transaction(size_t _index) const override
     {
-        return std::make_shared<const bcostars::protocol::TransactionImpl>(
-            &(m_inner.transactions[_index]), m_transactionFactory->cryptoSuite());
+        return std::make_shared<bcostars::protocol::TransactionImpl>(
+            m_transactionFactory->cryptoSuite(),
+            const_cast<bcostars::Transaction*>(&(m_inner.transactions[_index])),
+            std::const_pointer_cast<bcostars::protocol::BlockImpl>(shared_from_this()));
     }
 
     bcos::protocol::TransactionReceipt::ConstPtr receipt(size_t _index) const override
     {
         return std::make_shared<bcostars::protocol::TransactionReceiptImpl>(
-            &(m_inner.receipts[_index]), m_transactionFactory->cryptoSuite());
+            m_transactionFactory->cryptoSuite(),
+            const_cast<bcostars::TransactionReceipt*>(&(m_inner.receipts[_index])),
+            std::const_pointer_cast<bcostars::protocol::BlockImpl>(shared_from_this()));
     };
 
     bcos::crypto::HashType const& transactionHash(size_t _index) const override
@@ -106,6 +111,11 @@ public:
 
     void setReceipt(size_t _index, bcos::protocol::TransactionReceipt::Ptr _receipt) override
     {
+        if (_index >= m_inner.receipts.size())
+        {
+            m_inner.receipts.resize(m_inner.transactions.size());
+        }
+
         m_inner.receipts[_index] =
             std::dynamic_pointer_cast<bcostars::protocol::TransactionReceiptImpl>(_receipt)
                 ->inner();
@@ -158,7 +168,14 @@ public:
 
             for (auto const& it : m_inner.nonceList)
             {
-                m_nonceList.push_back(boost::lexical_cast<bcos::u256>(it));
+                if (it.empty())
+                {
+                    m_nonceList.push_back(bcos::protocol::NonceType(0));
+                }
+                else
+                {
+                    m_nonceList.push_back(boost::lexical_cast<bcos::u256>(it));
+                }
             }
         }
 

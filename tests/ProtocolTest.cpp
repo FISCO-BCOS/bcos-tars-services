@@ -9,6 +9,7 @@
 #include "bcos-framework/libutilities/DataConvertUtility.h"
 #include "bcos-framework/testutils/crypto/HashImpl.h"
 #include "bcos-framework/testutils/crypto/SignatureImpl.h"
+#include "interfaces/protocol/ProtocolTypeDef.h"
 #include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 #include <memory>
@@ -35,15 +36,10 @@ BOOST_AUTO_TEST_CASE(transaction)
 {
     bcos::bytes to(bcos::asBytes("Target"));
     bcos::bytes input(bcos::asBytes("Arguments"));
-    bcos::u256 nonce(100);
+    bcos::u256 nonce(800);
 
     bcostars::protocol::TransactionFactoryImpl factory(cryptoSuite);
-    auto tx = factory.createTransaction(0, to, input, nonce, 100, "testChain", "testGroup", 1000);
-
-    auto signature = cryptoSuite->signatureImpl()->sign(
-        cryptoSuite->signatureImpl()->generateKeyPair(), tx->hash(), true);
-    std::dynamic_pointer_cast<bcostars::protocol::TransactionImpl>(tx)->setSignatureData(
-        *signature);
+    auto tx = factory.createTransaction(0, to, input, nonce, 100, "testChain", "testGroup", 1000, cryptoSuite->signatureImpl()->generateKeyPair());
 
     auto buffer = tx->encode(false);
 
@@ -140,6 +136,13 @@ BOOST_AUTO_TEST_CASE(block)
     bcos::u256 gasUsed(8858);
     bcos::bytes contractAddress(bcos::asBytes("contract Address!"));
 
+    // set the blockHeader
+    auto header = block->blockHeader();
+    header->setNumber(100);
+    header->setGasUsed(1000);
+    header->setStateRoot(bcos::crypto::HashType("62384386743874"));
+    header->setTimestamp(500);
+
     auto logEntries = std::make_shared<std::vector<bcos::protocol::LogEntry>>();
     for (auto i : {1, 2, 3})
     {
@@ -172,6 +175,12 @@ BOOST_AUTO_TEST_CASE(block)
     BOOST_CHECK_NO_THROW(block->encode(buffer));
 
     auto decodedBlock = blockFactory.createBlock(buffer);
+
+    BOOST_CHECK_EQUAL(block->blockHeader()->number(), decodedBlock->blockHeader()->number());
+    BOOST_CHECK_EQUAL(block->blockHeader()->gasUsed(), decodedBlock->blockHeader()->gasUsed());
+    BOOST_CHECK_EQUAL(block->blockHeader()->stateRoot(), decodedBlock->blockHeader()->stateRoot());
+    BOOST_CHECK_EQUAL(block->blockHeader()->timestamp(), block->blockHeader()->timestamp());
+
     BOOST_CHECK_EQUAL(block->version(), decodedBlock->version());
     BOOST_CHECK_EQUAL(block->blockType(), decodedBlock->blockType());
 
@@ -226,7 +235,51 @@ BOOST_AUTO_TEST_CASE(block)
     }
 }
 
-BOOST_AUTO_TEST_CASE(emptyBlockHeader) {
+BOOST_AUTO_TEST_CASE(blockHeader)
+{
+    auto blockHeaderFactory =
+        std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(cryptoSuite);
+
+    auto header = blockHeaderFactory->createBlockHeader();
+
+    BOOST_CHECK_EQUAL(header->gasUsed(), bcos::u256(0));
+
+    header->setNumber(100);
+    header->setTimestamp(200);
+
+    bcos::u256 gasUsed(1000);
+    header->setGasUsed(gasUsed);
+
+    bcos::protocol::ParentInfo parentInfo;
+    parentInfo.blockHash = bcos::crypto::HashType(10000);
+    parentInfo.blockNumber = 2000;
+
+    std::vector<bcos::protocol::ParentInfo> parentInfoList;
+    parentInfoList.emplace_back(parentInfo);
+
+    header->setParentInfo(std::move(parentInfoList));
+
+    for (auto flag : { false, true })
+    {
+        auto buffer = header->encode(flag);
+
+        auto decodedHeader = blockHeaderFactory->createBlockHeader(buffer);
+
+        BOOST_CHECK_EQUAL(header->number(), decodedHeader->number());
+        BOOST_CHECK_EQUAL(header->timestamp(), decodedHeader->timestamp());
+        BOOST_CHECK_EQUAL(header->gasUsed(), decodedHeader->gasUsed());
+        BOOST_CHECK_EQUAL(header->parentInfo().size(), decodedHeader->parentInfo().size());
+        for(size_t i = 0; i < decodedHeader->parentInfo().size(); ++i) {
+            BOOST_CHECK_EQUAL(bcos::toString(header->parentInfo()[i].blockHash), bcos::toString(decodedHeader->parentInfo()[i].blockHash));
+            BOOST_CHECK_EQUAL(header->parentInfo()[i].blockNumber, decodedHeader->parentInfo()[i].blockNumber);
+        }
+    }
+
+    BOOST_CHECK_NO_THROW(header->setExtraData(header->extraData().toBytes()));
+}
+
+BOOST_AUTO_TEST_CASE(emptyBlockHeader)
+{
     auto blockHeaderFactory =
         std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(cryptoSuite);
     auto transactionFactory =

@@ -44,13 +44,30 @@ include(CompilerSettings)
 add_subdirectory(tars)
 add_subdirectory(protocols)
 add_subdirectory(libinitializer)
-add_subdirectory(StorageService)
-add_subdirectory(FrontService)
-add_subdirectory(GatewayService)
-add_subdirectory(PBFTService)
-add_subdirectory(ExecutorService)
-add_subdirectory(DispatcherService)
-add_subdirectory(TxPoolService)
+
+# add_subdirectory(StorageService)
+# add_subdirectory(FrontService)
+# add_subdirectory(GatewayService)
+# add_subdirectory(PBFTService)
+# add_subdirectory(ExecutorService)
+# add_subdirectory(DispatcherService)
+# add_subdirectory(TxPoolService)
+
+# import services
+list(APPEND SERVICE_LIST StorageService FrontService GatewayService PBFTService ExecutorService DispatcherService TxPoolService)
+foreach(SERVICE ${SERVICE_LIST})
+    add_subdirectory(${SERVICE})
+
+    add_custom_command(OUTPUT ${SERVICE}.tgz
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMAND cmake -E chdir ${CMAKE_BINARY_DIR} tar czfv ${SERVICE}.tgz -C ${SERVICE}/ ${SERVICE}Server
+    COMMENT "Compressing ${SERVICE}...")
+    add_custom_target(${SERVICE}-tar DEPENDS ${SERVICE}.tgz ${SERVICE}Server)
+
+    list(APPEND SERVICE_TAR_LIST ${SERVICE}-tar)
+endforeach()
+
+add_custom_target(tar DEPENDS ${SERVICE_TAR_LIST})
 
 if(TESTS)
     enable_testing()
