@@ -1,5 +1,6 @@
 #include "servant/Application.h"
 #include "GatewayServiceServer.h"
+#include "../Common/TarsUtils.h"
 
 using namespace bcostars;
 
@@ -10,8 +11,7 @@ public:
 
     virtual void initialize() override
     {
-        addConfig("config.ini");
-        addConfig("node.pem");
+        addAllConfig(this);
         addServant<GatewayServiceServer>(
             ServerConfig::Application + "." + ServerConfig::ServerName + ".GatewayServiceObj");
     }

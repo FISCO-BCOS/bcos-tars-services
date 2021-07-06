@@ -1,5 +1,6 @@
 #include "servant/Application.h"
 #include "PBFTServiceServer.h"
+#include "../Common/TarsUtils.h"
 
 using namespace bcostars;
 
@@ -10,9 +11,7 @@ public:
 
     virtual void initialize() override
     {
-        addConfig("config.genesis");
-        addConfig("config.ini");
-        addConfig("node.pem");
+        addAllConfig(this);
         addServant<PBFTServiceServer>(
             ServerConfig::Application + "." + ServerConfig::ServerName + ".PBFTServiceObj");
     }

@@ -1,5 +1,6 @@
 #include "servant/Application.h"
 #include "ExecutorServiceServer.h"
+#include "../Common/TarsUtils.h"
 
 using namespace bcostars;
 
@@ -10,7 +11,7 @@ public:
 
     virtual void initialize() override
     {
-        addConfig("config.ini");
+        addAllConfig(this);
         addServant<ExecutorServiceServer>(
             ServerConfig::Application + "." + ServerConfig::ServerName + ".ExecutorServiceObj");
     }

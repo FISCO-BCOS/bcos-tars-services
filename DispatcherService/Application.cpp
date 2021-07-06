@@ -1,5 +1,6 @@
 #include "servant/Application.h"
 #include "DispatcherServiceServer.h"
+#include "../Common/TarsUtils.h"
 
 using namespace bcostars;
 
@@ -10,8 +11,8 @@ public:
 
     virtual void initialize() override
     {
-        addConfig("config.ini");
-        addConfig("node.pem");
+        addAllConfig(this);
+
         addServant<DispatcherServiceServer>(
             ServerConfig::Application + "." + ServerConfig::ServerName + ".DispatcherServiceObj");
     }

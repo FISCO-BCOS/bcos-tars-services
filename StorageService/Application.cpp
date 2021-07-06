@@ -1,4 +1,5 @@
 #include "StorageServiceServer.h"
+#include "../Common/TarsUtils.h"
 
 using namespace bcostars;
 
@@ -9,7 +10,7 @@ public:
 
     virtual void initialize() override
     {
-        addConfig("config.ini");
+        addAllConfig(this);
         addServant<StorageServiceServer>(
             ServerConfig::Application + "." + ServerConfig::ServerName + ".StorageServiceObj");
     }

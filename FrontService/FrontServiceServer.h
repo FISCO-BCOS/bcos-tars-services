@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Common/ErrorConverter.h"
-#include "../Common/ProxyDesc.h"
+#include "../Common/TarsUtils.h"
 #include "../GatewayService/GatewayServiceClient.h"
 #include "../PBFTService/PBFTServiceClient.h"
 #include "../TxPoolService/TxPoolServiceClient.h"
@@ -36,6 +36,7 @@ class FrontServiceServer : public FrontService
             nodeConfig->loadConfig(iniConfigPath);
 
             auto protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
+            protocolInitializer->init(nodeConfig);
             auto privateKeyPath = ServerConfig::BasePath + "node.pem";
             protocolInitializer->loadKeyPair(privateKeyPath);
             m_keyFactory = protocolInitializer->keyFactory();
