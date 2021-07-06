@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Common/ErrorConverter.h"
-#include "../Common/ProxyDesc.h"
+#include "../Common/TarsUtils.h"
 #include "../DispatcherService/DispatcherServiceClient.h"
 #include "../StorageService/StorageServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Common/ErrorConverter.h"
-#include "../Common/ProxyDesc.h"
+#include "../Common/TarsUtils.h"
 #include "../FrontService/FrontServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include "GatewayService.h"
@@ -24,7 +24,12 @@ public:
             auto configPath = ServerConfig::BasePath + "config.ini";
             m_gateway = factory.buildGateway(configPath);
 
+            auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
+            nodeConfig->loadConfig(configPath);
+
             auto protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
+            protocolInitializer->init(nodeConfig);
+
             auto privateKeyPath = ServerConfig::BasePath + "node.pem";
             protocolInitializer->loadKeyPair(privateKeyPath);
 
@@ -33,8 +38,7 @@ public:
                     getProxyDesc("FrontServiceObj"));
             auto frontService = std::make_shared<bcostars::FrontServiceClient>(
                 frontServiceProxy, protocolInitializer->keyFactory());
-            auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
-            nodeConfig->loadConfig(configPath);
+                
             m_gateway->registerFrontService(
                 nodeConfig->groupId(), protocolInitializer->keyPair()->publicKey(), frontService);
             // start the gateway
