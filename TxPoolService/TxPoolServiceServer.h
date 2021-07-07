@@ -45,7 +45,7 @@ public:
         // create the storage client
         auto storageProxy =
             Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(
-                getProxyDesc("StorageServiceObj"));
+                getProxyDesc(STORAGE_SERVICE_NAME));
         auto storage = std::make_shared<bcostars::StorageServiceClient>(storageProxy);
 
         // create the ledger
@@ -55,7 +55,7 @@ public:
         // create the frontService client
         auto frontServiceProxy =
             Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
-                getProxyDesc("FrontServiceObj"));
+                getProxyDesc(FRONT_SERVICE_NAME));
         auto frontService = std::make_shared<bcostars::FrontServiceClient>(
             frontServiceProxy, protocolInitializer->keyFactory());
 
@@ -76,7 +76,7 @@ public:
 
         // register handlers for the txpool to interact with the sealer
         auto pbftProxy = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
-            getProxyDesc("PBFTServiceObj"));
+            getProxyDesc(PBFT_SERVICE_NAME));
         auto pbft = std::make_shared<PBFTServiceClient>(pbftProxy);
         m_txpool->registerUnsealedTxsNotifier(
             [pbft](size_t _unsealedTxsSize, std::function<void(bcos::Error::Ptr)> _onRecv) {

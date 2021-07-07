@@ -46,8 +46,8 @@ void PBFTServiceServer::initialize()
     auto iniConfigPath = ServerConfig::BasePath + "config.ini";
     nodeConfig->loadConfig(iniConfigPath);
 
-    auto genesisConfigPath = ServerConfig::BasePath + "config.genesis";
-    nodeConfig->loadGenesisConfig(genesisConfigPath);
+    // auto genesisConfigPath = ServerConfig::BasePath + "config.genesis";
+    // nodeConfig->loadGenesisConfig(genesisConfigPath);
 
     m_protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
     m_protocolInitializer->init(nodeConfig);
@@ -57,19 +57,19 @@ void PBFTServiceServer::initialize()
     // create the frontService
     auto frontServiceProxy =
         Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
-            getProxyDesc("FrontServiceObj"));
+            getProxyDesc(FRONT_SERVICE_NAME));
     m_frontService =
         std::make_shared<bcostars::FrontServiceClient>(frontServiceProxy, m_keyFactory);
 
     // create the storage
     auto storageProxy = Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(
-        getProxyDesc("StorageServiceObj"));
+        getProxyDesc(STORAGE_SERVICE_NAME));
     m_storage = std::make_shared<bcostars::StorageServiceClient>(storageProxy);
 
     // create dispatcher
     auto dispatcherProxy =
         Application::getCommunicator()->stringToProxy<bcostars::DispatcherServicePrx>(
-            getProxyDesc("DispatcherServiceObj"));
+            getProxyDesc(DISPATCHER_SERVANT_NAME));
     m_dispatcher = std::make_shared<bcostars::DispatcherServiceClient>(dispatcherProxy);
 
     // create the ledger
@@ -77,8 +77,8 @@ void PBFTServiceServer::initialize()
         std::make_shared<bcos::ledger::Ledger>(m_protocolInitializer->blockFactory(), m_storage);
     m_ledger = ledger;
     // write the genesis block through ledger
-    ledger->buildGenesisBlock(
-        nodeConfig->ledgerConfig(), nodeConfig->txGasLimit(), nodeConfig->genesisData());
+    // ledger->buildGenesisBlock(
+    //    nodeConfig->ledgerConfig(), nodeConfig->txGasLimit(), nodeConfig->genesisData());
 
     // create the txpool client only
     createTxPool(nodeConfig);
@@ -127,7 +127,7 @@ void PBFTServiceServer::createTxPool(bcos::tool::NodeConfig::Ptr _nodeConfig)
 {
     PBFTSERVICE_LOG(INFO) << LOG_DESC("createTxPool");
     auto txpoolProxy = Application::getCommunicator()->stringToProxy<bcostars::TxPoolServicePrx>(
-        getProxyDesc("TxPoolServiceObj"));
+        getProxyDesc(TXPOOL_SERVICE_NAME));
     m_txpool = std::make_shared<bcostars::TxPoolServiceClient>(
         txpoolProxy, m_protocolInitializer->cryptoSuite());
     PBFTSERVICE_LOG(INFO) << LOG_DESC("create TxPool client success");

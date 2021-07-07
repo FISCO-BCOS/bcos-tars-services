@@ -1,6 +1,6 @@
 #include "servant/Application.h"
-#include "FrontServiceServer.h"
 #include "../Common/TarsUtils.h"
+#include "FrontServiceServer.h"
 
 using namespace bcostars;
 
@@ -13,7 +13,7 @@ public:
     {
         addAllConfig(this);
         addServant<FrontServiceServer>(
-            ServerConfig::Application + "." + ServerConfig::ServerName + ".FrontServiceObj");
+            ServerConfig::Application + "." + ServerConfig::ServerName + "." + FRONT_SERVANT_NAME);
     }
 
     virtual void destroyApp() override {}

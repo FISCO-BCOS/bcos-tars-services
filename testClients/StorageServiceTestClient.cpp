@@ -1,4 +1,5 @@
 
+#include "../Common/TarsUtils.h"
 #include "../StorageService/StorageServiceClient.h"
 #include "../StorageService/StorageServiceServer.h"
 #include "StorageService.h"
@@ -12,7 +13,6 @@
 #include <boost/program_options.hpp>
 #include <boost/program_options/variables_map.hpp>
 #include <thread>
-
 using namespace bcostars;
 
 auto now()
@@ -261,7 +261,7 @@ void tarsBasedTest(const std::string& ip, unsigned short port,
     communicator->setProperty("async-invoke-timeout", "60000");
 
     StorageServicePrx proxy = communicator->stringToProxy<StorageServicePrx>(
-        std::string(StorageServiceClient::servantName) + "@tcp -h " + ip + " -p " +
+        std::string(STORAGE_SERVICE_NAME) + "@tcp -h " + ip + " -p " +
         boost::lexical_cast<std::string>(port));
 
     auto client = std::make_shared<StorageServiceClient>(proxy);

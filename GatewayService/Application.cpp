@@ -1,22 +1,22 @@
 #include "servant/Application.h"
-#include "GatewayServiceServer.h"
 #include "../Common/TarsUtils.h"
+#include "GatewayServiceServer.h"
 
 using namespace bcostars;
 
 class GatewayServiceApp : public Application
 {
 public:
-    virtual ~GatewayServiceApp() override{};
+    ~GatewayServiceApp() override{};
 
-    virtual void initialize() override
+    void initialize() override
     {
         addAllConfig(this);
-        addServant<GatewayServiceServer>(
-            ServerConfig::Application + "." + ServerConfig::ServerName + ".GatewayServiceObj");
+        addServant<GatewayServiceServer>(ServerConfig::Application + "." +
+                                         ServerConfig::ServerName + "." + GATEWAY_SERVANT_NAME);
     }
 
-    virtual void destroyApp() override {}
+    void destroyApp() override {}
 };
 
 int main(int argc, char* argv[])
