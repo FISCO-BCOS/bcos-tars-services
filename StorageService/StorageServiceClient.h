@@ -15,8 +15,6 @@ class StorageServiceClient : public bcos::storage::StorageInterface
 public:
     ~StorageServiceClient() override {}
 
-    constexpr static const char* servantName = "bcostars.StorageService.StorageServiceObj";
-
     StorageServiceClient(StorageServicePrx storageServiceProxy) : m_proxy(storageServiceProxy) {}
 
     std::vector<std::string> getPrimaryKeys(const bcos::storage::TableInfo::Ptr& _tableInfo,

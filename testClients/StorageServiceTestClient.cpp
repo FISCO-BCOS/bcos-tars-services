@@ -277,14 +277,14 @@ int main(int argc, char* argv[])
     std::string mode;
 
     boost::program_options::options_description desc("Storage client options.");
-    desc.add_options()("help", "produce help message")("mode",
-        boost::program_options::value<std::string>(&mode)->default_value("local"),
-        "Test mode, local/tars")("ip",
-        boost::program_options::value<std::string>(&ip)->default_value("127.0.0.1"),
-        "StorageService server ip")("port",
-        boost::program_options::value<unsigned short>(&port)->default_value(0),
-        "StorageService server port")("count",
-        boost::program_options::value<size_t>(&count)->default_value(1000), "Total request count");
+    // clang-format off
+    desc.add_options()
+        ("help", "produce help message")
+        ("mode", boost::program_options::value<std::string>(&mode)->default_value("local"), "Test mode, local/tars")
+        ("ip", boost::program_options::value<std::string>(&ip)->default_value("127.0.0.1"), "StorageService server ip")
+        ("port", boost::program_options::value<unsigned short>(&port)->default_value(0), "StorageService server port")
+        ("count", boost::program_options::value<size_t>(&count)->default_value(1000), "Total request count");
+    // clang-format on
 
     boost::program_options::variables_map vm;
     boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
