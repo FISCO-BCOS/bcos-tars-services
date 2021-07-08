@@ -6,3 +6,4 @@ using namespace bcostars;
 
 std::once_flag StorageServiceServer::m_storageFlag;
 bcos::storage::StorageInterface::Ptr StorageServiceServer::m_storage;
+bcos::BoostLogInitializer::Ptr StorageServiceServer::m_logInitializer;

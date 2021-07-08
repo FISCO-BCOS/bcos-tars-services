@@ -1,6 +1,6 @@
 #include "servant/Application.h"
-#include "TxPoolServiceServer.h"
 #include "../Common/TarsUtils.h"
+#include "TxPoolServiceServer.h"
 
 using namespace bcostars;
 
@@ -13,7 +13,7 @@ public:
     {
         addAllConfig(this);
         addServant<TxPoolServiceServer>(
-            ServerConfig::Application + "." + ServerConfig::ServerName + ".TxPoolServiceObj");
+            ServerConfig::Application + "." + ServerConfig::ServerName + "." + TXPOOL_SERVANT_NAME);
     }
 
     virtual void destroyApp() override {}

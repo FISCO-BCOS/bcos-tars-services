@@ -1,6 +1,6 @@
 #include "servant/Application.h"
-#include "DispatcherServiceServer.h"
 #include "../Common/TarsUtils.h"
+#include "DispatcherServiceServer.h"
 
 using namespace bcostars;
 
@@ -13,8 +13,10 @@ public:
     {
         addAllConfig(this);
 
-        addServant<DispatcherServiceServer>(
-            ServerConfig::Application + "." + ServerConfig::ServerName + ".DispatcherServiceObj");
+        // Note: the tars packet name must be the same with ServerConfig::ServerName
+        addServant<DispatcherServiceServer>(ServerConfig::Application + "." +
+                                            ServerConfig::ServerName + "." +
+                                            DISPATCHER_SERVANT_NAME);
     }
 
     virtual void destroyApp() override {}

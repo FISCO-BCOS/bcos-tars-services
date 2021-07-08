@@ -43,7 +43,7 @@ class FrontServiceServer : public FrontService
 
             // set the gateway interface
             auto gateWayProxy = Application::getCommunicator()->stringToProxy<GatewayServicePrx>(
-                getProxyDesc("GatewayServiceObj"));
+                getProxyDesc(GATEWAY_SERVICE_NAME));
             auto gateWay = std::make_shared<GatewayServiceClient>(gateWayProxy);
             frontServiceFactory.setGatewayInterface(gateWay);
 
@@ -51,7 +51,7 @@ class FrontServiceServer : public FrontService
                 nodeConfig->groupId(), protocolInitializer->keyPair()->publicKey());
             // register the message dispatcher handler to the frontService
             auto pbftProxy = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
-                getProxyDesc("PBFTServiceObj"));
+                getProxyDesc(PBFT_SERVICE_NAME));
             auto pbft = std::make_shared<PBFTServiceClient>(pbftProxy);
             // register the message dispatcher for PBFT module
             front->registerModuleMessageDispatcher(bcos::protocol::ModuleID::PBFT,
@@ -71,7 +71,7 @@ class FrontServiceServer : public FrontService
             // register the message dispatcher for the txsSync module
             auto txpoolProxy =
                 Application::getCommunicator()->stringToProxy<bcostars::TxPoolServicePrx>(
-                    getProxyDesc("TxPoolServiceObj"));
+                    getProxyDesc(TXPOOL_SERVICE_NAME));
             auto txpoolClient = std::make_shared<bcostars::TxPoolServiceClient>(
                 txpoolProxy, protocolInitializer->cryptoSuite());
             front->registerModuleMessageDispatcher(bcos::protocol::ModuleID::TxsSync,
