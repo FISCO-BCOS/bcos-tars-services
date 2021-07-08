@@ -39,15 +39,63 @@ using namespace bcos::sealer;
 using namespace bcos::sync;
 using namespace bcos::ledger;
 
+std::once_flag PBFTServiceServer::m_initFlag;
+
 void PBFTServiceServer::initialize()
+{
+    try
+    {
+        std::call_once(m_initFlag, [this]() {
+            init();
+            m_running = true;
+        });
+    }
+    catch (std::exception const& e)
+    {
+        TLOGERROR("init the PBFTService exceptioned"
+                  << LOG_KV("error", boost::diagnostic_information(e)) << std::endl);
+        exit(0);
+    }
+}
+
+void PBFTServiceServer::destroy()
+{
+    if (!m_running)
+    {
+        PBFTSERVICE_LOG(WARNING) << LOG_DESC("The PBFTService has already been stopped");
+        return;
+    }
+    PBFTSERVICE_LOG(INFO) << LOG_DESC("Stop the PBFTService");
+    m_running = false;
+    if (m_sealer)
+    {
+        m_sealer->stop();
+    }
+    if (m_blockSync)
+    {
+        m_blockSync->stop();
+    }
+    if (m_pbft)
+    {
+        m_pbft->stop();
+    }
+    PBFTSERVICE_LOG(INFO) << LOG_DESC("Stop the PBFTService success");
+}
+
+void PBFTServiceServer::init()
 {
     m_keyFactory = std::make_shared<KeyFactoryImpl>();
     auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>(m_keyFactory);
     auto iniConfigPath = ServerConfig::BasePath + "config.ini";
-    nodeConfig->loadConfig(iniConfigPath);
 
-    // auto genesisConfigPath = ServerConfig::BasePath + "config.genesis";
-    // nodeConfig->loadGenesisConfig(genesisConfigPath);
+    // init the log
+    boost::property_tree::ptree pt;
+    boost::property_tree::read_ini(iniConfigPath, pt);
+    m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
+    m_logInitializer->initLog(pt);
+    TLOGINFO(LOG_DESC("TxPoolService initLog success") << std::endl);
+
+    nodeConfig->loadConfig(iniConfigPath);
 
     m_protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
     m_protocolInitializer->init(nodeConfig);
@@ -73,13 +121,10 @@ void PBFTServiceServer::initialize()
     m_dispatcher = std::make_shared<bcostars::DispatcherServiceClient>(dispatcherProxy);
 
     // create the ledger
+    // Note: the executor module init the genesis block
     auto ledger =
         std::make_shared<bcos::ledger::Ledger>(m_protocolInitializer->blockFactory(), m_storage);
     m_ledger = ledger;
-    // write the genesis block through ledger
-    // ledger->buildGenesisBlock(
-    //    nodeConfig->ledgerConfig(), nodeConfig->txGasLimit(), nodeConfig->genesisData());
-
     // create the txpool client only
     createTxPool(nodeConfig);
 
