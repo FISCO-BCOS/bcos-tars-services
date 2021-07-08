@@ -30,15 +30,15 @@ public:
             init();
             m_stopped = false;
         }
+        catch (tars::TC_Exception const& e)
+        {
+            TLOGERROR("StorageServiceServer init exception, error:" << e.what() << std::endl);
+            exit(0);
+        }
         catch (std::exception const& e)
         {
             TLOGERROR("StorageServiceServer init exception"
                       << LOG_KV("error", boost::diagnostic_information(e)) << std::endl);
-            exit(0);
-        }
-        catch (tars::TC_Exception const& e)
-        {
-            TLOGERROR("StorageServiceServer init exception, error:" << e.what() << std::endl);
             exit(0);
         }
     }
