@@ -155,7 +155,7 @@ public:
         {
             m_logInitializer->stopLogging();
         }
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("Stop the txpoolService success");
+        TLOGINFO(LOG_DESC("[TXPOOLSERVICE] Stop the txpoolService success") << std::endl);
     }
 
     bcostars::Error asyncFillBlock(const vector<vector<tars::UInt8>>& txHashs,

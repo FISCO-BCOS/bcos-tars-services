@@ -126,7 +126,7 @@ public:
         {
             m_logInitializer->stopLogging();
         }
-        GATEWAYSERVICE_LOG(INFO) << LOG_DESC("Stop the GatewayService success");
+        TLOGINFO(LOG_DESC("[GATEWAYSERVICE] Stop the GatewayService success") << std::endl);
     }
 
     bcostars::Error asyncSendBroadcastMessage(const std::string& groupID,

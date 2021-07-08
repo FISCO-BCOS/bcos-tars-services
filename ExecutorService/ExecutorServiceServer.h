@@ -65,7 +65,7 @@ public:
         {
             m_logInitializer->stopLogging();
         }
-        EXECUTORSERVICE_LOG(DEBUG) << LOG_DESC("stop the ExecutoreSerivce success");
+        TLOGINFO(LOG_DESC("[ExecutorService] stop the ExecutoreSerivce success") << std::endl);
     }
 
     void init()
