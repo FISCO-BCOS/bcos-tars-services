@@ -8,40 +8,121 @@
 #include <emmintrin.h>
 #include <exception>
 
+#define STORAGECLIENT_LOG(LEVEL) BCOS_LOG(LEVEL) << "[StorageServiceClient]"
+
 namespace bcostars
 {
 class StorageServiceClient : public bcos::storage::StorageInterface
 {
 public:
     ~StorageServiceClient() override {}
-
-    constexpr static const char* servantName = "bcostars.StorageService.StorageServiceObj";
-
     StorageServiceClient(StorageServicePrx storageServiceProxy) : m_proxy(storageServiceProxy) {}
 
     std::vector<std::string> getPrimaryKeys(const bcos::storage::TableInfo::Ptr& _tableInfo,
         const bcos::storage::Condition::Ptr& _condition) const override
     {
-        throw bcos::Error(-1, "Unspported interface!");
+        // TODO: remove this log
+        STORAGECLIENT_LOG(DEBUG) << LOG_DESC("getPrimaryKeys") << LOG_KV("table", _tableInfo->name);
+        std::vector<std::string> keys;
+        auto error =
+            m_proxy->getPrimaryKeys(toTarsTableInfo(_tableInfo), toTarsCondition(_condition), keys);
+        auto bcosError = toBcosError(error);
+        if (bcosError)
+        {
+            STORAGECLIENT_LOG(WARNING)
+                << LOG_DESC("getPrimaryKeys error") << LOG_KV("table", _tableInfo->name)
+                << LOG_KV("msg", bcosError->errorMessage())
+                << LOG_KV("code", bcosError->errorCode());
+            return keys;
+        }
+        return keys;
     };
+
+    // Note: must implement this interface for this is used by TableFactory
     bcos::storage::Entry::Ptr getRow(
         const bcos::storage::TableInfo::Ptr& _tableInfo, const std::string_view& _key) override
     {
-        throw bcos::Error(-1, "Unspported interface!");
+        // TODO: remove this log
+        STORAGECLIENT_LOG(DEBUG) << LOG_DESC("getRow") << LOG_KV("table", _tableInfo->name);
+        bcostars::Entry entry;
+        auto error = m_proxy->getRow(toTarsTableInfo(_tableInfo), std::string(_key), entry);
+        // TODO: remove this log
+        STORAGECLIENT_LOG(DEBUG) << LOG_DESC("getRow success") << LOG_KV("table", _tableInfo->name);
+        auto bcosError = toBcosError(error);
+        if (bcosError)
+        {
+            STORAGECLIENT_LOG(WARNING)
+                << LOG_DESC("getRow error") << LOG_KV("table", _tableInfo->name)
+                << LOG_KV("key", _tableInfo->key) << LOG_KV("msg", bcosError->errorMessage())
+                << LOG_KV("code", bcosError->errorCode());
+            return nullptr;
+        }
+        return toBcosEntry(entry);
     };
+
     std::map<std::string, bcos::storage::Entry::Ptr> getRows(
         const bcos::storage::TableInfo::Ptr& _tableInfo,
         const std::vector<std::string>& _keys) override
     {
-        throw bcos::Error(-1, "Unspported interface!");
-    };
+        // TODO: remove this log
+        STORAGECLIENT_LOG(DEBUG) << LOG_DESC("getRows") << LOG_KV("table", _tableInfo->name);
+        std::map<std::string, bcostars::Entry> rowsRet;
+        std::map<std::string, bcos::storage::Entry::Ptr> bcosRows;
+        auto error = m_proxy->getRows(toTarsTableInfo(_tableInfo), _keys, rowsRet);
+        auto bcosError = toBcosError(error);
+        if (bcosError)
+        {
+            STORAGECLIENT_LOG(WARNING)
+                << LOG_DESC("getRows error") << LOG_KV("table", _tableInfo->name)
+                << LOG_KV("msg", bcosError->errorMessage())
+                << LOG_KV("code", bcosError->errorCode());
+            return bcosRows;
+        }
+
+        for (auto const& it : rowsRet)
+        {
+            bcosRows.emplace(it.first, toBcosEntry(it.second));
+        }
+        return bcosRows;
+    }
+
+    // Note: this interface useless now
     std::pair<size_t, bcos::Error::Ptr> commitBlock(bcos::protocol::BlockNumber _blockNumber,
         const std::vector<bcos::storage::TableInfo::Ptr>& _tableInfos,
         const std::vector<std::shared_ptr<std::map<std::string, bcos::storage::Entry::Ptr>>>&
             _tableDatas) override
     {
-        throw bcos::Error(-1, "Unspported interface!");
-    };
+        STORAGECLIENT_LOG(DEBUG) << LOG_DESC("commitBlock") << LOG_KV("number", _blockNumber);
+
+        std::vector<bcostars::TableInfo> tarsTablesInfos;
+        for (auto const& it : _tableInfos)
+        {
+            tarsTablesInfos.emplace_back(toTarsTableInfo(it));
+        }
+
+        std::vector<std::map<std::string, bcostars::Entry>> tarsDatas;
+        for (auto const& it : _tableDatas)
+        {
+            std::map<std::string, bcostars::Entry> tableData;
+            for (auto const& tableIt : *it)
+            {
+                tableData.emplace(tableIt.first, toTarsEntry(tableIt.second));
+            }
+            tarsDatas.emplace_back(tableData);
+        }
+        tars::Int64 count;
+        auto error = m_proxy->commitBlock(_blockNumber, tarsTablesInfos, tarsDatas, count);
+        auto bcosError = toBcosError(error);
+        if (bcosError)
+        {
+            STORAGECLIENT_LOG(WARNING)
+                << LOG_DESC("commitBlock error") << LOG_KV("num", _blockNumber)
+                << LOG_KV("msg", bcosError->errorMessage())
+                << LOG_KV("code", bcosError->errorCode());
+            return std::make_pair(0, bcosError);
+        }
+        return std::make_pair(count, nullptr);
+    }
 
     void asyncGetPrimaryKeys(const bcos::storage::TableInfo::Ptr& _tableInfo,
         const bcos::storage::Condition::Ptr& _condition,
@@ -278,15 +359,20 @@ public:
         m_proxy->async_getStateCache(new Callback(_callback), _blockNumber);
     }
 
+    // Note: no need to implement this interface
     std::shared_ptr<bcos::storage::TableFactoryInterface> getStateCache(
         bcos::protocol::BlockNumber _blockNumber) override
     {
         throw bcos::Error(-1, "Unspported interface!");
     };
+
+    // Note: no need to implement this interface
     void dropStateCache(bcos::protocol::BlockNumber _blockNumber) override
     {
         throw bcos::Error(-1, "Unspported interface!");
     };
+
+    // Note: no need to implement this interface
     void addStateCache(bcos::protocol::BlockNumber _blockNumber,
         const std::shared_ptr<bcos::storage::TableFactoryInterface>& _tablefactory) override
     {
@@ -294,16 +380,21 @@ public:
     };
 
     // KV store in split database, used to store data off-chain
+    // Note: this interface is useless now, no need to implement this
     bcos::Error::Ptr put(const std::string_view& _columnFamily, const std::string_view& _key,
         const std::string_view& _value) override
     {
         throw bcos::Error(-1, "Unspported interface!");
     }
+
+    // Note: this interface is useless now, no need to implement this
     std::pair<std::string, bcos::Error::Ptr> get(
         const std::string_view& _columnFamily, const std::string_view& _key) override
     {
         throw bcos::Error(-1, "Unspported interface!");
     }
+
+    // Note: this interface is useless now, no need to implement this
     bcos::Error::Ptr remove(
         const std::string_view& _columnFamily, const std::string_view& _key) override
     {

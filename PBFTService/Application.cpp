@@ -1,6 +1,6 @@
 #include "servant/Application.h"
-#include "PBFTServiceServer.h"
 #include "../Common/TarsUtils.h"
+#include "PBFTServiceServer.h"
 
 using namespace bcostars;
 
@@ -13,7 +13,7 @@ public:
     {
         addAllConfig(this);
         addServant<PBFTServiceServer>(
-            ServerConfig::Application + "." + ServerConfig::ServerName + ".PBFTServiceObj");
+            ServerConfig::Application + "." + ServerConfig::ServerName + "." + PBFT_SERVANT_NAME);
     }
 
     virtual void destroyApp() override {}

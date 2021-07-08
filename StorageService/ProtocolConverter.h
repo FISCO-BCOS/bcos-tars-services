@@ -41,6 +41,10 @@ inline bcos::storage::Entry::Ptr toBcosEntry(const bcostars::Entry& entry)
 inline bcostars::Entry toTarsEntry(const bcos::storage::Entry::Ptr& entry)
 {
     bcostars::Entry tarsEntry;
+    if (!entry)
+    {
+        return tarsEntry;
+    }
     tarsEntry.num = entry->num();
     tarsEntry.status = entry->getStatus();
     for (auto const& field : *entry)

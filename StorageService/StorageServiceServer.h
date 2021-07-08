@@ -7,12 +7,14 @@
 #include <bcos-framework/interfaces/storage/TableInterface.h>
 #include <bcos-framework/libtable/TableFactory.h>
 #include <bcos-framework/libtool/NodeConfig.h>
+#include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <bcos-storage/KVDBImpl.h>
 #include <bcos-storage/RocksDBAdapter/RocksDBAdapter.h>
 #include <bcos-storage/RocksDBAdapter/RocksDBAdapterFactory.h>
 #include <bcos-storage/Storage.h>
 #include <memory>
 #include <mutex>
+#define STORAGESERVICE_LOG(LEVEL) BCOS_LOG(LEVEL) << "[StorageService][Initialize]"
 
 namespace bcostars
 {
@@ -23,12 +25,41 @@ public:
 
     void initialize() override
     {
+        try
+        {
+            init();
+            m_stopped = false;
+        }
+        catch (std::exception const& e)
+        {
+            TLOGERROR("StorageServiceServer init exception"
+                      << LOG_KV("error", boost::diagnostic_information(e)) << std::endl);
+            exit(0);
+        }
+        catch (tars::TC_Exception const& e)
+        {
+            TLOGERROR("StorageServiceServer init exception, error:" << e.what() << std::endl);
+            exit(0);
+        }
+    }
+    void init()
+    {
         std::call_once(m_storageFlag, []() {
             // load the config
             auto configPath = ServerConfig::BasePath + "config.ini";
+            // init the log
+            boost::property_tree::ptree pt;
+            boost::property_tree::read_ini(configPath, pt);
+            m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
+            m_logInitializer->initLog(pt);
+            STORAGESERVICE_LOG(INFO) << LOG_DESC("init log success");
+
             auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
             nodeConfig->loadConfig(configPath);
 
+            STORAGESERVICE_LOG(INFO)
+                << LOG_DESC("open DB") << LOG_KV("storageDBName", nodeConfig->storageDBName())
+                << LOG_KV("stateDBName", nodeConfig->stateDBName());
             bcos::storage::RocksDBAdapterFactory rocksdbAdapterFactory(nodeConfig->storagePath());
 
             auto ret = rocksdbAdapterFactory.createRocksDB(
@@ -41,11 +72,32 @@ public:
             auto adapter = rocksdbAdapterFactory.createAdapter(
                 nodeConfig->stateDBName(), bcos::storage::RocksDBAdapter::TABLE_PERFIX_LENGTH);
             auto storageImpl = std::make_shared<bcos::storage::StorageImpl>(adapter, kvDB);
+            storageImpl->disableCache();
             m_storage = storageImpl;
+            STORAGESERVICE_LOG(INFO) << LOG_DESC("start the storage");
+            m_storage->start();
+            STORAGESERVICE_LOG(INFO) << LOG_DESC("start the storage success");
         });
     }
 
-    void destroy() override {}
+    void destroy() override
+    {
+        if (m_stopped)
+        {
+            STORAGESERVICE_LOG(WARNING) << LOG_DESC("the storageService has already been stopped");
+            return;
+        }
+        STORAGESERVICE_LOG(INFO) << LOG_DESC("stop the storageService");
+        m_stopped = true;
+        if (m_storage)
+        {
+            m_storage->stop();
+        }
+        if (m_logInitializer)
+        {
+            m_logInitializer->stopLogging();
+        }
+    }
 
     bcostars::Error addStateCache(tars::Int64 blockNumber,
         const bcostars::TableFactory& tableFactory, tars::TarsCurrentPtr current) override
@@ -248,7 +300,9 @@ public:
 private:
     static std::once_flag m_storageFlag;
     static bcos::storage::StorageInterface::Ptr m_storage;
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
+    std::atomic_bool m_stopped = {false};
 };
 
 }  // namespace bcostars

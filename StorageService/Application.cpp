@@ -1,5 +1,5 @@
-#include "StorageServiceServer.h"
 #include "../Common/TarsUtils.h"
+#include "StorageServiceServer.h"
 
 using namespace bcostars;
 
@@ -11,8 +11,8 @@ public:
     virtual void initialize() override
     {
         addAllConfig(this);
-        addServant<StorageServiceServer>(
-            ServerConfig::Application + "." + ServerConfig::ServerName + ".StorageServiceObj");
+        addServant<StorageServiceServer>(ServerConfig::Application + "." +
+                                         ServerConfig::ServerName + "." + STORAGE_SERVANT_NAME);
     }
 
     virtual void destroyApp() override {}

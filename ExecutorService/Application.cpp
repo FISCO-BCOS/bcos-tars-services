@@ -1,22 +1,22 @@
 #include "servant/Application.h"
-#include "ExecutorServiceServer.h"
 #include "../Common/TarsUtils.h"
+#include "ExecutorServiceServer.h"
 
 using namespace bcostars;
 
 class ExecutorServiceApp : public Application
 {
 public:
-    virtual ~ExecutorServiceApp() override{};
+    ~ExecutorServiceApp() override{};
 
-    virtual void initialize() override
+    void initialize() override
     {
         addAllConfig(this);
-        addServant<ExecutorServiceServer>(
-            ServerConfig::Application + "." + ServerConfig::ServerName + ".ExecutorServiceObj");
+        addServant<ExecutorServiceServer>(ServerConfig::Application + "." +
+                                          ServerConfig::ServerName + "." + EXECUTOR_SERVANT_NAME);
     }
 
-    virtual void destroyApp() override {}
+    void destroyApp() override {}
 };
 
 int main(int argc, char* argv[])
