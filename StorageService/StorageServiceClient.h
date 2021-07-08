@@ -86,13 +86,16 @@ public:
         return bcosRows;
     }
 
-    // Note: this interface useless now
+    // Note: this interface is used by TableFactory to commit data
     std::pair<size_t, bcos::Error::Ptr> commitBlock(bcos::protocol::BlockNumber _blockNumber,
         const std::vector<bcos::storage::TableInfo::Ptr>& _tableInfos,
         const std::vector<std::shared_ptr<std::map<std::string, bcos::storage::Entry::Ptr>>>&
             _tableDatas) override
     {
-        STORAGECLIENT_LOG(DEBUG) << LOG_DESC("commitBlock") << LOG_KV("number", _blockNumber);
+        if (_blockNumber >= 0)
+        {
+            STORAGECLIENT_LOG(DEBUG) << LOG_DESC("commitBlock") << LOG_KV("number", _blockNumber);
+        }
 
         std::vector<bcostars::TableInfo> tarsTablesInfos;
         for (auto const& it : _tableInfos)
@@ -120,6 +123,11 @@ public:
                 << LOG_KV("msg", bcosError->errorMessage())
                 << LOG_KV("code", bcosError->errorCode());
             return std::make_pair(0, bcosError);
+        }
+        if (_blockNumber >= 0)
+        {
+            STORAGECLIENT_LOG(INFO)
+                << LOG_DESC("commitBlock success") << LOG_KV("number", _blockNumber);
         }
         return std::make_pair(count, nullptr);
     }

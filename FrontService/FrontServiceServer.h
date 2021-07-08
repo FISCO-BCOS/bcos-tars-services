@@ -7,14 +7,15 @@
 #include "../TxPoolService/TxPoolServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include "FrontService.h"
-#include "bcos-framework/interfaces/crypto/KeyFactory.h"
-#include "bcos-framework/interfaces/crypto/KeyInterface.h"
-#include "bcos-framework/interfaces/front/FrontServiceInterface.h"
 #include "servant/Communicator.h"
 #include "servant/Global.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
+#include <bcos-framework/interfaces/crypto/KeyFactory.h>
+#include <bcos-framework/interfaces/crypto/KeyInterface.h>
+#include <bcos-framework/interfaces/front/FrontServiceInterface.h>
 #include <bcos-framework/interfaces/protocol/Protocol.h>
 #include <bcos-framework/libtool/NodeConfig.h>
+#include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <bcos-front/FrontService.h>
 #include <bcos-front/FrontServiceFactory.h>
 
@@ -25,14 +26,34 @@ namespace bcostars
 class FrontServiceServer : public FrontService
 {
     ~FrontServiceServer() override {}
-
     void initialize() override
+    {
+        try
+        {
+            init();
+            m_running = true;
+        }
+        catch (std::exception const& e)
+        {
+            TLOGERROR("init the FrontService exceptioned"
+                      << LOG_KV("error", boost::diagnostic_information(e)) << std::endl);
+            exit(0);
+        }
+    }
+
+    void init()
     {
         std::call_once(m_onceFlag, [this]() {
             bcos::front::FrontServiceFactory frontServiceFactory;
             // load the config
             auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
             auto iniConfigPath = ServerConfig::BasePath + "config.ini";
+            boost::property_tree::ptree pt;
+            boost::property_tree::read_ini(iniConfigPath, pt);
+            m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
+            m_logInitializer->initLog(pt);
+            TLOGINFO(LOG_DESC("FrontService initLog success") << std::endl);
+
             nodeConfig->loadConfig(iniConfigPath);
 
             auto protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
@@ -105,13 +126,39 @@ class FrontServiceServer : public FrontService
                             }
                         });
                 });
+            // register the GetNodeIDsDispatcher to the frontService
+            front->registerModuleNodeIDsDispatcher(bcos::protocol::ModuleID::TxsSync,
+                [txpoolClient](std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs,
+                    bcos::front::ReceiveMsgFunc _receiveMsgCallback) {
+                    auto nodeIdSet = bcos::crypto::NodeIDSet(_nodeIDs->begin(), _nodeIDs->end());
+                    txpoolClient->notifyConnectedNodes(nodeIdSet, _receiveMsgCallback);
+                    FRONTSERVICE_LOG(DEBUG) << LOG_DESC("notifyConnectedNodes")
+                                            << LOG_KV("connectedNodeSize", nodeIdSet.size());
+                });
             m_front = front;
             // start the front service
             m_front->start();
         });
     }
 
-    void destroy() override {}
+    void destroy() override
+    {
+        if (!m_running)
+        {
+            FRONTSERVICE_LOG(WARNING) << LOG_DESC("The FrontService has already been stopped");
+            return;
+        }
+        FRONTSERVICE_LOG(INFO) << LOG_DESC("stop the FrontService");
+        m_running = false;
+        if (m_front)
+        {
+            m_front->stop();
+        }
+        if (m_logInitializer)
+        {
+            m_logInitializer->stopLogging();
+        }
+    }
 
     bcostars::Error asyncGetNodeIDs(
         vector<vector<tars::UInt8>>& nodeIDs, tars::TarsCurrentPtr current) override
@@ -120,13 +167,18 @@ class FrontServiceServer : public FrontService
 
         m_front->asyncGetNodeIDs([current](bcos::Error::Ptr _error,
                                      std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs) {
+            // Note: the nodeIDs maybe null if no connections
             std::vector<bcos::bytes> tarsNodeIDs;
+            if (!_nodeIDs)
+            {
+                async_response_asyncGetNodeIDs(current, toTarsError(_error), tarsNodeIDs);
+                return;
+            }
             tarsNodeIDs.reserve(_nodeIDs->size());
             for (auto const& it : *_nodeIDs)
             {
                 tarsNodeIDs.push_back(it->data());
             }
-
             async_response_asyncGetNodeIDs(current, toTarsError(_error), tarsNodeIDs);
         });
 
@@ -231,6 +283,8 @@ class FrontServiceServer : public FrontService
 private:
     static std::once_flag m_onceFlag;
     static bcos::front::FrontServiceInterface::Ptr m_front;
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
+    std::atomic_bool m_running = {false};
     bcos::crypto::KeyFactory::Ptr m_keyFactory;
 };
 }  // namespace bcostars
