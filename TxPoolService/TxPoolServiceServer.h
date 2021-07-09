@@ -19,6 +19,7 @@
 #include "libutilities/FixedBytes.h"
 #include "servant/Servant.h"
 #include <bcos-framework/libtool/NodeConfig.h>
+#include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <bcos-ledger/ledger/Ledger.h>
 #include <bcos-txpool/TxPoolFactory.h>
 #include <memory>
@@ -31,36 +32,71 @@ class TxPoolServiceServer : public bcostars::TxPoolService
 public:
     void initialize() override
     {
+        try
+        {
+            std::call_once(m_initFlag, [this]() {
+                init();
+                m_running = true;
+            });
+        }
+        catch (std::exception const& e)
+        {
+            TLOGERROR("init the txpoolService exceptioned"
+                      << LOG_KV("error", boost::diagnostic_information(e)) << std::endl);
+            exit(0);
+        }
+    }
+
+    void init()
+    {
         // load the configuration for txpool
         auto configPath = ServerConfig::BasePath + "config.ini";
+        boost::property_tree::ptree pt;
+        boost::property_tree::read_ini(configPath, pt);
+        m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
+        m_logInitializer->initLog(pt);
+        TLOGINFO(LOG_DESC("TxPoolService initLog success") << std::endl);
+
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("load nodeConfig");
         auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
         nodeConfig->loadConfig(configPath);
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("load nodeConfig success");
 
         // create the protocolInitializer
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("load protocol and nodeID");
         auto protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
         protocolInitializer->init(nodeConfig);
         auto privateKeyPath = ServerConfig::BasePath + "node.pem";
         protocolInitializer->loadKeyPair(privateKeyPath);
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("load protocol and nodeID success")
+                                << LOG_KV("nodeID",
+                                       protocolInitializer->keyPair()->publicKey()->shortHex());
 
         // create the storage client
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the storage client");
         auto storageProxy =
             Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(
                 getProxyDesc(STORAGE_SERVICE_NAME));
         auto storage = std::make_shared<bcostars::StorageServiceClient>(storageProxy);
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the storage client success");
 
         // create the ledger
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the ledger");
         auto ledger =
             std::make_shared<bcos::ledger::Ledger>(protocolInitializer->blockFactory(), storage);
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the ledger success");
 
         // create the frontService client
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the frontService client");
         auto frontServiceProxy =
             Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
                 getProxyDesc(FRONT_SERVICE_NAME));
         auto frontService = std::make_shared<bcostars::FrontServiceClient>(
             frontServiceProxy, protocolInitializer->keyFactory());
-
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the frontService client success");
 
         // create txpoolFactory
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the txpool");
         auto txpoolFactory = std::make_shared<bcos::txpool::TxPoolFactory>(
             protocolInitializer->keyPair()->publicKey(), protocolInitializer->cryptoSuite(),
             protocolInitializer->txResultFactory(), protocolInitializer->blockFactory(),
@@ -68,11 +104,15 @@ public:
             nodeConfig->blockLimit());
 
         auto txpool = txpoolFactory->createTxPool();
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the txpool success");
         m_txpool = txpool;
+
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("load the txpool config");
         auto txpoolConfig = txpool->txpoolConfig();
         txpoolConfig->setPoolLimit(nodeConfig->txpoolLimit());
         txpoolConfig->setNotifierWorkerNum(nodeConfig->notifyWorkerNum());
         txpoolConfig->setVerifyWorkerNum(nodeConfig->verifierWorkerNum());
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("load the txpool config success");
 
         // register handlers for the txpool to interact with the sealer
         auto pbftProxy = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
@@ -92,11 +132,31 @@ public:
                 }
             });
         // init and start the txpool
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("init and start the txpool");
         txpool->init();
         m_txpool->start();
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("init and start the txpool success");
     }
 
-    void destroy() override {}
+    void destroy() override
+    {
+        if (!m_running)
+        {
+            TXPOOLSERVICE_LOG(WARNING) << LOG_DESC("The txpoolService has already stopped!");
+            return;
+        }
+        m_running = false;
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("Stop the txpoolService");
+        if (m_txpool)
+        {
+            m_txpool->stop();
+        }
+        if (m_logInitializer)
+        {
+            m_logInitializer->stopLogging();
+        }
+        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("Stop the txpoolService success");
+    }
 
     bcostars::Error asyncFillBlock(const vector<vector<tars::UInt8>>& txHashs,
         vector<bcostars::Transaction>& filled, tars::TarsCurrentPtr current) override
@@ -307,7 +367,10 @@ public:
     }
 
 private:
+    static std::once_flag m_initFlag;
     bcos::txpool::TxPool::Ptr m_txpool;
     bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
+    bcos::BoostLogInitializer::Ptr m_logInitializer;
+    std::atomic_bool m_running = {false};
 };
 }  // namespace bcostars

@@ -23,6 +23,7 @@ struct Entry {
     1 optional long num;
     2 optional int status;
     3 optional map<string, string> fields;
+    4 optional bool isNull;
 };
 
 struct TableFactory {
