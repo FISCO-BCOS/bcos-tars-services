@@ -13,4 +13,4 @@ target_link_libraries(StorageServiceTestClient bcos-storage::bcos-storage bcos-f
 add_executable(TransactionTestClient TransactionTestClient.cpp)
 target_compile_options(TransactionTestClient PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
 add_dependencies(TransactionTestClient StorageServiceClient bcostars)
-target_link_libraries(TransactionTestClient bcos-framework::table bcos-framework::tool bcos-framework::codec bcos-framework::protocol bcos-crypto::bcos-crypto tarsservant tarsutil Boost::program_options)
+target_link_libraries(TransactionTestClient bcos-ledger::bcos-ledger bcos-framework::table bcos-framework::tool bcos-framework::codec bcos-framework::protocol bcos-crypto::bcos-crypto tarsservant tarsutil Boost::program_options)
