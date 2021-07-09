@@ -104,7 +104,7 @@ inline bcostars::TableFactory toTarsTableFactory(
     bcostars::TableFactory tarsTableFactory;
 
     tarsTableFactory.num = tableFactory->blockNumber();
-    auto tableDatas = tableFactory->exportData();
+    auto tableDatas = tableFactory->exportData(tableFactory->blockNumber());
 
     for (auto const& tableInfo : tableDatas.first)
     {

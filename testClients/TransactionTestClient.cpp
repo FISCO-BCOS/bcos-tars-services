@@ -4,7 +4,7 @@
 #include "../protocols/BlockImpl.h"
 #include "Block.h"
 #include "TxPoolService.h"
-#include "bcos-ledger/ledger/Ledger.h"
+#include "bcos-ledger/libledger/Ledger.h"
 #include <bcos-crypto/encrypt/AESCrypto.h>
 #include <bcos-crypto/encrypt/SM4Crypto.h>
 #include <bcos-crypto/hash/Keccak256.h>
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 
     // clang-format off
     desc.add_options()
-        ("help", "Produce help message")
+        ("help,h", "Produce help message")
         ("ip", boost::program_options::value<std::string>(&ip)->default_value("127.0.0.1"), "Tarsregistry server ip")
         ("port", boost::program_options::value<unsigned short>(&port)->default_value(17890), "Tarsregistry server port")
         ("prefix", boost::program_options::value<std::string>(&prefix)->default_value("bcostars.TxPoolService"), "BCOS prefix")

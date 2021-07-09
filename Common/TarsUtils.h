@@ -31,6 +31,11 @@ inline std::string getProxyDesc(const std::string& serviceName)
     return desc;
 }
 
+inline std::string getLogPath()
+{
+    return ServerConfig::LogPath + "/" + ServerConfig::Application + "/" + ServerConfig::ServerName;
+}
+
 inline void addAllConfig(Application* app)
 {
     app->addAppConfig("nodes.json");

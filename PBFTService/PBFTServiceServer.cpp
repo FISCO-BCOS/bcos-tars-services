@@ -79,7 +79,16 @@ void PBFTServiceServer::destroy()
     {
         m_pbft->stop();
     }
-    PBFTSERVICE_LOG(INFO) << LOG_DESC("Stop the PBFTService success");
+    if (m_ledger)
+    {
+        PBFTSERVICE_LOG(INFO) << LOG_DESC("stop the ledger");
+        m_ledger->stop();
+    }
+    if (m_logInitializer)
+    {
+        m_logInitializer->stopLogging();
+    }
+    TLOGINFO(LOG_DESC("Stop the PBFTService success") << std::endl);
 }
 
 void PBFTServiceServer::init()
@@ -92,6 +101,8 @@ void PBFTServiceServer::init()
     boost::property_tree::ptree pt;
     boost::property_tree::read_ini(iniConfigPath, pt);
     m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
+    // set the boost log into the tars log directory
+    m_logInitializer->setLogPath(getLogPath());
     m_logInitializer->initLog(pt);
     TLOGINFO(LOG_DESC("TxPoolService initLog success") << std::endl);
 

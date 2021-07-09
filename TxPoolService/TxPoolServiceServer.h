@@ -20,7 +20,7 @@
 #include "servant/Servant.h"
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
-#include <bcos-ledger/ledger/Ledger.h>
+#include <bcos-ledger/libledger/Ledger.h>
 #include <bcos-txpool/TxPoolFactory.h>
 #include <memory>
 
@@ -54,6 +54,8 @@ public:
         boost::property_tree::ptree pt;
         boost::property_tree::read_ini(configPath, pt);
         m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
+        // set the boost log into the tars log directory
+        m_logInitializer->setLogPath(getLogPath());
         m_logInitializer->initLog(pt);
         TLOGINFO(LOG_DESC("TxPoolService initLog success") << std::endl);
 
@@ -368,9 +370,9 @@ public:
 
 private:
     static std::once_flag m_initFlag;
-    bcos::txpool::TxPool::Ptr m_txpool;
-    bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
-    bcos::BoostLogInitializer::Ptr m_logInitializer;
-    std::atomic_bool m_running = {false};
+    static bcos::txpool::TxPool::Ptr m_txpool;
+    static bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
+    static std::atomic_bool m_running;
 };
 }  // namespace bcostars

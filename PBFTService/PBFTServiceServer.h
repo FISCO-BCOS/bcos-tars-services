@@ -30,7 +30,7 @@
 #include <bcos-framework/libsealer/SealerFactory.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
-#include <bcos-ledger/ledger/Ledger.h>
+#include <bcos-ledger/libledger/Ledger.h>
 #include <bcos-pbft/pbft/PBFTFactory.h>
 #include <bcos-sync/BlockSyncFactory.h>
 #include <bcos-txpool/TxPoolFactory.h>
@@ -102,7 +102,7 @@ private:
     bcos::txpool::TxPoolInterface::Ptr m_txpool;
     bcos::front::FrontServiceInterface::Ptr m_frontService;
     bcos::storage::StorageInterface::Ptr m_storage;
-    bcos::ledger::LedgerInterface::Ptr m_ledger;
+    std::shared_ptr<bcos::ledger::Ledger> m_ledger;
     bcos::dispatcher::DispatcherInterface::Ptr m_dispatcher;
 
     bcos::initializer::ProtocolInitializer::Ptr m_protocolInitializer;
