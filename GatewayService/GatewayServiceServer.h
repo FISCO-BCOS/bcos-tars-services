@@ -28,6 +28,12 @@ public:
             init();
             m_running = true;
         }
+        catch (tars::TC_Exception const& e)
+        {
+            TLOGERROR(GATEWAYSERVICE_BADGE << "init the GateWay exceptioned, exist now"
+                                           << LOG_KV("error", e.what()) << std::endl);
+            exit(0);
+        }
         catch (std::exception const& e)
         {
             TLOGERROR(GATEWAYSERVICE_BADGE << "init the GateWay exceptioned, exist now"
@@ -35,13 +41,8 @@ public:
                                            << std::endl);
             exit(0);
         }
-        catch (tars::TC_Exception const& e)
-        {
-            TLOGERROR(GATEWAYSERVICE_BADGE << "init the GateWay exceptioned, exist now"
-                                           << LOG_KV("error", e.what()) << std::endl);
-            exit(0);
-        }
     }
+    
     void init()
     {
         std::call_once(m_initFlag, [this]() {

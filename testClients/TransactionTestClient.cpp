@@ -166,8 +166,8 @@ int main(int argc, char* argv[])
         std::cout << "Block hash" << result->blockHash() << std::endl;
         std::cout << std::endl;
     }
-    // txpool->asyncSubmit(bcos::bytesPointer _tx, bcos::protocol::TxSubmitCallback
-    // _txSubmitCallback);
+
+    std::cout << "All transactions finished" << std::endl;
 
     return 0;
 }

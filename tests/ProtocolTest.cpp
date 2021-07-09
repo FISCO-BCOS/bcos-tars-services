@@ -12,6 +12,7 @@
 #include "interfaces/protocol/ProtocolTypeDef.h"
 #include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
+#include <gsl/span>
 #include <memory>
 
 namespace bcostars
@@ -269,7 +270,7 @@ BOOST_AUTO_TEST_CASE(blockHeader)
         BOOST_CHECK_EQUAL(header->timestamp(), decodedHeader->timestamp());
         BOOST_CHECK_EQUAL(header->gasUsed(), decodedHeader->gasUsed());
         BOOST_CHECK_EQUAL(header->parentInfo().size(), decodedHeader->parentInfo().size());
-        for(size_t i = 0; i < decodedHeader->parentInfo().size(); ++i) {
+        for(int i = 0; i < decodedHeader->parentInfo().size(); ++i) {
             BOOST_CHECK_EQUAL(bcos::toString(header->parentInfo()[i].blockHash), bcos::toString(decodedHeader->parentInfo()[i].blockHash));
             BOOST_CHECK_EQUAL(header->parentInfo()[i].blockNumber, decodedHeader->parentInfo()[i].blockNumber);
         }
