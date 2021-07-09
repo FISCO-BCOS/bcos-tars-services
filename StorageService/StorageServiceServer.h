@@ -150,12 +150,13 @@ public:
         try
         {
             auto [c, error] = m_storage->commitBlock(blockNumber, bcosTableInfos, bcosDatas);
-            c = count;
+            count = c;
 
             return toTarsError(error);
         }
         catch (const bcos::Error& error)
         {
+            count = 0;
             return toTarsError(error);
         }
     }

@@ -29,6 +29,7 @@
 #include <bcos-framework/interfaces/crypto/KeyFactory.h>
 #include <bcos-framework/libsealer/SealerFactory.h>
 #include <bcos-framework/libtool/NodeConfig.h>
+#include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <bcos-ledger/ledger/Ledger.h>
 #include <bcos-pbft/pbft/PBFTFactory.h>
 #include <bcos-sync/BlockSyncFactory.h>
@@ -47,7 +48,7 @@ public:
     ~PBFTServiceServer() override {}
 
     void initialize() override;
-    void destroy() override {}
+    void destroy() override;
 
     // for the sync module to check block
     // Node: since the sync module is intergrated with the PBFT, this interfaces is useless now
@@ -89,14 +90,16 @@ protected:
     virtual void createBlockSync(bcos::tool::NodeConfig::Ptr _nodeConfig);
     virtual void createPBFT(bcos::tool::NodeConfig::Ptr _nodeConfig);
 
+    virtual void init();
+
 private:
     // the local dependencies
-    bcos::txpool::TxPoolInterface::Ptr m_txpool;
     bcos::consensus::PBFTImpl::Ptr m_pbft;
     bcos::sealer::Sealer::Ptr m_sealer;
     bcos::sync::BlockSync::Ptr m_blockSync;
 
     // the client dependencies used to access the remote server service
+    bcos::txpool::TxPoolInterface::Ptr m_txpool;
     bcos::front::FrontServiceInterface::Ptr m_frontService;
     bcos::storage::StorageInterface::Ptr m_storage;
     bcos::ledger::LedgerInterface::Ptr m_ledger;
@@ -106,6 +109,10 @@ private:
 
     bcos::protocol::BlockFactory::Ptr m_blockFactory;
     bcos::crypto::KeyFactory::Ptr m_keyFactory;
+
+    std::atomic_bool m_running = {false};
+    static std::once_flag m_initFlag;
+    bcos::BoostLogInitializer::Ptr m_logInitializer;
 };
 
 }  // namespace bcostars

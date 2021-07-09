@@ -117,8 +117,13 @@ public:
                 protocolInitializer->blockFactory(), storageServiceClient);
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("build the genesis block");
             // write the genesis block through ledger
-            ledger->buildGenesisBlock(
+            auto ret = ledger->buildGenesisBlock(
                 nodeConfig->ledgerConfig(), nodeConfig->txGasLimit(), nodeConfig->genesisData());
+            if (!ret)
+            {
+                EXECUTORSERVICE_LOG(ERROR) << LOG_DESC("build genesis failed");
+                exit(0);
+            }
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init ledger success");
 
             // init the dispatcher

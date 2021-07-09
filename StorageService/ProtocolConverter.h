@@ -27,6 +27,10 @@ inline bcostars::TableInfo toTarsTableInfo(const bcos::storage::TableInfo::Ptr& 
 
 inline bcos::storage::Entry::Ptr toBcosEntry(const bcostars::Entry& entry)
 {
+    if (entry.isNull)
+    {
+        return nullptr;
+    }
     auto bcosEntry = std::make_shared<bcos::storage::Entry>();
     bcosEntry->setNum(entry.num);
     bcosEntry->setStatus((bcos::storage::Entry::Status)entry.status);
@@ -43,8 +47,10 @@ inline bcostars::Entry toTarsEntry(const bcos::storage::Entry::Ptr& entry)
     bcostars::Entry tarsEntry;
     if (!entry)
     {
+        tarsEntry.isNull = true;
         return tarsEntry;
     }
+    tarsEntry.isNull = false;
     tarsEntry.num = entry->num();
     tarsEntry.status = entry->getStatus();
     for (auto const& field : *entry)
@@ -114,6 +120,10 @@ inline bcostars::TableFactory toTarsTableFactory(
 inline bcostars::Condition toTarsCondition(const bcos::storage::Condition::Ptr& condition)
 {
     bcostars::Condition tarsCondition;
+    if (!condition)
+    {
+        return tarsCondition;
+    }
     tarsCondition.offset = condition->getLimit().first;
     tarsCondition.size = condition->getLimit().second;
     for (auto const& it : condition->m_conditions)
