@@ -114,15 +114,15 @@ jobs:
             /Users/runner/.hunter/
             deps/src
             ccache
-          key: hunter-ubuntu-v4-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+          key: hunter-ubuntu-v5-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
           restore-keys: |
-            hunter-ubuntu-v4-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
-            hunter-ubuntu-v4-notest-${{ runner.temp }}-${{ github.base_ref }}-
-            hunter-ubuntu-v4-notest-${{ runner.temp }}-
+            hunter-ubuntu-v5-notest-${{ runner.temp }}-${{ github.base_ref }}-${{ hashFiles('.github/workflows/workflow.yml') }}
+            hunter-ubuntu-v5-notest-${{ runner.temp }}-${{ github.base_ref }}-
+            hunter-ubuntu-v5-notest-${{ runner.temp }}-
       - name: install Ubuntu dependencies
         run: sudo apt-get install -y git curl build-essential cmake ccache lcov libzstd-dev
       - name: configure
-        run: cmake . -DTEST=ON -DCOVERAGE=ON
+        run: cmake . -DTEST=ON -DTESTS=OFF -DCOVERAGE=ON
       - name: compile
         run: make -j4
       - name: run test

@@ -95,18 +95,23 @@ int main(int argc, char* argv[])
     size_t count;
     std::string chainID;
     std::string groupID;
+    size_t rate;
+    bool printStat;
 
     boost::program_options::options_description desc("Transaction client options");
 
     // clang-format off
     desc.add_options()
-        ("help", "Produce help message")
+        ("help,h", "Produce help message")
         ("ip", boost::program_options::value<std::string>(&ip)->default_value("127.0.0.1"), "Tars locator server ip")
         ("port", boost::program_options::value<unsigned short>(&port)->default_value(17890), "Tars locator server port")
         ("app", boost::program_options::value<std::string>(&app)->default_value("bcostars"), "BCOS application name")
-        ("count", boost::program_options::value<size_t>(&count)->default_value(1), "Transaction count")
+        ("count,c", boost::program_options::value<size_t>(&count)->default_value(1), "Transaction count")
         ("chain", boost::program_options::value<std::string>(&chainID), "Chain ID")
         ("group", boost::program_options::value<std::string>(&groupID), "Group ID")
+        ("rate,r", boost::program_options::value<size_t>(&rate)->default_value(10), "send TPS")
+        ("trace,t", boost::program_options::value<bool>(&printStat)->default_value(true), "print the transaction result or not")
+
     ;
     // clang-format on
 
@@ -145,39 +150,64 @@ int main(int argc, char* argv[])
 
     auto keyPair = blockFactory->cryptoSuite()->signatureImpl()->generateKeyPair();
 
+    std::atomic<bcos::protocol::BlockNumber> blockNumber = {0};
+    ledger->asyncGetBlockNumber(
+        [&](bcos::Error::Ptr _error, bcos::protocol::BlockNumber _blockNumber) {
+            if (_error)
+            {
+                return;
+            }
+            blockNumber = _blockNumber;
+        });
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    size_t txsNum = 0;
+    uint16_t sleepInterval = (uint16_t)(1000000 / rate);
+    bcos::u256 nonce = bcos::utcTimeUs();
+    std::atomic<size_t> receivedTxs = 0;
     for (size_t i = 0; i < count; ++i)
     {
-        std::promise<std::tuple<bcos::Error::Ptr, bcos::protocol::BlockNumber>> getBlockPromise;
-        ledger->asyncGetBlockNumber(
-            [&getBlockPromise](bcos::Error::Ptr error, bcos::protocol::BlockNumber number) {
-                getBlockPromise.set_value(std::make_tuple(error, number));
-            });
+        if (txsNum % 500 == 0)
+        {
+            ledger->asyncGetBlockNumber(
+                [&](bcos::Error::Ptr _error, bcos::protocol::BlockNumber _blockNumber) {
+                    if (_error)
+                    {
+                        return;
+                    }
+                    blockNumber = _blockNumber;
+                });
+        }
 
-        auto blockNumberResult = getBlockPromise.get_future().get();
-
-        bcos::u256 nonce = bcos::utcTime();
-        auto txBlockLimit = std::get<1>(blockNumberResult) + 500;
-
+        auto txBlockLimit = blockNumber + 500;
         auto tx = blockFactory->transactionFactory()->createTransaction(0, bcos::bytes(),
             fakeHelloWorldDeployInput(), nonce, txBlockLimit, chainID, groupID, 0, keyPair);
 
-        std::promise<std::tuple<bcos::Error::Ptr, bcos::protocol::TransactionSubmitResult::Ptr>>
-            submitPromise;
-
         auto encodedTxData = tx->encode();
         auto txData = std::make_shared<bcos::bytes>(encodedTxData.begin(), encodedTxData.end());
-        txpool->asyncSubmit(txData, [&submitPromise](bcos::Error::Ptr error,
-                                        bcos::protocol::TransactionSubmitResult::Ptr result) {
-            submitPromise.set_value(std::make_tuple(error, result));
-        });
-
-        auto result = std::get<1>(submitPromise.get_future().get());
-        std::cout << "Transaction status: " << result->status() << std::endl;
-        std::cout << "Transaction hash: " << result->txHash() << std::endl;
-        std::cout << "Block hash" << result->blockHash() << std::endl;
-        std::cout << std::endl;
+        txpool->asyncSubmit(txData,
+            [&, tx](bcos::Error::Ptr error, bcos::protocol::TransactionSubmitResult::Ptr result) {
+                if (!result)
+                {
+                    std::cout << "Transaction submit failed: " << tx->hash().abridged();
+                    return;
+                }
+                if (printStat)
+                {
+                    std::cout << "Transaction status: " << result->status() << std::endl;
+                    std::cout << "Transaction hash: " << result->txHash() << std::endl;
+                    std::cout << "Block hash" << result->blockHash() << std::endl;
+                    std::cout << std::endl;
+                }
+                receivedTxs++;
+            });
+        txsNum++;
+        nonce = bcos::utcTimeUs() + tx->nonce();
+        std::this_thread::sleep_for(std::chrono::microseconds(sleepInterval));
     }
-
+    while (receivedTxs < count)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
     std::cout << "All transactions finished" << std::endl;
 
     return 0;
