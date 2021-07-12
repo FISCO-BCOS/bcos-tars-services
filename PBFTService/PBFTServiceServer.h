@@ -84,7 +84,7 @@ public:
 protected:
     virtual void registerHandlers();
 
-    // TODO: create the txpool client only
+    // create the txpool client only
     virtual void createTxPool(bcos::tool::NodeConfig::Ptr _nodeConfig);
     virtual void createSealer(bcos::tool::NodeConfig::Ptr _nodeConfig);
     virtual void createBlockSync(bcos::tool::NodeConfig::Ptr _nodeConfig);
@@ -94,9 +94,9 @@ protected:
 
 private:
     // the local dependencies
-    bcos::consensus::PBFTImpl::Ptr m_pbft;
-    bcos::sealer::Sealer::Ptr m_sealer;
-    bcos::sync::BlockSync::Ptr m_blockSync;
+    static bcos::consensus::PBFTImpl::Ptr m_pbft;
+    static bcos::sealer::Sealer::Ptr m_sealer;
+    static bcos::sync::BlockSync::Ptr m_blockSync;
 
     // the client dependencies used to access the remote server service
     bcos::txpool::TxPoolInterface::Ptr m_txpool;

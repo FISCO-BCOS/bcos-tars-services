@@ -41,6 +41,10 @@ using namespace bcos::ledger;
 
 std::once_flag PBFTServiceServer::m_initFlag;
 
+bcos::consensus::PBFTImpl::Ptr PBFTServiceServer::m_pbft;
+bcos::sealer::Sealer::Ptr PBFTServiceServer::m_sealer;
+bcos::sync::BlockSync::Ptr PBFTServiceServer::m_blockSync;
+
 void PBFTServiceServer::initialize()
 {
     try
@@ -104,7 +108,7 @@ void PBFTServiceServer::init()
     // set the boost log into the tars log directory
     m_logInitializer->setLogPath(getLogPath());
     m_logInitializer->initLog(pt);
-    TLOGINFO(LOG_DESC("TxPoolService initLog success") << std::endl);
+    TLOGINFO(LOG_DESC("PBFTService initLog success") << std::endl);
 
     nodeConfig->loadConfig(iniConfigPath);
 
@@ -128,8 +132,9 @@ void PBFTServiceServer::init()
     // create dispatcher
     auto dispatcherProxy =
         Application::getCommunicator()->stringToProxy<bcostars::DispatcherServicePrx>(
-            getProxyDesc(DISPATCHER_SERVANT_NAME));
-    m_dispatcher = std::make_shared<bcostars::DispatcherServiceClient>(dispatcherProxy);
+            getProxyDesc(DISPATCHER_SERVICE_NAME));
+    m_dispatcher = std::make_shared<bcostars::DispatcherServiceClient>(
+        dispatcherProxy, m_protocolInitializer->blockFactory());
 
     // create the ledger
     // Note: the executor module init the genesis block
@@ -145,9 +150,9 @@ void PBFTServiceServer::init()
     registerHandlers();
 
     // init and start all the modules
-    m_sealer->init(m_pbft);
     m_blockSync->init();
     m_pbft->init();
+    m_sealer->init(m_pbft);
 
     m_sealer->start();
     m_blockSync->start();
@@ -237,6 +242,7 @@ Error PBFTServiceServer::asyncCheckBlock(
     m_pbft->asyncCheckBlock(block, [_current](bcos::Error::Ptr _error, bool _verifyResult) {
         async_response_asyncCheckBlock(_current, toTarsError(_error), _verifyResult);
     });
+    return bcostars::Error();
 }
 
 Error PBFTServiceServer::asyncGetPBFTView(tars::Int64& _view, tars::TarsCurrentPtr _current)
@@ -245,6 +251,7 @@ Error PBFTServiceServer::asyncGetPBFTView(tars::Int64& _view, tars::TarsCurrentP
     m_pbft->asyncGetPBFTView([_current](bcos::Error::Ptr _error, bcos::consensus::ViewType _view) {
         async_response_asyncGetPBFTView(_current, toTarsError(_error), _view);
     });
+    return bcostars::Error();
 }
 
 
@@ -255,6 +262,7 @@ Error PBFTServiceServer::asyncNoteUnSealedTxsSize(
     m_sealer->asyncNoteUnSealedTxsSize(_unsealedTxsSize, [_current](bcos::Error::Ptr _error) {
         async_response_asyncNoteUnSealedTxsSize(_current, toTarsError(_error));
     });
+    return bcostars::Error();
 }
 
 Error PBFTServiceServer::asyncNotifyConsensusMessage(std::string const& _uuid,
@@ -267,6 +275,7 @@ Error PBFTServiceServer::asyncNotifyConsensusMessage(std::string const& _uuid,
         nullptr, _uuid, nodeId, bcos::ref(_data), [_current](bcos::Error::Ptr _error) {
             async_response_asyncNotifyConsensusMessage(_current, toTarsError(_error));
         });
+    return bcostars::Error();
 }
 
 bcostars::Error PBFTServiceServer::asyncNotifyBlockSyncMessage(std::string const& _uuid,
@@ -279,6 +288,7 @@ bcostars::Error PBFTServiceServer::asyncNotifyBlockSyncMessage(std::string const
         nullptr, _uuid, nodeId, bcos::ref(_data), [_current](bcos::Error::Ptr _error) {
             async_response_asyncNotifyBlockSyncMessage(_current, toTarsError(_error));
         });
+    return bcostars::Error();
 }
 
 
@@ -290,6 +300,7 @@ Error PBFTServiceServer::asyncNotifyNewBlock(
     m_pbft->asyncNotifyNewBlock(ledgerConfig, [_current](bcos::Error::Ptr _error) {
         async_response_asyncNotifyNewBlock(_current, toTarsError(_error));
     });
+    return bcostars::Error();
 }
 
 Error PBFTServiceServer::asyncSubmitProposal(const vector<tars::UInt8>& _proposalData,
@@ -306,6 +317,7 @@ Error PBFTServiceServer::asyncSubmitProposal(const vector<tars::UInt8>& _proposa
         [_current](bcos::Error::Ptr _error) {
             async_response_asyncSubmitProposal(_current, toTarsError(_error));
         });
+    return bcostars::Error();
 }
 
 bcostars::Error PBFTServiceServer::asyncGetSyncInfo(
@@ -316,4 +328,5 @@ bcostars::Error PBFTServiceServer::asyncGetSyncInfo(
         [_current](bcos::Error::Ptr _error, std::string const& _syncInfo) {
             async_response_asyncGetSyncInfo(_current, toTarsError(_error), _syncInfo);
         });
+    return bcostars::Error();
 }

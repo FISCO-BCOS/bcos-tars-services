@@ -20,7 +20,7 @@
  */
 #include "ProtocolInitializer.h"
 #include "../protocols/BlockImpl.h"
-#include "../protocols/TransactionSubmitResultImpl.h>
+#include "../protocols/TransactionSubmitResultImpl.h"
 #include <bcos-crypto/encrypt/AESCrypto.h>
 #include <bcos-crypto/encrypt/SM4Crypto.h>
 #include <bcos-crypto/hash/Keccak256.h>
@@ -53,7 +53,7 @@ void ProtocolInitializer::init(NodeConfig::Ptr _nodeConfig)
         m_cryptoSuite, blockHeaderFactory, transactionFactory, receiptFactory);
 
     m_cryptoSuite->setKeyFactory(m_keyFactory);
-    m_txResultFactory = std::make_shared<bcostars::protocol::TransactionSubmitResultFactoryImpl>();
+    m_txResultFactory = std::make_shared<TransactionSubmitResultFactoryImpl>();
 
     INITIALIZER_LOG(INFO) << LOG_DESC("init blockFactory success");
 }

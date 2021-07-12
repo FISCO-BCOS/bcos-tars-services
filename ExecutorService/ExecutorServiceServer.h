@@ -131,8 +131,9 @@ public:
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init dispatcher client");
             auto dispatcherProxy =
                 Application::getCommunicator()->stringToProxy<bcostars::DispatcherServicePrx>(
-                    getProxyDesc(DISPATCHER_SERVANT_NAME));
-            auto dispatcher = std::make_shared<bcostars::DispatcherServiceClient>(dispatcherProxy);
+                    getProxyDesc(DISPATCHER_SERVICE_NAME));
+            auto dispatcher = std::make_shared<bcostars::DispatcherServiceClient>(
+                dispatcherProxy, protocolInitializer->blockFactory());
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init dispatcher client success");
 
             // create the executor

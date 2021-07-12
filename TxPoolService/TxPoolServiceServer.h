@@ -74,6 +74,8 @@ public:
                                 << LOG_KV("nodeID",
                                        protocolInitializer->keyPair()->publicKey()->shortHex());
 
+        m_cryptoSuite = protocolInitializer->cryptoSuite();
+
         // create the storage client
         TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the storage client");
         auto storageProxy =
@@ -119,12 +121,12 @@ public:
         // register handlers for the txpool to interact with the sealer
         auto pbftProxy = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
             getProxyDesc(PBFT_SERVICE_NAME));
-        auto pbft = std::make_shared<PBFTServiceClient>(pbftProxy);
+        auto sealer = std::make_shared<PBFTServiceClient>(pbftProxy);
         m_txpool->registerUnsealedTxsNotifier(
-            [pbft](size_t _unsealedTxsSize, std::function<void(bcos::Error::Ptr)> _onRecv) {
+            [sealer](size_t _unsealedTxsSize, std::function<void(bcos::Error::Ptr)> _onRecv) {
                 try
                 {
-                    pbft->asyncNoteUnSealedTxsSize(_unsealedTxsSize, _onRecv);
+                    sealer->asyncNoteUnSealedTxsSize(_unsealedTxsSize, _onRecv);
                 }
                 catch (std::exception const& e)
                 {
@@ -366,6 +368,7 @@ public:
                                                      bcos::Error::Ptr _error, size_t _txsSize) {
             async_response_asyncGetPendingTransactionSize(_current, toTarsError(_error), _txsSize);
         });
+        return bcostars::Error();
     }
 
 private:

@@ -12,7 +12,10 @@ namespace bcostars
 class DispatcherServiceClient : public bcos::dispatcher::DispatcherInterface
 {
 public:
-    DispatcherServiceClient(bcostars::DispatcherServicePrx _proxy) : m_proxy(_proxy) {}
+    DispatcherServiceClient(
+        bcostars::DispatcherServicePrx _proxy, bcos::protocol::BlockFactory::Ptr _blockFactory)
+      : m_proxy(_proxy), m_blockFactory(_blockFactory)
+    {}
     ~DispatcherServiceClient() override {}
 
     void asyncExecuteBlock(const bcos::protocol::Block::Ptr& _block, bool _verify,
@@ -25,7 +28,7 @@ public:
             Callback(std::function<void(
                          const bcos::Error::Ptr&, const bcos::protocol::BlockHeader::Ptr&)>
                          callback,
-                bcostars::protocol::BlockHeaderFactoryImpl::Ptr blockHeaderFactory)
+                bcos::protocol::BlockHeaderFactory::Ptr blockHeaderFactory)
               : m_callback(callback), m_blockHeaderFactory(blockHeaderFactory)
             {}
 
@@ -46,10 +49,11 @@ public:
         private:
             std::function<void(const bcos::Error::Ptr&, const bcos::protocol::BlockHeader::Ptr&)>
                 m_callback;
-            bcostars::protocol::BlockHeaderFactoryImpl::Ptr m_blockHeaderFactory;
+            bcos::protocol::BlockHeaderFactory::Ptr m_blockHeaderFactory;
         };
 
-        m_proxy->async_asyncExecuteBlock(new Callback(_callback, m_blockHeaderFactory),
+        m_proxy->async_asyncExecuteBlock(
+            new Callback(_callback, m_blockFactory->blockHeaderFactory()),
             std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(_block)->inner(), _verify);
     }
 
@@ -62,7 +66,7 @@ public:
         public:
             Callback(std::function<void(const bcos::Error::Ptr&, const bcos::protocol::Block::Ptr&)>
                          callback,
-                bcostars::protocol::BlockFactoryImpl::Ptr blockFactory)
+                bcos::protocol::BlockFactory::Ptr blockFactory)
               : m_callback(callback), m_blockFactory(blockFactory)
             {}
 
@@ -84,9 +88,8 @@ public:
         private:
             std::function<void(const bcos::Error::Ptr&, const bcos::protocol::Block::Ptr&)>
                 m_callback;
-            bcostars::protocol::BlockFactoryImpl::Ptr m_blockFactory;
+            bcos::protocol::BlockFactory::Ptr m_blockFactory;
         };
-
         m_proxy->async_asyncGetLatestBlock(new Callback(_callback, m_blockFactory));
     }
 
@@ -123,7 +126,6 @@ public:
 
 private:
     bcostars::DispatcherServicePrx m_proxy;
-    bcostars::protocol::BlockHeaderFactoryImpl::Ptr m_blockHeaderFactory;
-    bcostars::protocol::BlockFactoryImpl::Ptr m_blockFactory;
+    bcos::protocol::BlockFactory::Ptr m_blockFactory;
 };
 }  // namespace bcostars

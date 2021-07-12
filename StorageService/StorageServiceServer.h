@@ -213,6 +213,7 @@ public:
                 bcos::Error::Ptr error, std::shared_ptr<std::vector<std::string>> values) {
                 async_response_getBatch(current, toTarsError(error), *values);
             });
+        return bcostars::Error();
     }
 
     bcostars::Error getPrimaryKeys(const bcostars::TableInfo& tableInfo,

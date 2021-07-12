@@ -1,5 +1,7 @@
 #pragma once
 #include "../Common/ErrorConverter.h"
+#include "../Common/TarsUtils.h"
+#include "../TxPoolService/TxPoolServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include "../protocols/BlockImpl.h"
 #include "DispatcherService.h"
@@ -8,7 +10,11 @@
 #include "bcos-dispatcher/DispatcherImpl.h"
 #include "servant/Application.h"
 #include <bcos-framework/libtool/NodeConfig.h>
+#include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <memory>
+
+
+#define DISPATCHERSERVICE_LOG(LEVEL) BCOS_LOG(LEVEL) << "[DISPATCHERSERVICE]"
 
 namespace bcostars
 {
@@ -17,8 +23,17 @@ class DispatcherServiceServer : public DispatcherService
 public:
     void initialize() override
     {
-        std::call_once(m_initFlag, []() {
+        std::call_once(m_initFlag, [this]() {
             auto configPath = ServerConfig::BasePath + "config.ini";
+
+            // init the log
+            boost::property_tree::ptree pt;
+            boost::property_tree::read_ini(configPath, pt);
+            m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
+            // set the boost log into the tars log directory
+            m_logInitializer->setLogPath(getLogPath());
+            m_logInitializer->initLog(pt);
+
             auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
             nodeConfig->loadConfig(configPath);
 
@@ -27,8 +42,17 @@ public:
 
             m_blockFactory = protocolInitializer->blockFactory();
             m_dispatcher = std::make_shared<bcos::dispatcher::DispatcherImpl>();
-            // TODO: set the txpool to the dispatcher
+            // set the txpool to the dispatcher
+            auto txpoolProxy =
+                Application::getCommunicator()->stringToProxy<bcostars::TxPoolServicePrx>(
+                    getProxyDesc(TXPOOL_SERVICE_NAME));
+            auto txpool = std::make_shared<bcostars::TxPoolServiceClient>(
+                txpoolProxy, protocolInitializer->cryptoSuite());
+            DISPATCHERSERVICE_LOG(INFO) << LOG_DESC("init and start the dispatcher service");
+            m_dispatcher->init(txpool);
             m_dispatcher->start();
+            DISPATCHERSERVICE_LOG(INFO)
+                << LOG_DESC("init and start the dispatcher service success");
         });
     }
 
@@ -84,6 +108,7 @@ private:
     static std::once_flag m_initFlag;
     static bcos::dispatcher::DispatcherImpl::Ptr m_dispatcher;
     static bcostars::protocol::BlockFactoryImpl::Ptr m_blockFactory;
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
 };
 
 }  // namespace bcostars

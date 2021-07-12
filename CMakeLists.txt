@@ -61,7 +61,7 @@ endforeach()
 
 add_custom_target(tar DEPENDS ${SERVICE_TAR_LIST})
 
-if(TESTS)
+if(TEST)
     enable_testing()
     add_subdirectory(tests)
     add_subdirectory(testClients)
@@ -70,5 +70,5 @@ endif()
 # for code coverage
 if (COVERAGE)
     include(Coverage)
-    config_coverage("coverage" "'/usr*' '${CMAKE_CURRENT_SOURCE_DIR}/bcos-cmake-scripts*' '${CMAKE_CURRENT_SOURCE_DIR}/test/bcos-test*'")
+    config_coverage("tars-cov" "'/usr*' '${CMAKE_CURRENT_SOURCE_DIR}/bcos-cmake-scripts*' '${CMAKE_CURRENT_SOURCE_DIR}/test/bcos-test*'")
 endif ()
