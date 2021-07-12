@@ -1,16 +1,17 @@
+#include "../Common/TarsUtils.h"
 #include "../StorageService/StorageServiceClient.h"
 #include "../TxPoolService/TxPoolServiceClient.h"
 #include "../protocols/BlockHeaderImpl.h"
 #include "../protocols/BlockImpl.h"
 #include "Block.h"
 #include "TxPoolService.h"
-#include "bcos-ledger/ledger/Ledger.h"
 #include <bcos-crypto/encrypt/AESCrypto.h>
 #include <bcos-crypto/encrypt/SM4Crypto.h>
 #include <bcos-crypto/hash/Keccak256.h>
 #include <bcos-crypto/hash/SM3.h>
 #include <bcos-crypto/signature/secp256k1/Secp256k1Crypto.h>
 #include <bcos-crypto/signature/sm2/SM2Crypto.h>
+#include <bcos-ledger/libledger/Ledger.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
@@ -33,6 +34,8 @@ bcostars::protocol::BlockFactoryImpl::Ptr initBlockFactory()
         std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(cryptoSuite);
     auto blockFactory = std::make_shared<bcostars::protocol::BlockFactoryImpl>(
         cryptoSuite, blockHeaderFactory, transactionFactory, receiptFactory);
+
+    return blockFactory;
 }
 
 inline bcos::bytes fakeHelloWorldSet()
@@ -88,7 +91,7 @@ int main(int argc, char* argv[])
 {
     std::string ip;
     unsigned short port;
-    std::string prefix;
+    std::string app;
     size_t count;
     std::string chainID;
     std::string groupID;
@@ -98,12 +101,12 @@ int main(int argc, char* argv[])
     // clang-format off
     desc.add_options()
         ("help", "Produce help message")
-        ("ip", boost::program_options::value<std::string>(&ip)->default_value("127.0.0.1"), "Tarsregistry server ip")
-        ("port", boost::program_options::value<unsigned short>(&port)->default_value(17890), "Tarsregistry server port")
-        ("prefix", boost::program_options::value<std::string>(&prefix)->default_value("bcostars.TxPoolService"), "BCOS prefix")
+        ("ip", boost::program_options::value<std::string>(&ip)->default_value("127.0.0.1"), "Tars locator server ip")
+        ("port", boost::program_options::value<unsigned short>(&port)->default_value(17890), "Tars locator server port")
+        ("app", boost::program_options::value<std::string>(&app)->default_value("bcostars"), "BCOS application name")
         ("count", boost::program_options::value<size_t>(&count)->default_value(1), "Transaction count")
-        ("chain_id", boost::program_options::value<std::string>(&chainID), "Chain ID")
-        ("group_id", boost::program_options::value<std::string>(&groupID), "Group ID")
+        ("chain", boost::program_options::value<std::string>(&chainID), "Chain ID")
+        ("group", boost::program_options::value<std::string>(&groupID), "Group ID")
     ;
     // clang-format on
 
@@ -118,11 +121,19 @@ int main(int argc, char* argv[])
     }
 
     CommunicatorPtr c = new Communicator();
-    c->setProperty("locator", "tars.tarsregistry.QueryObj@tcp -h " + ip + " -p " +
-                                  boost::lexical_cast<std::string>(port));
+
+    std::string locatorStr =
+        "tars.tarsregistry.QueryObj@tcp -h " + ip + " -p " + boost::lexical_cast<std::string>(port);
+    std::cout << "Using locator: " << locatorStr << std::endl;
+
+    c->setProperty("locator", locatorStr);
+    c->setProperty("modulename", "webank.TransactionTestClient");
+
     auto storageProxy =
-        c->stringToProxy<bcostars::StorageServicePrx>(prefix + ".StorageServiceObj");
-    auto txpoolProxy = c->stringToProxy<bcostars::TxPoolServicePrx>(prefix + ".TxPoolServiceObj");
+        c->stringToProxy<bcostars::StorageServicePrx>(app + "." + bcostars::STORAGE_SERVICE_NAME);
+    auto txpoolProxy =
+        c->stringToProxy<bcostars::TxPoolServicePrx>(app + "." + bcostars::TXPOOL_SERVICE_NAME);
+
     auto blockFactory = initBlockFactory();
 
     auto ledger = std::make_shared<bcos::ledger::Ledger>(
@@ -145,7 +156,7 @@ int main(int argc, char* argv[])
         auto blockNumberResult = getBlockPromise.get_future().get();
 
         bcos::u256 nonce = bcos::utcTime();
-        auto txBlockLimit = std::get<1>(blockNumberResult);
+        auto txBlockLimit = std::get<1>(blockNumberResult) + 500;
 
         auto tx = blockFactory->transactionFactory()->createTransaction(0, bcos::bytes(),
             fakeHelloWorldDeployInput(), nonce, txBlockLimit, chainID, groupID, 0, keyPair);

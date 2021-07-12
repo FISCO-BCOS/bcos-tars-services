@@ -30,7 +30,7 @@
 #include <bcos-framework/libsealer/SealerFactory.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
-#include <bcos-ledger/ledger/Ledger.h>
+#include <bcos-ledger/libledger/Ledger.h>
 #include <bcos-pbft/pbft/PBFTFactory.h>
 #include <bcos-sync/BlockSyncFactory.h>
 #include <bcos-txpool/TxPoolFactory.h>
@@ -84,7 +84,7 @@ public:
 protected:
     virtual void registerHandlers();
 
-    // TODO: create the txpool client only
+    // create the txpool client only
     virtual void createTxPool(bcos::tool::NodeConfig::Ptr _nodeConfig);
     virtual void createSealer(bcos::tool::NodeConfig::Ptr _nodeConfig);
     virtual void createBlockSync(bcos::tool::NodeConfig::Ptr _nodeConfig);
@@ -94,15 +94,15 @@ protected:
 
 private:
     // the local dependencies
-    bcos::consensus::PBFTImpl::Ptr m_pbft;
-    bcos::sealer::Sealer::Ptr m_sealer;
-    bcos::sync::BlockSync::Ptr m_blockSync;
+    static bcos::consensus::PBFTImpl::Ptr m_pbft;
+    static bcos::sealer::Sealer::Ptr m_sealer;
+    static bcos::sync::BlockSync::Ptr m_blockSync;
 
     // the client dependencies used to access the remote server service
     bcos::txpool::TxPoolInterface::Ptr m_txpool;
     bcos::front::FrontServiceInterface::Ptr m_frontService;
     bcos::storage::StorageInterface::Ptr m_storage;
-    bcos::ledger::LedgerInterface::Ptr m_ledger;
+    std::shared_ptr<bcos::ledger::Ledger> m_ledger;
     bcos::dispatcher::DispatcherInterface::Ptr m_dispatcher;
 
     bcos::initializer::ProtocolInitializer::Ptr m_protocolInitializer;

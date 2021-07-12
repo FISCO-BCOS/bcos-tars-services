@@ -15,10 +15,9 @@
 #include <bcos-crypto/signature/sm2/SM2Crypto.h>
 #include <bcos-executor/Executor.h>
 #include <bcos-framework/interfaces/executor/ExecutorInterface.h>
-#include <bcos-framework/libprotocol/TransactionSubmitResultFactoryImpl.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
-#include <bcos-ledger/ledger/Ledger.h>
+#include <bcos-ledger/libledger/Ledger.h>
 #include <memory>
 #include <mutex>
 
@@ -65,7 +64,7 @@ public:
         {
             m_logInitializer->stopLogging();
         }
-        EXECUTORSERVICE_LOG(DEBUG) << LOG_DESC("stop the ExecutoreSerivce success");
+        TLOGINFO(LOG_DESC("[ExecutorService] stop the ExecutoreSerivce success") << std::endl);
     }
 
     void init()
@@ -78,6 +77,8 @@ public:
             boost::property_tree::ptree pt;
             boost::property_tree::read_ini(configPath, pt);
             m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
+            // set the boost log into the tars log directory
+            m_logInitializer->setLogPath(getLogPath());
             m_logInitializer->initLog(pt);
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init log success");
 
@@ -130,8 +131,9 @@ public:
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init dispatcher client");
             auto dispatcherProxy =
                 Application::getCommunicator()->stringToProxy<bcostars::DispatcherServicePrx>(
-                    getProxyDesc(DISPATCHER_SERVANT_NAME));
-            auto dispatcher = std::make_shared<bcostars::DispatcherServiceClient>(dispatcherProxy);
+                    getProxyDesc(DISPATCHER_SERVICE_NAME));
+            auto dispatcher = std::make_shared<bcostars::DispatcherServiceClient>(
+                dispatcherProxy, protocolInitializer->blockFactory());
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init dispatcher client success");
 
             // create the executor

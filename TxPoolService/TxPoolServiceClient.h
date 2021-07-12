@@ -96,9 +96,12 @@ public:
         };
 
         vector<vector<tars::UInt8>> tarsAvoidTxs;
-        for (auto& it : *_avoidTxs)
+        if (_avoidTxs && _avoidTxs->size() > 0)
         {
-            tarsAvoidTxs.push_back(it.asBytes());
+            for (auto& it : *_avoidTxs)
+            {
+                tarsAvoidTxs.push_back(it.asBytes());
+            }
         }
 
         m_proxy->async_asyncSealTxs(new Callback(_sealCallback), _txsLimit, tarsAvoidTxs);

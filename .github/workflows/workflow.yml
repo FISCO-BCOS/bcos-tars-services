@@ -52,10 +52,10 @@ jobs:
         run: sudo apt install -y git curl build-essential clang cmake ccache libzstd-dev
       - name: configure
         if: runner.os == 'macOS'
-        run: export SDKROOT=$(xcrun --sdk macosx --show-sdk-path) && CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake . -DTESTS=ON
+        run: export SDKROOT=$(xcrun --sdk macosx --show-sdk-path) && CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake . -DTEST=ON
       - name: configure
         if: runner.os == 'Linux'
-        run: CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake . -DTESTS=ON
+        run: CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake . -DTEST=ON
       - name: compile
         run: make -j4
       - name: run test
@@ -86,7 +86,7 @@ jobs:
       - name: install Ubuntu dependencies
         run: sudo apt install -y libzstd-dev git curl build-essential cmake ccache
       - name: configure
-        run: cmake . -DTESTS=ON
+        run: cmake . -DTEST=ON
       - name: compile
         run: make -j4
       - name: run test
@@ -122,13 +122,13 @@ jobs:
       - name: install Ubuntu dependencies
         run: sudo apt-get install -y git curl build-essential cmake ccache lcov libzstd-dev
       - name: configure
-        run: cmake . -DTESTS=ON -DCOVERAGE=ON
+        run: cmake . -DTEST=ON -DCOVERAGE=ON
       - name: compile
         run: make -j4
       - name: run test
         run: CTEST_OUTPUT_ON_FAILURE=TRUE make test
       - name: generate coverage
-        run: make coverage
+        run: make tars-cov
       - name: upload code coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
@@ -171,6 +171,6 @@ jobs:
           git config --global user.name "test"
           source /opt/rh/devtoolset-7/enable
           # mkdir -p build && cd build
-          cmake3 . -DTESTS=ON
+          cmake3 . -DTEST=ON
           make -j4
           CTEST_OUTPUT_ON_FAILURE=TRUE make test

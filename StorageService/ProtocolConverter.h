@@ -104,8 +104,7 @@ inline bcostars::TableFactory toTarsTableFactory(
     bcostars::TableFactory tarsTableFactory;
 
     tarsTableFactory.num = tableFactory->blockNumber();
-    auto tableDatas = tableFactory->exportData();
-
+    auto tableDatas = tableFactory->exportData(tableFactory->blockNumber());
     for (auto const& tableInfo : tableDatas.first)
     {
         bcostars::TableInfo tarsTableInfo;
@@ -115,6 +114,7 @@ inline bcostars::TableFactory toTarsTableFactory(
 
         tarsTableFactory.tableInfos.emplace_back(tarsTableInfo);
     }
+    return tarsTableFactory;
 }
 
 inline bcostars::Condition toTarsCondition(const bcos::storage::Condition::Ptr& condition)

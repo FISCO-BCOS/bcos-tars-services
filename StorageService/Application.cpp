@@ -6,16 +6,16 @@ using namespace bcostars;
 class StorageServiceApp : public Application
 {
 public:
-    virtual ~StorageServiceApp() override{};
+    ~StorageServiceApp() override{};
 
-    virtual void initialize() override
+    void initialize() override
     {
         addAllConfig(this);
         addServant<StorageServiceServer>(ServerConfig::Application + "." +
                                          ServerConfig::ServerName + "." + STORAGE_SERVANT_NAME);
     }
 
-    virtual void destroyApp() override {}
+    void destroyApp() override {}
 };
 
 int main(int argc, char* argv[])
@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
         StorageServiceApp app;
         app.main(argc, argv);
         app.waitForShutdown();
-
+        std::cout << "StorageService exit" << std::endl;
         return 0;
     }
     catch (std::exception& e)

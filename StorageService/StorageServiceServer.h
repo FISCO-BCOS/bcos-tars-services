@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "../Common/TarsUtils.h"
+#include "../libinitializer/ProtocolInitializer.h"
 #include "ProtocolConverter.h"
 #include "StorageService.h"
 #include "servant/Application.h"
@@ -9,8 +11,8 @@
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <bcos-storage/KVDBImpl.h>
-#include <bcos-storage/RocksDBAdapter/RocksDBAdapter.h>
-#include <bcos-storage/RocksDBAdapter/RocksDBAdapterFactory.h>
+#include <bcos-storage/RocksDBAdapter.h>
+#include <bcos-storage/RocksDBAdapterFactory.h>
 #include <bcos-storage/Storage.h>
 #include <memory>
 #include <mutex>
@@ -44,18 +46,28 @@ public:
     }
     void init()
     {
-        std::call_once(m_storageFlag, []() {
+        std::call_once(m_storageFlag, [this]() {
             // load the config
             auto configPath = ServerConfig::BasePath + "config.ini";
             // init the log
             boost::property_tree::ptree pt;
             boost::property_tree::read_ini(configPath, pt);
             m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
+            // set the boost log into the tars log directory
+            m_logInitializer->setLogPath(getLogPath());
             m_logInitializer->initLog(pt);
             STORAGESERVICE_LOG(INFO) << LOG_DESC("init log success");
 
             auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
             nodeConfig->loadConfig(configPath);
+
+            // load the protocol
+            STORAGESERVICE_LOG(INFO) << LOG_DESC("init protocol");
+            auto protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
+            protocolInitializer->init(nodeConfig);
+            m_cryptoSuite = protocolInitializer->cryptoSuite();
+            STORAGESERVICE_LOG(INFO) << LOG_DESC("init protocol success");
+
 
             STORAGESERVICE_LOG(INFO)
                 << LOG_DESC("open DB") << LOG_KV("storageDBName", nodeConfig->storageDBName())
@@ -201,6 +213,7 @@ public:
                 bcos::Error::Ptr error, std::shared_ptr<std::vector<std::string>> values) {
                 async_response_getBatch(current, toTarsError(error), *values);
             });
+        return bcostars::Error();
     }
 
     bcostars::Error getPrimaryKeys(const bcostars::TableInfo& tableInfo,
@@ -302,8 +315,8 @@ private:
     static std::once_flag m_storageFlag;
     static bcos::storage::StorageInterface::Ptr m_storage;
     static bcos::BoostLogInitializer::Ptr m_logInitializer;
-    bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
-    std::atomic_bool m_stopped = {false};
+    static bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
+    static std::atomic_bool m_stopped;
 };
 
 }  // namespace bcostars

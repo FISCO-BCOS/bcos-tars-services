@@ -20,7 +20,7 @@
 #include "servant/Servant.h"
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
-#include <bcos-ledger/ledger/Ledger.h>
+#include <bcos-ledger/libledger/Ledger.h>
 #include <bcos-txpool/TxPoolFactory.h>
 #include <memory>
 
@@ -54,6 +54,8 @@ public:
         boost::property_tree::ptree pt;
         boost::property_tree::read_ini(configPath, pt);
         m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
+        // set the boost log into the tars log directory
+        m_logInitializer->setLogPath(getLogPath());
         m_logInitializer->initLog(pt);
         TLOGINFO(LOG_DESC("TxPoolService initLog success") << std::endl);
 
@@ -71,6 +73,8 @@ public:
         TXPOOLSERVICE_LOG(INFO) << LOG_DESC("load protocol and nodeID success")
                                 << LOG_KV("nodeID",
                                        protocolInitializer->keyPair()->publicKey()->shortHex());
+
+        m_cryptoSuite = protocolInitializer->cryptoSuite();
 
         // create the storage client
         TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the storage client");
@@ -117,12 +121,12 @@ public:
         // register handlers for the txpool to interact with the sealer
         auto pbftProxy = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
             getProxyDesc(PBFT_SERVICE_NAME));
-        auto pbft = std::make_shared<PBFTServiceClient>(pbftProxy);
+        auto sealer = std::make_shared<PBFTServiceClient>(pbftProxy);
         m_txpool->registerUnsealedTxsNotifier(
-            [pbft](size_t _unsealedTxsSize, std::function<void(bcos::Error::Ptr)> _onRecv) {
+            [sealer](size_t _unsealedTxsSize, std::function<void(bcos::Error::Ptr)> _onRecv) {
                 try
                 {
-                    pbft->asyncNoteUnSealedTxsSize(_unsealedTxsSize, _onRecv);
+                    sealer->asyncNoteUnSealedTxsSize(_unsealedTxsSize, _onRecv);
                 }
                 catch (std::exception const& e)
                 {
@@ -155,7 +159,7 @@ public:
         {
             m_logInitializer->stopLogging();
         }
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("Stop the txpoolService success");
+        TLOGINFO(LOG_DESC("[TXPOOLSERVICE] Stop the txpoolService success") << std::endl);
     }
 
     bcostars::Error asyncFillBlock(const vector<vector<tars::UInt8>>& txHashs,
@@ -364,13 +368,14 @@ public:
                                                      bcos::Error::Ptr _error, size_t _txsSize) {
             async_response_asyncGetPendingTransactionSize(_current, toTarsError(_error), _txsSize);
         });
+        return bcostars::Error();
     }
 
 private:
     static std::once_flag m_initFlag;
-    bcos::txpool::TxPool::Ptr m_txpool;
-    bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
-    bcos::BoostLogInitializer::Ptr m_logInitializer;
-    std::atomic_bool m_running = {false};
+    static bcos::txpool::TxPool::Ptr m_txpool;
+    static bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
+    static std::atomic_bool m_running;
 };
 }  // namespace bcostars

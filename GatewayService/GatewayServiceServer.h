@@ -54,6 +54,8 @@ public:
             boost::property_tree::ptree pt;
             boost::property_tree::read_ini(configPath, pt);
             m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
+            // set the boost log into the tars log directory
+            m_logInitializer->setLogPath(getLogPath());
             m_logInitializer->initLog(pt);
             TLOGINFO(GATEWAYSERVICE_BADGE << LOG_DESC("initLog success") << std::endl);
 
@@ -126,7 +128,7 @@ public:
         {
             m_logInitializer->stopLogging();
         }
-        GATEWAYSERVICE_LOG(INFO) << LOG_DESC("Stop the GatewayService success");
+        TLOGINFO(LOG_DESC("[GATEWAYSERVICE] Stop the GatewayService success") << std::endl);
     }
 
     bcostars::Error asyncSendBroadcastMessage(const std::string& groupID,
