@@ -53,10 +53,29 @@ public:
             m_dispatcher->start();
             DISPATCHERSERVICE_LOG(INFO)
                 << LOG_DESC("init and start the dispatcher service success");
+            this->m_running = true;
         });
     }
 
-    void destroy() override {}
+    void destroy() override
+    {
+        if (!m_running)
+        {
+            DISPATCHERSERVICE_LOG(WARNING)
+                << LOG_DESC("The dispatcher service has already been stopped");
+            return;
+        }
+        DISPATCHERSERVICE_LOG(INFO) << LOG_DESC("Stop the dispatcher service");
+        m_running = false;
+        if (m_dispatcher)
+        {
+            m_dispatcher->stop();
+        }
+        if (m_logInitializer)
+        {
+            m_logInitializer->stopLogging();
+        }
+    }
 
     bcostars::Error asyncExecuteBlock(const bcostars::Block& block, tars::Bool verify,
         bcostars::BlockHeader& blockHeader, tars::TarsCurrentPtr current) override
@@ -109,6 +128,7 @@ private:
     static bcos::dispatcher::DispatcherImpl::Ptr m_dispatcher;
     static bcostars::protocol::BlockFactoryImpl::Ptr m_blockFactory;
     static bcos::BoostLogInitializer::Ptr m_logInitializer;
+    static std::atomic_bool m_running;
 };
 
 }  // namespace bcostars

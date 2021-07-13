@@ -86,7 +86,7 @@ public:
 
         // create the ledger
         TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the ledger");
-        auto ledger =
+        m_ledger =
             std::make_shared<bcos::ledger::Ledger>(protocolInitializer->blockFactory(), storage);
         TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the ledger success");
 
@@ -104,7 +104,7 @@ public:
         auto txpoolFactory = std::make_shared<bcos::txpool::TxPoolFactory>(
             protocolInitializer->keyPair()->publicKey(), protocolInitializer->cryptoSuite(),
             protocolInitializer->txResultFactory(), protocolInitializer->blockFactory(),
-            frontService, ledger, nodeConfig->groupId(), nodeConfig->chainId(),
+            frontService, m_ledger, nodeConfig->groupId(), nodeConfig->chainId(),
             nodeConfig->blockLimit());
 
         auto txpool = txpoolFactory->createTxPool();
@@ -154,6 +154,10 @@ public:
         if (m_txpool)
         {
             m_txpool->stop();
+        }
+        if (m_ledger)
+        {
+            m_ledger->stop();
         }
         if (m_logInitializer)
         {
@@ -374,6 +378,7 @@ public:
 private:
     static std::once_flag m_initFlag;
     static bcos::txpool::TxPool::Ptr m_txpool;
+    static std::shared_ptr<bcos::ledger::Ledger> m_ledger;
     static bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
     static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static std::atomic_bool m_running;
