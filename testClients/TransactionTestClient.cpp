@@ -138,7 +138,8 @@ int main(int argc, char* argv[])
         c->stringToProxy<bcostars::StorageServicePrx>(app + "." + bcostars::STORAGE_SERVICE_NAME);
     auto txpoolProxy =
         c->stringToProxy<bcostars::TxPoolServicePrx>(app + "." + bcostars::TXPOOL_SERVICE_NAME);
-
+    txpoolProxy->tars_timeout(600000);
+    txpoolProxy->tars_async_timeout(600000);
     auto blockFactory = initBlockFactory();
 
     auto ledger = std::make_shared<bcos::ledger::Ledger>(
@@ -162,7 +163,6 @@ int main(int argc, char* argv[])
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     size_t txsNum = 0;
     uint16_t sleepInterval = (uint16_t)(1000000 / rate);
-    bcos::u256 nonce = bcos::utcTimeUs();
     std::atomic<size_t> receivedTxs = 0;
     for (size_t i = 0; i < count; ++i)
     {
@@ -179,32 +179,43 @@ int main(int argc, char* argv[])
         }
 
         auto txBlockLimit = blockNumber + 500;
+        bcos::u256 nonce = bcos::utcTimeUs();
         auto tx = blockFactory->transactionFactory()->createTransaction(0, bcos::bytes(),
             fakeHelloWorldDeployInput(), nonce, txBlockLimit, chainID, groupID, 0, keyPair);
 
         auto encodedTxData = tx->encode();
         auto txData = std::make_shared<bcos::bytes>(encodedTxData.begin(), encodedTxData.end());
-        txpool->asyncSubmit(txData,
-            [&, tx](bcos::Error::Ptr error, bcos::protocol::TransactionSubmitResult::Ptr result) {
-                if (!result)
-                {
-                    std::cout << "Transaction submit failed: " << tx->hash().abridged();
-                    return;
-                }
-                if (printStat)
-                {
-                    std::cout << "Transaction status: " << result->status() << std::endl;
-                    std::cout << "Transaction hash: " << result->txHash() << std::endl;
-                    std::cout << "Block hash" << result->blockHash() << std::endl;
-                    std::cout << std::endl;
-                }
-                receivedTxs++;
-            });
+        txpool->asyncSubmit(txData, [&, tx](bcos::Error::Ptr error,
+                                        bcos::protocol::TransactionSubmitResult::Ptr result) {
+            if (!result)
+            {
+                std::cout << "Transaction submit failed: " << tx->hash().abridged() << std::endl;
+                return;
+            }
+            if (printStat)
+            {
+                std::cout << "Transaction status: " << result->status() << std::endl;
+                std::cout << "Transaction hash: " << result->txHash() << std::endl;
+                std::cout << "Block hash" << result->blockHash() << std::endl;
+                std::cout << std::endl;
+            }
+            receivedTxs++;
+        });
         txsNum++;
-        nonce = bcos::utcTimeUs() + tx->nonce();
         std::this_thread::sleep_for(std::chrono::microseconds(sleepInterval));
     }
     while (receivedTxs < count)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    // get pending txsSize
+    bool obtainPendingTxs = false;
+    txpool->asyncGetPendingTransactionSize([&](bcos::Error::Ptr _error, size_t _pendingTxsSize) {
+        obtainPendingTxs = true;
+        std::cout << "Pending transactions size:" << _pendingTxsSize << std::endl;
+    });
+
+    while (!obtainPendingTxs)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }

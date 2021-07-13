@@ -71,6 +71,16 @@ public:
         m_callback(toBcosError(ret));
     }
 
+    void callback_asyncNotifyBlockSyncMessage(const bcostars::Error& ret) override
+    {
+        m_callback(toBcosError(ret));
+    }
+
+    void callback_asyncNotifyBlockSyncMessage_exception(tars::Int32 ret) override
+    {
+        m_callback(toBcosError(ret));
+    }
+
 private:
     std::function<void(bcos::Error::Ptr)> m_callback;
 };

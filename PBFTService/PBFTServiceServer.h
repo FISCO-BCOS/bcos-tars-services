@@ -102,11 +102,11 @@ private:
     bcos::txpool::TxPoolInterface::Ptr m_txpool;
     bcos::front::FrontServiceInterface::Ptr m_frontService;
     bcos::storage::StorageInterface::Ptr m_storage;
-    std::shared_ptr<bcos::ledger::Ledger> m_ledger;
     bcos::dispatcher::DispatcherInterface::Ptr m_dispatcher;
 
-    bcos::initializer::ProtocolInitializer::Ptr m_protocolInitializer;
+    static bcos::initializer::ProtocolInitializer::Ptr m_protocolInitializer;
 
+    static std::shared_ptr<bcos::ledger::Ledger> m_ledger;
     static bcos::crypto::KeyFactory::Ptr m_keyFactory;
     static bcos::BoostLogInitializer::Ptr m_logInitializer;
 
