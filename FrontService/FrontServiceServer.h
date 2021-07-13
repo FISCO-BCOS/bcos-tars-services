@@ -248,6 +248,7 @@ public:
             [current](bcos::Error::Ptr error) {
                 async_response_asyncSendResponse(current, toTarsError(error));
             });
+        return bcostars::Error();
     }
 
     bcostars::Error onReceiveBroadcastMessage(const std::string& groupID,

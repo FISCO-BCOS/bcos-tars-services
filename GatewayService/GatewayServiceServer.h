@@ -155,6 +155,7 @@ public:
             bcos::ref(payload), [current](bcos::Error::Ptr error) {
                 async_response_asyncSendMessageByNodeID(current, toTarsError(error));
             });
+        return bcostars::Error();
     }
 
     bcostars::Error asyncSendMessageByNodeIDs(const std::string& groupID,
