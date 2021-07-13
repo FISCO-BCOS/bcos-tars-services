@@ -44,6 +44,8 @@ std::once_flag PBFTServiceServer::m_initFlag;
 bcos::consensus::PBFTImpl::Ptr PBFTServiceServer::m_pbft;
 bcos::sealer::Sealer::Ptr PBFTServiceServer::m_sealer;
 bcos::sync::BlockSync::Ptr PBFTServiceServer::m_blockSync;
+bcos::crypto::KeyFactory::Ptr PBFTServiceServer::m_keyFactory;
+bcos::BoostLogInitializer::Ptr PBFTServiceServer::m_logInitializer;
 
 void PBFTServiceServer::initialize()
 {

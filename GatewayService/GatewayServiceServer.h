@@ -42,7 +42,7 @@ public:
             exit(0);
         }
     }
-    
+
     void init()
     {
         std::call_once(m_initFlag, [this]() {
@@ -89,6 +89,7 @@ public:
             GATEWAYSERVICE_LOG(INFO)
                 << LOG_DESC("init the nodeID success")
                 << LOG_KV("nodeID", protocolInitializer->keyPair()->publicKey()->shortHex());
+            m_keyFactory = protocolInitializer->keyFactory();
 
             GATEWAYSERVICE_LOG(INFO) << LOG_DESC("create the frontService client");
             auto frontServiceProxy =
@@ -107,8 +108,6 @@ public:
             m_gateway->start();
             GATEWAYSERVICE_LOG(INFO) << LOG_DESC("start the frontService success");
         });
-
-        m_keyFactory = std::make_shared<bcos::crypto::KeyFactoryImpl>();
     }
 
     void destroy() override
@@ -181,7 +180,7 @@ private:
     static std::once_flag m_initFlag;
     static bcos::gateway::Gateway::Ptr m_gateway;
     static bcos::BoostLogInitializer::Ptr m_logInitializer;
-    bcos::crypto::KeyFactory::Ptr m_keyFactory;
+    static bcos::crypto::KeyFactory::Ptr m_keyFactory;
     std::atomic_bool m_running = {false};
 };
 }  // namespace bcostars
