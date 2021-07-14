@@ -5,6 +5,7 @@
 #include "../FrontService/FrontServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include "GatewayService.h"
+#include "libutilities/Common.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 #include <bcos-framework/interfaces/crypto/KeyInterface.h>
 #include <bcos-framework/libtool/NodeConfig.h>
@@ -132,25 +133,25 @@ public:
     }
 
     bcostars::Error asyncSendBroadcastMessage(const std::string& groupID,
-        const vector<tars::UInt8>& srcNodeID, const vector<tars::UInt8>& payload,
+        const vector<tars::Char>& srcNodeID, const vector<tars::Char>& payload,
         tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
-        auto bcosNodeID = m_keyFactory->createKey(srcNodeID);
-        m_gateway->asyncSendBroadcastMessage(groupID, bcosNodeID, bcos::ref(payload));
+        auto bcosNodeID = m_keyFactory->createKey(bcos::bytesConstRef((const bcos::byte*)srcNodeID.data(), srcNodeID.size()));
+        m_gateway->asyncSendBroadcastMessage(groupID, bcosNodeID, bcos::bytesConstRef((const bcos::byte*)payload.data(), payload.size()));
 
         async_response_asyncSendBroadcastMessage(current, toTarsError(nullptr));
     }
 
     bcostars::Error asyncSendMessageByNodeID(const std::string& groupID,
-        const vector<tars::UInt8>& srcNodeID, const vector<tars::UInt8>& dstNodeID,
-        const vector<tars::UInt8>& payload, tars::TarsCurrentPtr current) override
+        const vector<tars::Char>& srcNodeID, const vector<tars::Char>& dstNodeID,
+        const vector<tars::Char>& payload, tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
-        auto bcosSrcNodeID = m_keyFactory->createKey(srcNodeID);
-        auto bcosDstNodeID = m_keyFactory->createKey(dstNodeID);
+        auto bcosSrcNodeID = m_keyFactory->createKey(bcos::bytesConstRef(srcNodeID));
+        auto bcosDstNodeID = m_keyFactory->createKey(bcos::bytesConstRef(dstNodeID));
 
         m_gateway->asyncSendMessageByNodeID(groupID, bcosSrcNodeID, bcosDstNodeID,
             bcos::ref(payload), [current](bcos::Error::Ptr error) {
@@ -159,8 +160,8 @@ public:
     }
 
     bcostars::Error asyncSendMessageByNodeIDs(const std::string& groupID,
-        const vector<tars::UInt8>& srcNodeID, const vector<vector<tars::UInt8>>& dstNodeID,
-        const vector<tars::UInt8>& payload, tars::TarsCurrentPtr current) override
+        const vector<tars::Char>& srcNodeID, const vector<vector<tars::Char>>& dstNodeID,
+        const vector<tars::Char>& payload, tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 

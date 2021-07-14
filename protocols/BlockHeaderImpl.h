@@ -126,10 +126,24 @@ public:
     }
     int64_t timestamp() override { return m_inner->timestamp; }
     int64_t sealer() override { return m_inner->sealer; }
-    gsl::span<const bcos::bytes> sealerList() const override { return m_inner->sealerList; }
+    gsl::span<const bcos::bytes> sealerList() const override
+    {
+        if (m_sealerList.empty())
+        {
+            m_sealerList.reserve(m_inner->sealerList.size());
+
+            for (auto const& it : m_inner->sealerList)
+            {
+                m_sealerList.emplace_back(bcos::bytes(it.begin(), it.end()));
+            }
+        }
+
+        return m_sealerList;
+    }
     bcos::bytesConstRef extraData() const override
     {
-        return bcos::bytesConstRef(m_inner->extraData.data(), m_inner->extraData.size());
+        return bcos::bytesConstRef(reinterpret_cast<const bcos::byte*>(m_inner->extraData.data()),
+            m_inner->extraData.size());
     }
     gsl::span<const bcos::protocol::Signature> signatureList() const override
     {
@@ -188,7 +202,10 @@ public:
     void setSealer(int64_t _sealerId) override { m_inner->sealer = _sealerId; }
     void setSealerList(gsl::span<const bcos::bytes> const& _sealerList) override
     {
-        m_inner->sealerList.assign(_sealerList.begin(), _sealerList.end());
+        m_inner->sealerList.clear();
+        for(auto const& it: m_sealerList) {
+            m_inner->sealerList.push_back(std::vector<char>(it.begin(), it.end()));
+        }
     }
 
     void setSealerList(std::vector<bcos::bytes>&& _sealerList) override
@@ -206,15 +223,21 @@ public:
         setConsensusWeights(gsl::span(_weightList.data(), _weightList.size()));
     }
 
-    void setExtraData(bcos::bytes const& _extraData) override { m_inner->extraData = _extraData; }
-    void setExtraData(bcos::bytes&& _extraData) override { _extraData.swap(m_inner->extraData); }
+    void setExtraData(bcos::bytes const& _extraData) override
+    {
+        m_inner->extraData.assign(_extraData.begin(), _extraData.end());
+    }
+    void setExtraData(bcos::bytes&& _extraData) override
+    {
+        m_inner->extraData.assign(_extraData.begin(), _extraData.end());
+    }
     void setSignatureList(gsl::span<const bcos::protocol::Signature> const& _signatureList) override
     {
         for (auto& it : _signatureList)
         {
             Signature signature;
             signature.sealerIndex = it.index;
-            signature.signature = it.signature;
+            signature.signature.assign(it.signature.begin(), it.signature.end());
             m_inner->signatureList.emplace_back(signature);
         }
     }
@@ -230,6 +253,7 @@ public:
     void setInner(const bcostars::BlockHeader&& blockHeader) { *m_inner = std::move(blockHeader); }
 
 private:
+    mutable std::vector<bcos::bytes> m_sealerList;
     mutable bcos::crypto::HashType m_txsRoot;
     mutable bcos::crypto::HashType m_stateRoot;
     mutable bcos::crypto::HashType m_receiptRoot;

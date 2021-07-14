@@ -50,7 +50,7 @@ public:
             {
                 topics.emplace_back(topicIt.data(), topicIt.size());
             }
-            bcos::protocol::LogEntry logEntry(it.address, topics, it.data);
+            bcos::protocol::LogEntry logEntry(bcos::bytes(it.address.begin(), it.address.end()), topics, bcos::bytes(it.data.begin(), it.data.end()));
             m_logEntries.emplace_back(logEntry);
         }
     };
@@ -67,7 +67,7 @@ public:
             for (auto& topicIt : it.topics())
             {
                 logEntry.topic.push_back(
-                    std::vector<unsigned char>(topicIt.begin(), topicIt.end()));
+                    std::vector<char>(topicIt.begin(), topicIt.end()));
             }
             logEntry.data.assign(it.data().begin(), it.data().end());
 
@@ -162,9 +162,9 @@ public:
     {
         auto transactionReceipt = std::make_shared<TransactionReceiptImpl>(m_cryptoSuite);
         transactionReceipt->m_inner->version = 0;
-        transactionReceipt->m_inner->contractAddress = _contractAddress;
+        transactionReceipt->m_inner->contractAddress.assign(_contractAddress.begin(), _contractAddress.end());
         transactionReceipt->m_inner->status = _status;
-        transactionReceipt->m_inner->output = _output;
+        transactionReceipt->m_inner->output.assign(_output.begin(), _output.end());
 
         transactionReceipt->m_inner->gasUsed = boost::lexical_cast<std::string>(_gasUsed);
         _logEntries->swap(transactionReceipt->m_logEntries);
