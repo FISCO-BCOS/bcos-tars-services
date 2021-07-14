@@ -48,7 +48,7 @@ public:
             std::vector<bcos::h256> topics;
             for (auto& topicIt : it.topic)
             {
-                topics.emplace_back(topicIt.data(), topicIt.size());
+                topics.emplace_back((const bcos::byte*)topicIt.data(), topicIt.size());
             }
             bcos::protocol::LogEntry logEntry(bcos::bytes(it.address.begin(), it.address.end()), topics, bcos::bytes(it.data.begin(), it.data.end()));
             m_logEntries.emplace_back(logEntry);

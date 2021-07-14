@@ -29,8 +29,10 @@ void PBFTServiceClient::asyncSubmitProposal(bcos::bytesConstRef _proposalData,
     bcos::protocol::BlockNumber _proposalIndex, bcos::crypto::HashType const& _proposalHash,
     std::function<void(bcos::Error::Ptr)> _onProposalSubmitted)
 {
+    auto data = _proposalData.toBytes();
+    auto hash = _proposalHash.asBytes();
     m_proxy->async_asyncSubmitProposal(new PBFTServiceCommonCallback(_onProposalSubmitted),
-        _proposalData.toBytes(), _proposalIndex, _proposalHash.asBytes());
+        std::vector<char>(data.begin(), data.end()), _proposalIndex, std::vector<char>(hash.begin(), hash.end()));
 }
 
 void PBFTServiceClient::asyncGetPBFTView(
@@ -102,8 +104,9 @@ void PBFTServiceClient::asyncNotifyConsensusMessage(bcos::Error::Ptr _error,
     std::string const& _uuid, bcos::crypto::NodeIDPtr _nodeID, bcos::bytesConstRef _data,
     std::function<void(bcos::Error::Ptr _error)> _onRecv)
 {
+    auto nodeIDData = _nodeID->data();
     m_proxy->async_asyncNotifyConsensusMessage(
-        new PBFTServiceCommonCallback(_onRecv), _uuid, _nodeID->data(), _data.toBytes());
+        new PBFTServiceCommonCallback(_onRecv), _uuid, std::vector<char>(nodeIDData.begin(), nodeIDData.end()), std::vector<char>(_data.begin(), _data.end()));
 }
 
 // Note: used for the txpool notify the unsealed txsSize

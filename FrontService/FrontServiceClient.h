@@ -5,6 +5,7 @@
 #include "bcos-framework/interfaces/crypto/KeyFactory.h"
 #include "bcos-framework/interfaces/front/FrontServiceInterface.h"
 #include "bcos-framework/libutilities/RefDataContainer.h"
+#include "libutilities/Common.h"
 
 namespace bcostars
 {
@@ -27,13 +28,13 @@ public:
               : m_callback(callback), m_self(self)
             {}
             void callback_asyncGetNodeIDs(
-                const bcostars::Error& ret, const vector<vector<tars::UInt8>>& nodeIDs) override
+                const bcostars::Error& ret, const vector<vector<tars::Char>>& nodeIDs) override
             {
                 auto bcosNodeIDs = std::make_shared<std::vector<bcos::crypto::NodeIDPtr>>();
                 bcosNodeIDs->reserve(nodeIDs.size());
                 for (auto const& it : nodeIDs)
                 {
-                    bcosNodeIDs->push_back(m_self->m_keyFactory->createKey(it));
+                    bcosNodeIDs->push_back(m_self->m_keyFactory->createKey(bcos::bytesConstRef((bcos::byte*)it.data(), it.size())));
                 }
 
                 m_callback(toBcosError(ret), bcosNodeIDs);
@@ -74,11 +75,12 @@ public:
             bcos::front::ReceiveMsgFunc m_callback;
         };
 
-        std::vector<bcos::bytes> tarsNodeIDs;
+        std::vector<std::vector<char>> tarsNodeIDs;
         tarsNodeIDs.reserve(_nodeIDs->size());
         for (auto const& it : *_nodeIDs)
         {
-            tarsNodeIDs.push_back(it->data());
+            auto nodeIDData = it->data();
+            tarsNodeIDs.push_back(std::vector<char>(nodeIDData.begin(), nodeIDData.end()));
         }
 
         m_proxy->async_onReceivedNodeIDs(new Callback(_receiveMsgCallback), _groupID, tarsNodeIDs);
@@ -106,8 +108,9 @@ public:
             bcos::front::ReceiveMsgFunc m_callback;
         };
 
+        auto nodeIDData = _nodeID->data();
         m_proxy->async_onReceiveMessage(
-            new Callback(_receiveMsgCallback), _groupID, _nodeID->data(), _data.toBytes());
+            new Callback(_receiveMsgCallback), _groupID, std::vector<char>(nodeIDData.begin(), nodeIDData.end()), std::vector<char>(_data.begin(), _data.end()));
     }
 
     void onReceiveBroadcastMessage(const std::string& _groupID, bcos::crypto::NodeIDPtr _nodeID,
@@ -132,8 +135,9 @@ public:
             bcos::front::ReceiveMsgFunc m_callback;
         };
 
+        auto nodeIDData = _nodeID->data();
         m_proxy->async_onReceiveBroadcastMessage(
-            new Callback(_receiveMsgCallback), _groupID, _nodeID->data(), _data.toBytes());
+            new Callback(_receiveMsgCallback), _groupID, std::vector<char>(nodeIDData.begin(), nodeIDData.end()), std::vector<char>(_data.begin(), _data.end()));
     }
 
     void asyncSendMessageByNodeID(int _moduleID, bcos::crypto::NodeIDPtr _nodeID,
@@ -147,11 +151,11 @@ public:
             {}
 
             void callback_asyncSendMessageByNodeID(const bcostars::Error& ret,
-                const vector<tars::UInt8>& responseNodeID, const vector<tars::UInt8>& responseData,
+                const vector<tars::Char>& responseNodeID, const vector<tars::Char>& responseData,
                 const std::string& seq) override
             {
-                auto bcosNodeID = m_self->m_keyFactory->createKey(responseNodeID);
-                m_callback(toBcosError(ret), bcosNodeID, bcos::ref(responseData), seq,
+                auto bcosNodeID = m_self->m_keyFactory->createKey(bcos::bytesConstRef((bcos::byte*)responseNodeID.data(), responseNodeID.size()));
+                m_callback(toBcosError(ret), bcosNodeID, bcos::bytesConstRef((bcos::byte*)responseData.data(), responseData.size()), seq,
                     bcos::front::ResponseFunc());
             }
 
@@ -166,31 +170,36 @@ public:
             FrontServiceClient* m_self;
         };
 
+        auto nodeIDData = _nodeID->data();
         m_proxy->async_asyncSendMessageByNodeID(
-            new Callback(_callback, this), _moduleID, _nodeID->data(), _data.toBytes(), _timeout);
+            new Callback(_callback, this), _moduleID, std::vector<char>(nodeIDData.begin(), nodeIDData.end()), std::vector<char>(_data.begin(), _data.end()), _timeout);
     }
 
     void asyncSendResponse(const std::string& _id, int _moduleID, bcos::crypto::NodeIDPtr _nodeID,
         bcos::bytesConstRef _data, bcos::front::ReceiveMsgFunc _receiveMsgCallback) override
     {
-        m_proxy->asyncSendResponse(_id, _moduleID, _nodeID->data(), _data.toBytes());
+        auto nodeIDData = _nodeID->data();
+        auto data = _data.toBytes();
+        m_proxy->asyncSendResponse(_id, _moduleID, std::vector<char>(nodeIDData.begin(), nodeIDData.end()), std::vector<char>(data.begin(), data.end()));
     }
 
     void asyncSendMessageByNodeIDs(int _moduleID,
         const std::vector<bcos::crypto::NodeIDPtr>& _nodeIDs, bcos::bytesConstRef _data) override
     {
-        std::vector<bcos::bytes> tarsNodeIDs;
+        std::vector<std::vector<char>> tarsNodeIDs;
         tarsNodeIDs.reserve(_nodeIDs.size());
         for (auto const& it : _nodeIDs)
         {
-            tarsNodeIDs.push_back(it->data());
+            auto nodeIDData = it->data();
+            tarsNodeIDs.emplace_back(nodeIDData.begin(), nodeIDData.end());
         }
-        m_proxy->async_asyncSendMessageByNodeIDs(nullptr, _moduleID, tarsNodeIDs, _data.toBytes());
+        m_proxy->async_asyncSendMessageByNodeIDs(nullptr, _moduleID, tarsNodeIDs, std::vector<char>(_data.begin(), _data.end()));
     }
 
     void asyncSendBroadcastMessage(int _moduleID, bcos::bytesConstRef _data) override
     {
-        m_proxy->async_asyncSendBroadcastMessage(nullptr, _moduleID, _data.toBytes());
+        auto data = _data.toBytes();
+        m_proxy->async_asyncSendBroadcastMessage(nullptr, _moduleID, std::vector<char>(data.begin(), data.end()));
     }
 
 private:

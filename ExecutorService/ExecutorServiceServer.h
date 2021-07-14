@@ -175,7 +175,7 @@ public:
         return bcostars::Error();
     }
 
-    bcostars::Error asyncGetCode(const std::string& address, vector<tars::UInt8>& code,
+    bcostars::Error asyncGetCode(const std::string& address, vector<tars::Char>& code,
         tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
@@ -184,12 +184,12 @@ public:
             [current](const bcos::Error::Ptr& error, const std::shared_ptr<bcos::bytes>& code) {
                 if (error && error->errorCode())
                 {
-                    vector<tars::UInt8> nullobj;
+                    vector<tars::Char> nullobj;
                     async_response_asyncGetCode(current, toTarsError(error), nullobj);
                     return;
                 }
 
-                async_response_asyncGetCode(current, toTarsError(error), *code);
+                async_response_asyncGetCode(current, toTarsError(error), std::vector<char>(code->begin(), code->end()));
             });
 
         return bcostars::Error();

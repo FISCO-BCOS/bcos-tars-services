@@ -31,9 +31,9 @@ public:
             {}
 
             void callback_asyncGetCode(
-                const bcostars::Error& ret, const vector<tars::UInt8>& code) override
+                const bcostars::Error& ret, const vector<tars::Char>& code) override
             {
-                m_callback(toBcosError(ret), std::make_shared<bcos::bytes>(code));
+                m_callback(toBcosError(ret), std::make_shared<bcos::bytes>(code.begin(), code.end()));
             }
 
             void callback_asyncGetCode_exception(tars::Int32 ret) override

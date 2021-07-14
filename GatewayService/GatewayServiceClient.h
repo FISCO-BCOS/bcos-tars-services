@@ -33,27 +33,33 @@ public:
             bcos::gateway::ErrorRespFunc m_callback;
         };
 
+        auto srcNodeID = _srcNodeID->data();
+        auto destNodeID = _dstNodeID->data();
         m_proxy->async_asyncSendMessageByNodeID(new Callback(_errorRespFunc), _groupID,
-            _srcNodeID->data(), _dstNodeID->data(), _payload.toBytes());
+            std::vector<char>(srcNodeID.begin(), srcNodeID.end()), std::vector<char>(destNodeID.begin(), destNodeID.end()), std::vector<char>(_payload.begin(), _payload.end()));
     }
 
     void asyncSendMessageByNodeIDs(const std::string& _groupID, bcos::crypto::NodeIDPtr _srcNodeID,
         const bcos::crypto::NodeIDs& _dstNodeIDs, bcos::bytesConstRef _payload) override
     {
-        std::vector<bcos::bytes> tarsNodeIDs;
+        std::vector<std::vector<char>> tarsNodeIDs;
         for (auto const& it : _dstNodeIDs)
         {
-            tarsNodeIDs.emplace_back(it->data());
+            auto nodeID = it->data();
+            tarsNodeIDs.emplace_back(nodeID.begin(), nodeID.end());
         }
+
+        auto srcNodeID = _srcNodeID->data();
         m_proxy->async_asyncSendMessageByNodeIDs(
-            nullptr, _groupID, _srcNodeID->data(), tarsNodeIDs, _payload.toBytes());
+            nullptr, _groupID, std::vector<char>(srcNodeID.begin(), srcNodeID.end()), tarsNodeIDs, std::vector<char>(_payload.begin(), _payload.end()));
     }
 
     void asyncSendBroadcastMessage(const std::string& _groupID, bcos::crypto::NodeIDPtr _srcNodeID,
         bcos::bytesConstRef _payload) override
     {
+        auto srcNodeID = _srcNodeID->data();
         m_proxy->async_asyncSendBroadcastMessage(
-            nullptr, _groupID, _srcNodeID->data(), _payload.toBytes());
+            nullptr, _groupID, std::vector<char>(srcNodeID.begin(), srcNodeID.end()), std::vector<char>(_payload.begin(), _payload.end()));
     }
 
 protected:

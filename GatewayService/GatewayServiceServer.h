@@ -150,11 +150,11 @@ public:
     {
         current->setResponse(false);
 
-        auto bcosSrcNodeID = m_keyFactory->createKey(bcos::bytesConstRef(srcNodeID));
-        auto bcosDstNodeID = m_keyFactory->createKey(bcos::bytesConstRef(dstNodeID));
+        auto bcosSrcNodeID = m_keyFactory->createKey(bcos::bytesConstRef((const bcos::byte*)srcNodeID.data(), srcNodeID.size()));
+        auto bcosDstNodeID = m_keyFactory->createKey(bcos::bytesConstRef((const bcos::byte*)dstNodeID.data(), dstNodeID.size()));
 
         m_gateway->asyncSendMessageByNodeID(groupID, bcosSrcNodeID, bcosDstNodeID,
-            bcos::ref(payload), [current](bcos::Error::Ptr error) {
+            bcos::bytesConstRef((const bcos::byte*)payload.data(), payload.size()), [current](bcos::Error::Ptr error) {
                 async_response_asyncSendMessageByNodeID(current, toTarsError(error));
             });
     }
@@ -165,15 +165,15 @@ public:
     {
         current->setResponse(false);
 
-        auto bcosSrcNodeID = m_keyFactory->createKey(srcNodeID);
+        auto bcosSrcNodeID = m_keyFactory->createKey(bcos::bytesConstRef((const bcos::byte*)srcNodeID.data(), srcNodeID.size()));
         std::vector<bcos::crypto::NodeIDPtr> nodeIDs;
         nodeIDs.reserve(dstNodeID.size());
         for (auto const& it : dstNodeID)
         {
-            nodeIDs.push_back(m_keyFactory->createKey(it));
+            nodeIDs.push_back(m_keyFactory->createKey(bcos::bytesConstRef((const bcos::byte*)it.data(), it.size())));
         }
 
-        m_gateway->asyncSendMessageByNodeIDs(groupID, bcosSrcNodeID, nodeIDs, bcos::ref(payload));
+        m_gateway->asyncSendMessageByNodeIDs(groupID, bcosSrcNodeID, nodeIDs, bcos::bytesConstRef((const bcos::byte*)payload.data(), payload.size()));
 
         async_response_asyncSendMessageByNodeIDs(current, toTarsError(nullptr));
     }

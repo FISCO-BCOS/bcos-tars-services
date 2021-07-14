@@ -263,13 +263,13 @@ public:
                 vector<vector<tars::Char>> returnList1;
                 for (auto hash1 : *list1)
                 {
-                    returnList1.emplace_back(hash1.asBytes());
+                    returnList1.emplace_back(hash1.begin(), hash1.end());
                 }
 
                 vector<vector<tars::Char>> returnList2;
                 for (auto hash2 : *list2)
                 {
-                    returnList2.emplace_back(hash2.asBytes());
+                    returnList2.emplace_back(hash2.begin(), hash2.end());
                 }
 
                 async_response_asyncSealTxs(current, toTarsError(error), returnList1, returnList2);
@@ -282,7 +282,7 @@ public:
         bcostars::TransactionSubmitResult& result, tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
-        auto dataPtr = std::make_shared<bcos::bytes>(tx);
+        auto dataPtr = std::make_shared<bcos::bytes>(tx.begin(), tx.end());
         m_txpool->asyncSubmit(dataPtr, [current](bcos::Error::Ptr error,
                                            bcos::protocol::TransactionSubmitResult::Ptr result) {
             async_response_asyncSubmit(current, toTarsError(error),

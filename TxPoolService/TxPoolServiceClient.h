@@ -49,7 +49,7 @@ public:
             bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
         };
 
-        m_proxy->async_asyncSubmit(new Callback(_txSubmitCallback, m_cryptoSuite), *_tx);
+        m_proxy->async_asyncSubmit(new Callback(_txSubmitCallback, m_cryptoSuite), std::vector<char>(_tx->begin(), _tx->end()));
     }
 
     void asyncSealTxs(size_t _txsLimit, bcos::txpool::TxsHashSetPtr _avoidTxs,
@@ -66,19 +66,20 @@ public:
             {}
 
             void callback_asyncSealTxs(const bcostars::Error& ret,
-                const vector<vector<tars::UInt8>>& return1,
-                const vector<vector<tars::UInt8>>& return2) override
+                const vector<vector<tars::Char>>& return1,
+                const vector<vector<tars::Char>>& return2) override
             {
                 auto list1 = std::make_shared<bcos::crypto::HashList>();
                 for (auto& it : return1)
                 {
-                    list1->push_back(bcos::crypto::HashType(it));
+                    bcos::crypto::HashType tmp;
+                    list1->push_back(bcos::crypto::HashType(bcos::bytesConstRef((bcos::byte*)it.data(), it.size())));
                 }
 
                 auto list2 = std::make_shared<bcos::crypto::HashList>();
                 for (auto& it : return2)
                 {
-                    list2->push_back(bcos::crypto::HashType(it));
+                    list2->push_back(bcos::crypto::HashType(bcos::bytesConstRef((bcos::byte*)it.data(), it.size())));
                 }
 
                 m_callback(toBcosError(ret), list1, list2);
@@ -95,12 +96,12 @@ public:
                 m_callback;
         };
 
-        vector<vector<tars::UInt8>> tarsAvoidTxs;
+        vector<vector<tars::Char>> tarsAvoidTxs;
         if (_avoidTxs && _avoidTxs->size() > 0)
         {
             for (auto& it : *_avoidTxs)
             {
-                tarsAvoidTxs.push_back(it.asBytes());
+                tarsAvoidTxs.push_back(std::vector<char>(it.begin(), it.end()));
             }
         }
 
@@ -129,10 +130,10 @@ public:
             std::function<void(bcos::Error::Ptr)> m_callback;
         };
 
-        vector<vector<tars::UInt8>> txHashList;
+        vector<vector<tars::Char>> txHashList;
         for (auto& it : *_txsHash)
         {
-            txHashList.push_back(it.asBytes());
+            txHashList.push_back(std::vector<char>(it.begin(), it.end()));
         }
 
         m_proxy->async_asyncMarkTxs(new Callback(_onRecvResponse), txHashList, _sealedFlag);
@@ -161,8 +162,9 @@ public:
             std::function<void(bcos::Error::Ptr, bool)> m_callback;
         };
 
+        auto nodeID = _generatedNodeID->data();
         m_proxy->async_asyncVerifyBlock(
-            new Callback(_onVerifyFinished), _generatedNodeID->data(), _block.toBytes());
+            new Callback(_onVerifyFinished), std::vector<char>(nodeID.begin(), nodeID.end()), std::vector<char>(_block.begin(), _block.end()));
     }
 
     void asyncFillBlock(bcos::crypto::HashListPtr _txsHash,
@@ -201,10 +203,10 @@ public:
             bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
         };
 
-        vector<vector<tars::UInt8>> hashList;
+        vector<vector<tars::Char>> hashList;
         for (auto hashData : *_txsHash)
         {
-            hashList.emplace_back(hashData.asBytes());
+            hashList.emplace_back(hashData.begin(), hashData.end());
         }
 
         m_proxy->async_asyncFillBlock(new Callback(_onBlockFilled, m_cryptoSuite), hashList);
@@ -270,8 +272,9 @@ public:
             std::function<void(bcos::Error::Ptr _error)> m_callback;
         };
 
+        auto nodeID = _nodeID->data();
         m_proxy->async_asyncNotifyTxsSyncMessage(
-            new Callback(_onRecv), toTarsError(_error), _id, _nodeID->data(), _data.toBytes());
+            new Callback(_onRecv), toTarsError(_error), _id, std::vector<char>(nodeID.begin(), nodeID.end()), std::vector<char>(_data.begin(), _data.data()));
     }
 
     void notifyConnectedNodes(bcos::crypto::NodeIDSet const& _connectedNodes,
@@ -297,10 +300,11 @@ public:
             std::function<void(bcos::Error::Ptr _error)> m_callback;
         };
 
-        std::vector<vector<tars::UInt8>> tarsConnectedNodes;
+        std::vector<vector<tars::Char>> tarsConnectedNodes;
         for (auto const& it : _connectedNodes)
         {
-            tarsConnectedNodes.push_back(it->data());
+            auto nodeID = it->data();
+            tarsConnectedNodes.emplace_back(nodeID.begin(), nodeID.end());
         }
         m_proxy->async_notifyConnectedNodes(new Callback(_onRecvResponse), tarsConnectedNodes);
     }
@@ -332,7 +336,9 @@ public:
         for (auto const& it : _consensusNodeList)
         {
             bcostars::ConsensusNode node;
-            node.nodeID = it->nodeID()->data();
+
+            auto nodeID = it->nodeID()->data();
+            node.nodeID.assign(nodeID.begin(), nodeID.end());
             node.weight = it->weight();
             tarsConsensusNodeList.emplace_back(node);
         }
@@ -368,7 +374,8 @@ public:
         for (auto const& it : _observerNodeList)
         {
             bcostars::ConsensusNode node;
-            node.nodeID = it->nodeID()->data();
+            auto nodeID = it->nodeID()->data();
+            node.nodeID.assign(nodeID.begin(), nodeID.end());
             node.weight = it->weight();
             tarsConsensusNodeList.emplace_back(node);
         }

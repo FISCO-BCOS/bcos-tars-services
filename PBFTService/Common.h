@@ -19,6 +19,7 @@
  * @date 2021-06-29
  */
 #pragma once
+#include "libutilities/Common.h"
 #include <bcos-framework/interfaces/consensus/ConsensusNode.h>
 #include <bcos-framework/interfaces/ledger/LedgerConfig.h>
 namespace bcostars
@@ -30,7 +31,7 @@ inline bcos::ledger::LedgerConfig::Ptr toLedgerConfig(
     bcos::consensus::ConsensusNodeList consensusNodeList;
     for (auto const& node : _ledgerConfig.consensusNodeList)
     {
-        auto nodeID = _keyFactory->createKey(node.nodeID);
+        auto nodeID = _keyFactory->createKey(bcos::bytesConstRef((bcos::byte*)node.nodeID.data(), node.nodeID.size()));
         consensusNodeList.push_back(
             std::make_shared<bcos::consensus::ConsensusNode>(nodeID, node.weight));
     }
@@ -39,7 +40,7 @@ inline bcos::ledger::LedgerConfig::Ptr toLedgerConfig(
     bcos::consensus::ConsensusNodeList observerNodeList;
     for (auto const& node : _ledgerConfig.observerNodeList)
     {
-        auto nodeID = _keyFactory->createKey(node.nodeID);
+        auto nodeID = _keyFactory->createKey(bcos::bytesConstRef((bcos::byte*)node.nodeID.data(), node.nodeID.size()));
         observerNodeList.push_back(
             std::make_shared<bcos::consensus::ConsensusNode>(nodeID, node.weight));
     }
@@ -47,7 +48,7 @@ inline bcos::ledger::LedgerConfig::Ptr toLedgerConfig(
     auto hash = bcos::crypto::HashType();
     if (_ledgerConfig.hash.size() >= bcos::crypto::HashType::size)
     {
-        hash = bcos::crypto::HashType(_ledgerConfig.hash.data(), bcos::crypto::HashType::size);
+        hash = bcos::crypto::HashType((const bcos::byte*)_ledgerConfig.hash.data(), bcos::crypto::HashType::size);
     }
     ledgerConfig->setHash(hash);
     ledgerConfig->setBlockNumber(_ledgerConfig.blockNumber);
@@ -61,7 +62,8 @@ inline bcos::ledger::LedgerConfig::Ptr toLedgerConfig(
 inline bcostars::LedgerConfig toTarsLedgerConfig(bcos::ledger::LedgerConfig::Ptr _ledgerConfig)
 {
     bcostars::LedgerConfig ledgerConfig;
-    ledgerConfig.hash = _ledgerConfig->hash().asBytes();
+    auto hash = _ledgerConfig->hash().asBytes();
+    ledgerConfig.hash.assign(hash.begin(), hash.end());
     ledgerConfig.blockNumber = _ledgerConfig->blockNumber();
     ledgerConfig.consensusTimeout = _ledgerConfig->consensusTimeout();
     ledgerConfig.blockTxCountLimit = _ledgerConfig->blockTxCountLimit();
@@ -73,7 +75,7 @@ inline bcostars::LedgerConfig toTarsLedgerConfig(bcos::ledger::LedgerConfig::Ptr
     for (auto node : consensusNodeList)
     {
         bcostars::ConsensusNode consensusNode;
-        consensusNode.nodeID = node->nodeID()->data();
+        consensusNode.nodeID.assign(node->nodeID()->data().begin(), node->nodeID()->data().end());
         consensusNode.weight = node->weight();
         ledgerConfig.consensusNodeList.push_back(consensusNode);
     }
@@ -82,7 +84,7 @@ inline bcostars::LedgerConfig toTarsLedgerConfig(bcos::ledger::LedgerConfig::Ptr
     for (auto node : observerNodeList)
     {
         bcostars::ConsensusNode observerNode;
-        observerNode.nodeID = node->nodeID()->data();
+        observerNode.nodeID.assign(node->nodeID()->data().begin(), node->nodeID()->data().end());
         observerNode.weight = node->weight();
         ledgerConfig.observerNodeList.push_back(observerNode);
     }
