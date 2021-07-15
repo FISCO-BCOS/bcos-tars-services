@@ -1,0 +1,22 @@
+[tars]
+tars_url = "http://127.0.0.1:3000"
+tars_token = ""
+tars_pkg_dir = "../build"
+
+[chain]
+# the chain name
+app_name = "nodes"
+# use sm or not
+sm_mode = false 
+p2p_listen_port = 30300
+
+# the genesis config
+leader_period = 5
+block_tx_count_limit = 1000
+consensus_timeout = 3000
+consensus_type = "pbft"
+gas_limit = "300000000"
+
+[[deploy_info]]
+deploy_ip = "192.168.192.168"
+node_count = 2

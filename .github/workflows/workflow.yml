@@ -122,19 +122,11 @@ jobs:
       - name: install Ubuntu dependencies
         run: sudo apt-get install -y git curl build-essential cmake ccache lcov libzstd-dev
       - name: configure
-        run: cmake . -DTEST=ON -DTESTS=OFF -DCOVERAGE=ON
+        run: cmake . -DTEST=ON -DTESTS=OFF
       - name: compile
         run: make -j4
       - name: run test
         run: CTEST_OUTPUT_ON_FAILURE=TRUE make test
-      - name: generate coverage
-        run: make tars-cov
-      - name: upload code coverage to Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          file: ./coverage.info
-          name: bcos-tars-services coverage
-          fail_ci_if_error: true
   build_with_centos:
     name: build_with_centos
     runs-on: ubuntu-latest
