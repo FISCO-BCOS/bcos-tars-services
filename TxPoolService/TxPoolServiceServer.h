@@ -166,14 +166,14 @@ public:
         TLOGINFO(LOG_DESC("[TXPOOLSERVICE] Stop the txpoolService success") << std::endl);
     }
 
-    bcostars::Error asyncFillBlock(const vector<vector<tars::UInt8>>& txHashs,
+    bcostars::Error asyncFillBlock(const vector<vector<tars::Char>>& txHashs,
         vector<bcostars::Transaction>& filled, tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
         auto hashList = std::make_shared<std::vector<bcos::crypto::HashType>>();
-        for (auto hashData : txHashs)
+        for (auto const& hashData : txHashs)
         {
-            hashList->push_back(bcos::crypto::HashType(hashData));
+            hashList->push_back(bcos::crypto::HashType(reinterpret_cast<const bcos::byte*>(hashData.data()), hashData.size()));
         }
 
         m_txpool->asyncFillBlock(hashList, [current](bcos::Error::Ptr error,
@@ -191,14 +191,14 @@ public:
         return bcostars::Error();
     }
 
-    bcostars::Error asyncMarkTxs(const vector<vector<tars::UInt8>>& txHashs, tars::Bool sealedFlag,
+    bcostars::Error asyncMarkTxs(const vector<vector<tars::Char>>& txHashs, tars::Bool sealedFlag,
         tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
         auto hashList = std::make_shared<std::vector<bcos::crypto::HashType>>();
         for (auto hashData : txHashs)
         {
-            hashList->push_back(bcos::crypto::HashType(hashData));
+            hashList->push_back(bcos::crypto::HashType(reinterpret_cast<const bcos::byte*>(hashData.data()), hashData.size()));
         }
 
         m_txpool->asyncMarkTxs(hashList, sealedFlag, [current](bcos::Error::Ptr error) {
@@ -230,23 +230,23 @@ public:
     }
 
     bcostars::Error asyncNotifyTxsSyncMessage(const bcostars::Error& error, const std::string& id,
-        const vector<tars::UInt8>& nodeID, const vector<tars::UInt8>& data,
+        const vector<tars::Char>& nodeID, const vector<tars::Char>& data,
         tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
-        auto bcosNodeID = m_cryptoSuite->keyFactory()->createKey(nodeID);
+        auto bcosNodeID = m_cryptoSuite->keyFactory()->createKey(bcos::bytes(nodeID.begin(), nodeID.end()));
 
         m_txpool->asyncNotifyTxsSyncMessage(
-            toBcosError(error), id, bcosNodeID, bcos::ref(data), [current](bcos::Error::Ptr error) {
+            toBcosError(error), id, bcosNodeID, bcos::bytesConstRef(reinterpret_cast<const bcos::byte*>(data.data()), data.size()), [current](bcos::Error::Ptr error) {
                 async_response_asyncNotifyTxsSyncMessage(current, toTarsError(error));
             });
 
         return bcostars::Error();
     }
 
-    bcostars::Error asyncSealTxs(tars::Int64 txsLimit, const vector<vector<tars::UInt8>>& avoidTxs,
-        vector<vector<tars::UInt8>>& return1, vector<vector<tars::UInt8>>& return2,
+    bcostars::Error asyncSealTxs(tars::Int64 txsLimit, const vector<vector<tars::Char>>& avoidTxs,
+        vector<vector<tars::Char>>& return1, vector<vector<tars::Char>>& return2,
         tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
@@ -254,22 +254,22 @@ public:
         auto bcosAvoidTxs = std::make_shared<bcos::txpool::TxsHashSet>();
         for (auto tx : avoidTxs)
         {
-            bcosAvoidTxs->insert(bcos::crypto::HashType(tx));
+            bcosAvoidTxs->insert(bcos::crypto::HashType(bcos::bytes(tx.begin(), tx.end())));
         }
 
         m_txpool->asyncSealTxs(txsLimit, bcosAvoidTxs,
             [current](bcos::Error::Ptr error, bcos::crypto::HashListPtr list1,
                 bcos::crypto::HashListPtr list2) {
-                vector<vector<tars::UInt8>> returnList1;
+                vector<vector<tars::Char>> returnList1;
                 for (auto hash1 : *list1)
                 {
-                    returnList1.emplace_back(hash1.asBytes());
+                    returnList1.emplace_back(hash1.begin(), hash1.end());
                 }
 
-                vector<vector<tars::UInt8>> returnList2;
+                vector<vector<tars::Char>> returnList2;
                 for (auto hash2 : *list2)
                 {
-                    returnList2.emplace_back(hash2.asBytes());
+                    returnList2.emplace_back(hash2.begin(), hash2.end());
                 }
 
                 async_response_asyncSealTxs(current, toTarsError(error), returnList1, returnList2);
@@ -278,11 +278,11 @@ public:
         return bcostars::Error();
     }
 
-    bcostars::Error asyncSubmit(const vector<tars::UInt8>& tx,
+    bcostars::Error asyncSubmit(const vector<tars::Char>& tx,
         bcostars::TransactionSubmitResult& result, tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
-        auto dataPtr = std::make_shared<bcos::bytes>(tx);
+        auto dataPtr = std::make_shared<bcos::bytes>(tx.begin(), tx.end());
         m_txpool->asyncSubmit(dataPtr, [current](bcos::Error::Ptr error,
                                            bcos::protocol::TransactionSubmitResult::Ptr result) {
             async_response_asyncSubmit(current, toTarsError(error),
@@ -293,14 +293,14 @@ public:
         return bcostars::Error();
     }
 
-    bcostars::Error asyncVerifyBlock(const vector<tars::UInt8>& generatedNodeID,
-        const vector<tars::UInt8>& block, tars::Bool& result, tars::TarsCurrentPtr current) override
+    bcostars::Error asyncVerifyBlock(const vector<tars::Char>& generatedNodeID,
+        const vector<tars::Char>& block, tars::Bool& result, tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
-        bcos::crypto::PublicPtr pk = m_cryptoSuite->keyFactory()->createKey(generatedNodeID);
+        bcos::crypto::PublicPtr pk = m_cryptoSuite->keyFactory()->createKey(bcos::bytesConstRef((const bcos::byte*)generatedNodeID.data(), generatedNodeID.size()));
         m_txpool->asyncVerifyBlock(
-            pk, bcos::ref(block), [current](bcos::Error::Ptr error, bool result) {
+            pk, bcos::bytesConstRef((const bcos::byte*)block.data(), block.size()), [current](bcos::Error::Ptr error, bool result) {
                 async_response_asyncVerifyBlock(current, toTarsError(error), result);
             });
 
@@ -308,14 +308,14 @@ public:
     }
 
     bcostars::Error notifyConnectedNodes(
-        const vector<vector<tars::UInt8>>& connectedNodes, tars::TarsCurrentPtr current) override
+        const vector<vector<tars::Char>>& connectedNodes, tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
         bcos::crypto::NodeIDSet bcosNodeIDSet;
         for (auto const& it : connectedNodes)
         {
-            bcosNodeIDSet.insert(m_cryptoSuite->keyFactory()->createKey(it));
+            bcosNodeIDSet.insert(m_cryptoSuite->keyFactory()->createKey(bcos::bytesConstRef((const bcos::byte*)it.data(), it.size())));
         }
 
         m_txpool->notifyConnectedNodes(bcosNodeIDSet, [current](bcos::Error::Ptr error) {
@@ -335,7 +335,7 @@ public:
         for (auto const& it : consensusNodeList)
         {
             bcos::consensus::ConsensusNode node(
-                m_cryptoSuite->keyFactory()->createKey(it.nodeID), it.weight);
+                m_cryptoSuite->keyFactory()->createKey(bcos::bytesConstRef((const bcos::byte*)it.nodeID.data(), it.nodeID.size())), it.weight);
         }
 
         m_txpool->notifyConsensusNodeList(bcosNodeList, [current](bcos::Error::Ptr error) {
@@ -354,7 +354,7 @@ public:
         for (auto const& it : observerNodeList)
         {
             bcos::consensus::ConsensusNode node(
-                m_cryptoSuite->keyFactory()->createKey(it.nodeID), it.weight);
+                m_cryptoSuite->keyFactory()->createKey(bcos::bytesConstRef((const bcos::byte*)it.nodeID.data(), it.nodeID.size())), it.weight);
         }
 
         m_txpool->notifyObserverNodeList(bcosObserverNodeList, [current](bcos::Error::Ptr error) {

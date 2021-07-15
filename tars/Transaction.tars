@@ -5,14 +5,14 @@ module bcostars {
         3 optional string groupID;
         4 optional long blockLimit;
         5 optional string nonce;
-        6 optional vector<unsigned byte> to;
-        8 optional vector<unsigned byte> input;
+        6 optional vector<byte> to;
+        8 optional vector<byte> input;
     };
 
     struct Transaction {
         1 optional TransactionData data;
-        2 optional vector<unsigned byte> dataHash;
-        3 optional vector<unsigned byte> signature;
+        2 optional vector<byte> dataHash;
+        3 optional vector<byte> signature;
         4 optional long importTime;
     };
 };

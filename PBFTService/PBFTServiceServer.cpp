@@ -28,6 +28,7 @@
 #include "../TxPoolService/TxPoolServiceClient.h"
 #include "../protocols/BlockImpl.h"
 #include "Common.h"
+#include "libutilities/Common.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 
 using namespace bcostars;
@@ -274,26 +275,26 @@ Error PBFTServiceServer::asyncNoteUnSealedTxsSize(
 }
 
 Error PBFTServiceServer::asyncNotifyConsensusMessage(std::string const& _uuid,
-    const vector<tars::UInt8>& _nodeId, const vector<tars::UInt8>& _data,
+    const vector<tars::Char>& _nodeId, const vector<tars::Char>& _data,
     tars::TarsCurrentPtr _current)
 {
     _current->setResponse(false);
-    auto nodeId = m_keyFactory->createKey(_nodeId);
+    auto nodeId = m_keyFactory->createKey(bcos::bytesConstRef((const bcos::byte*)_nodeId.data(), _nodeId.size()));
     m_pbft->asyncNotifyConsensusMessage(
-        nullptr, _uuid, nodeId, bcos::ref(_data), [_current](bcos::Error::Ptr _error) {
+        nullptr, _uuid, nodeId, bcos::bytesConstRef((const bcos::byte*)_data.data(), _data.size()), [_current](bcos::Error::Ptr _error) {
             async_response_asyncNotifyConsensusMessage(_current, toTarsError(_error));
         });
     return bcostars::Error();
 }
 
 bcostars::Error PBFTServiceServer::asyncNotifyBlockSyncMessage(std::string const& _uuid,
-    const vector<tars::UInt8>& _nodeId, const vector<tars::UInt8>& _data,
+    const vector<tars::Char>& _nodeId, const vector<tars::Char>& _data,
     tars::TarsCurrentPtr _current)
 {
     _current->setResponse(false);
-    auto nodeId = m_keyFactory->createKey(_nodeId);
+    auto nodeId = m_keyFactory->createKey(bcos::bytesConstRef((const bcos::byte*)_nodeId.data(), _nodeId.size()));
     m_blockSync->asyncNotifyBlockSyncMessage(
-        nullptr, _uuid, nodeId, bcos::ref(_data), [_current](bcos::Error::Ptr _error) {
+        nullptr, _uuid, nodeId, bcos::bytesConstRef((const bcos::byte*)_data.data(), _data.size()), [_current](bcos::Error::Ptr _error) {
             async_response_asyncNotifyBlockSyncMessage(_current, toTarsError(_error));
         });
     return bcostars::Error();
@@ -311,17 +312,17 @@ Error PBFTServiceServer::asyncNotifyNewBlock(
     return bcostars::Error();
 }
 
-Error PBFTServiceServer::asyncSubmitProposal(const vector<tars::UInt8>& _proposalData,
-    tars::Int64 _proposalIndex, const vector<tars::UInt8>& _proposalHash,
+Error PBFTServiceServer::asyncSubmitProposal(const vector<tars::Char>& _proposalData,
+    tars::Int64 _proposalIndex, const vector<tars::Char>& _proposalHash,
     tars::TarsCurrentPtr _current)
 {
     _current->setResponse(false);
     auto proposalHash = bcos::crypto::HashType();
     if (_proposalHash.size() >= bcos::crypto::HashType::size)
     {
-        proposalHash = bcos::crypto::HashType(_proposalHash.data(), bcos::crypto::HashType::size);
+        proposalHash = bcos::crypto::HashType((const bcos::byte*)_proposalHash.data(), bcos::crypto::HashType::size);
     }
-    m_pbft->asyncSubmitProposal(bcos::ref(_proposalData), _proposalIndex, proposalHash,
+    m_pbft->asyncSubmitProposal(bcos::bytesConstRef((const bcos::byte*)_proposalData.data(), _proposalData.size()), _proposalIndex, proposalHash,
         [_current](bcos::Error::Ptr _error) {
             async_response_asyncSubmitProposal(_current, toTarsError(_error));
         });

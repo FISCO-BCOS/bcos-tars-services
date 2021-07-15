@@ -2,21 +2,21 @@
 
 module bcostars {
     interface FrontService {
-        Error asyncGetNodeIDs(out vector<vector<unsigned byte>> nodeIDs);
+        Error asyncGetNodeIDs(out vector<vector<byte>> nodeIDs);
 
-        Error onReceivedNodeIDs(string groupID, vector<vector<unsigned byte>> nodeIDs);
+        Error onReceivedNodeIDs(string groupID, vector<vector<byte>> nodeIDs);
 
-        Error onReceiveMessage(string groupID, vector<unsigned byte> nodeID, vector<unsigned byte> data);
+        Error onReceiveMessage(string groupID, vector<byte> nodeID, vector<byte> data);
 
-        Error onReceiveBroadcastMessage(string groupID, vector<unsigned byte> nodeID, vector<unsigned byte> data);
+        Error onReceiveBroadcastMessage(string groupID, vector<byte> nodeID, vector<byte> data);
 
-        Error asyncSendMessageByNodeID(int moduleID, vector<unsigned byte> nodeID, vector<unsigned byte> data, unsigned int timeout, 
-            out vector<unsigned byte> responseNodeID, out vector<unsigned byte> responseData, out string seq);
+        Error asyncSendMessageByNodeID(int moduleID, vector<byte> nodeID, vector<byte> data, unsigned int timeout, 
+            out vector<byte> responseNodeID, out vector<byte> responseData, out string seq);
 
-        Error asyncSendResponse(string id, int moduleID, vector<unsigned byte> nodeID, vector<unsigned byte> data);
+        Error asyncSendResponse(string id, int moduleID, vector<byte> nodeID, vector<byte> data);
 
-        void asyncSendMessageByNodeIDs(int moduleID, vector<vector<unsigned byte>> nodeIDs, vector<unsigned byte> data);
+        void asyncSendMessageByNodeIDs(int moduleID, vector<vector<byte>> nodeIDs, vector<byte> data);
 
-        void asyncSendBroadcastMessage(int moduleID, vector<unsigned byte> data);
+        void asyncSendBroadcastMessage(int moduleID, vector<byte> data);
     };
 };

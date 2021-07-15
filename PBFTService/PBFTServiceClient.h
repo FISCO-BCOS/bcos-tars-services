@@ -173,8 +173,9 @@ public:
         bcos::crypto::NodeIDPtr _nodeID, bcos::bytesConstRef _data,
         std::function<void(bcos::Error::Ptr _error)> _onRecv) override
     {
+        auto nodeIDData = _nodeID->data();
         m_proxy->async_asyncNotifyBlockSyncMessage(
-            new PBFTServiceCommonCallback(_onRecv), _uuid, _nodeID->data(), _data.toBytes());
+            new PBFTServiceCommonCallback(_onRecv), _uuid, std::vector<char>(nodeIDData.begin(), nodeIDData.end()), std::vector<char>(_data.begin(), _data.end()));
     }
 
 protected:

@@ -5,10 +5,10 @@ module bcostars {
     struct TransactionSubmitResult {
         1 optional int status;
         2 optional TransactionReceipt receipt;
-        3 optional vector<unsigned byte> txHash;
-        4 optional vector<unsigned byte> from;
-        5 optional vector<unsigned byte> blockHash;
-        6 optional vector<unsigned byte> to;
+        3 optional vector<byte> txHash;
+        4 optional vector<byte> from;
+        5 optional vector<byte> blockHash;
+        6 optional vector<byte> to;
         7 optional long transactionIndex;
         8 optional string nonce;
     };

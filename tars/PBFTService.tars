@@ -4,12 +4,12 @@
 
 module bcostars {
     interface PBFTService {
-        Error asyncNotifyConsensusMessage(string _uuid, vector<unsigned byte> _nodeId, vector<unsigned byte> _data);
-        Error asyncSubmitProposal(vector<unsigned byte> _proposalData, long _proposalIndex, vector<unsigned byte> _proposalHash);
+        Error asyncNotifyConsensusMessage(string _uuid, vector<byte> _nodeId, vector<byte> _data);
+        Error asyncSubmitProposal(vector<byte> _proposalData, long _proposalIndex, vector<byte> _proposalHash);
         Error asyncGetPBFTView(out long _view);
         Error asyncCheckBlock(Block _block, out bool _verifyResult);
         Error asyncNotifyNewBlock(LedgerConfig _ledgerConfig);
-        Error asyncNotifyBlockSyncMessage(string _uuid, vector<unsigned byte> _nodeId, vector<unsigned byte> _data);
+        Error asyncNotifyBlockSyncMessage(string _uuid, vector<byte> _nodeId, vector<byte> _data);
         Error asyncNoteUnSealedTxsSize(long _unsealedTxsSize);
         
         Error asyncGetSyncInfo(out string _syncInfo);

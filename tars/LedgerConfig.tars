@@ -1,14 +1,14 @@
 module bcostars
 {
     struct ConsensusNode {
-        1 optional vector<unsigned byte> nodeID;
+        1 optional vector<byte> nodeID;
         2 optional long weight;
     };
     struct LedgerConfig
     {
         1 optional vector<ConsensusNode> consensusNodeList;
         2 optional vector<ConsensusNode> observerNodeList;
-        3 optional vector<unsigned byte> hash;
+        3 optional vector<byte> hash;
         4 optional long blockNumber;
         5 optional long consensusTimeout;
         6 optional long blockTxCountLimit;

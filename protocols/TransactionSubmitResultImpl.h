@@ -41,7 +41,7 @@ public:
     }
     bcos::bytesConstRef from() const override
     {
-        return bcos::bytesConstRef(m_inner.from.data(), m_inner.from.size());
+        return bcos::bytesConstRef(reinterpret_cast<const bcos::byte*>(m_inner.from.data()), m_inner.from.size());
     }
     bcos::crypto::HashType const& blockHash() const override
     {
@@ -54,7 +54,7 @@ public:
     }
     bcos::bytesConstRef to() const override
     {
-        return bcos::bytesConstRef(m_inner.to.data(), m_inner.to.size());
+        return bcos::bytesConstRef(reinterpret_cast<const bcos::byte*>(m_inner.to.data()), m_inner.to.size());
     }
     int64_t transactionIndex() const override { return m_inner.transactionIndex; }
     void setNonce(bcos::protocol::NonceType const& _nonce) override

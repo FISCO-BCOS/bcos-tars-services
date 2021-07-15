@@ -5,6 +5,7 @@
 #include "../FrontService/FrontServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include "GatewayService.h"
+#include "libutilities/Common.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 #include <bcos-framework/interfaces/crypto/KeyInterface.h>
 #include <bcos-framework/libtool/NodeConfig.h>
@@ -131,48 +132,48 @@ public:
     }
 
     bcostars::Error asyncSendBroadcastMessage(const std::string& groupID,
-        const vector<tars::UInt8>& srcNodeID, const vector<tars::UInt8>& payload,
+        const vector<tars::Char>& srcNodeID, const vector<tars::Char>& payload,
         tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
-        auto bcosNodeID = m_keyFactory->createKey(srcNodeID);
-        m_gateway->asyncSendBroadcastMessage(groupID, bcosNodeID, bcos::ref(payload));
+        auto bcosNodeID = m_keyFactory->createKey(bcos::bytesConstRef((const bcos::byte*)srcNodeID.data(), srcNodeID.size()));
+        m_gateway->asyncSendBroadcastMessage(groupID, bcosNodeID, bcos::bytesConstRef((const bcos::byte*)payload.data(), payload.size()));
 
         async_response_asyncSendBroadcastMessage(current, toTarsError(nullptr));
     }
 
     bcostars::Error asyncSendMessageByNodeID(const std::string& groupID,
-        const vector<tars::UInt8>& srcNodeID, const vector<tars::UInt8>& dstNodeID,
-        const vector<tars::UInt8>& payload, tars::TarsCurrentPtr current) override
+        const vector<tars::Char>& srcNodeID, const vector<tars::Char>& dstNodeID,
+        const vector<tars::Char>& payload, tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
-        auto bcosSrcNodeID = m_keyFactory->createKey(srcNodeID);
-        auto bcosDstNodeID = m_keyFactory->createKey(dstNodeID);
+        auto bcosSrcNodeID = m_keyFactory->createKey(bcos::bytesConstRef((const bcos::byte*)srcNodeID.data(), srcNodeID.size()));
+        auto bcosDstNodeID = m_keyFactory->createKey(bcos::bytesConstRef((const bcos::byte*)dstNodeID.data(), dstNodeID.size()));
 
         m_gateway->asyncSendMessageByNodeID(groupID, bcosSrcNodeID, bcosDstNodeID,
-            bcos::ref(payload), [current](bcos::Error::Ptr error) {
+            bcos::bytesConstRef((const bcos::byte*)payload.data(), payload.size()), [current](bcos::Error::Ptr error) {
                 async_response_asyncSendMessageByNodeID(current, toTarsError(error));
             });
         return bcostars::Error();
     }
 
     bcostars::Error asyncSendMessageByNodeIDs(const std::string& groupID,
-        const vector<tars::UInt8>& srcNodeID, const vector<vector<tars::UInt8>>& dstNodeID,
-        const vector<tars::UInt8>& payload, tars::TarsCurrentPtr current) override
+        const vector<tars::Char>& srcNodeID, const vector<vector<tars::Char>>& dstNodeID,
+        const vector<tars::Char>& payload, tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
-        auto bcosSrcNodeID = m_keyFactory->createKey(srcNodeID);
+        auto bcosSrcNodeID = m_keyFactory->createKey(bcos::bytesConstRef((const bcos::byte*)srcNodeID.data(), srcNodeID.size()));
         std::vector<bcos::crypto::NodeIDPtr> nodeIDs;
         nodeIDs.reserve(dstNodeID.size());
         for (auto const& it : dstNodeID)
         {
-            nodeIDs.push_back(m_keyFactory->createKey(it));
+            nodeIDs.push_back(m_keyFactory->createKey(bcos::bytesConstRef((const bcos::byte*)it.data(), it.size())));
         }
 
-        m_gateway->asyncSendMessageByNodeIDs(groupID, bcosSrcNodeID, nodeIDs, bcos::ref(payload));
+        m_gateway->asyncSendMessageByNodeIDs(groupID, bcosSrcNodeID, nodeIDs, bcos::bytesConstRef((const bcos::byte*)payload.data(), payload.size()));
 
         async_response_asyncSendMessageByNodeIDs(current, toTarsError(nullptr));
     }

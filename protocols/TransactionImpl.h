@@ -99,17 +99,24 @@ public:
     }
     bcos::bytesConstRef to() const override
     {
-        return bcos::bytesConstRef(m_inner->data.to.data(), m_inner->data.to.size());
+        return bcos::bytesConstRef(reinterpret_cast<const bcos::byte*>(m_inner->data.to.data()), m_inner->data.to.size());
     }
     bcos::bytesConstRef input() const override
     {
-        return bcos::bytesConstRef(m_inner->data.input.data(), m_inner->data.input.size());
+        return bcos::bytesConstRef(reinterpret_cast<const bcos::byte*>(m_inner->data.input.data()), m_inner->data.input.size());
     }
     int64_t importTime() const override { return m_inner->importTime; }
     void setImportTime(int64_t _importTime) override { m_inner->importTime = _importTime; }
-    bcos::bytesConstRef signatureData() const override { return bcos::ref(m_inner->signature); }
+    bcos::bytesConstRef signatureData() const override
+    {
+        return bcos::bytesConstRef(reinterpret_cast<const bcos::byte*>(m_inner->signature.data()),
+            m_inner->signature.size());
+    }
 
-    void setSignatureData(bcos::bytes& signature) { signature.swap(m_inner->signature); }
+    void setSignatureData(bcos::bytes& signature)
+    {
+        m_inner->signature.assign(signature.begin(), signature.end());
+    }
 
     const bcostars::Transaction& inner() const { return *m_inner; }
 
@@ -157,8 +164,8 @@ public:
     {
         auto transaction = std::make_shared<bcostars::protocol::TransactionImpl>(m_cryptoSuite);
         transaction->m_inner->data.version = _version;
-        transaction->m_inner->data.to = _to;
-        transaction->m_inner->data.input = _input;
+        transaction->m_inner->data.to.assign(_to.begin(), _to.end());
+        transaction->m_inner->data.input.assign(_input.begin(), _input.end());
         transaction->m_inner->data.blockLimit = _blockLimit;
         transaction->m_inner->data.chainID = _chainId;
         transaction->m_inner->data.groupID = _groupId;
@@ -177,8 +184,8 @@ public:
             _version, _to, _input, _nonce, _blockLimit, _chainId, _groupId, _importTime);
         auto sign = m_cryptoSuite->signatureImpl()->sign(keyPair, tx->hash(), true);
 
-        sign->swap(
-            std::dynamic_pointer_cast<bcostars::protocol::TransactionImpl>(tx)->m_inner->signature);
+        auto tarsTx = std::dynamic_pointer_cast<bcostars::protocol::TransactionImpl>(tx);
+        tarsTx->m_inner->signature.assign(sign->begin(), sign->end());
 
         return tx;
     }

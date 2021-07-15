@@ -7,6 +7,7 @@
 #include "../TxPoolService/TxPoolServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include "FrontService.h"
+#include "libutilities/Common.h"
 #include "servant/Communicator.h"
 #include "servant/Global.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
@@ -178,14 +179,14 @@ public:
     }
 
     bcostars::Error asyncGetNodeIDs(
-        vector<vector<tars::UInt8>>& nodeIDs, tars::TarsCurrentPtr current) override
+        vector<vector<tars::Char>>& nodeIDs, tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
         m_front->asyncGetNodeIDs([current](bcos::Error::Ptr _error,
                                      std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs) {
             // Note: the nodeIDs maybe null if no connections
-            std::vector<bcos::bytes> tarsNodeIDs;
+            std::vector<std::vector<char>> tarsNodeIDs;
             if (!_nodeIDs)
             {
                 async_response_asyncGetNodeIDs(current, toTarsError(_error), tarsNodeIDs);
@@ -194,7 +195,8 @@ public:
             tarsNodeIDs.reserve(_nodeIDs->size());
             for (auto const& it : *_nodeIDs)
             {
-                tarsNodeIDs.push_back(it->data());
+                auto nodeIDData = it->data();
+                tarsNodeIDs.emplace_back(nodeIDData.begin(), nodeIDData.end());
             }
             async_response_asyncGetNodeIDs(current, toTarsError(_error), tarsNodeIDs);
         });
@@ -202,49 +204,57 @@ public:
         return bcostars::Error();
     }
 
-    void asyncSendBroadcastMessage(tars::Int32 moduleID, const vector<tars::UInt8>& data,
-        tars::TarsCurrentPtr current) override
+    void asyncSendBroadcastMessage(
+        tars::Int32 moduleID, const vector<tars::Char>& data, tars::TarsCurrentPtr current) override
     {
-        m_front->asyncSendBroadcastMessage(moduleID, bcos::ref(data));
+        m_front->asyncSendBroadcastMessage(
+            moduleID, bcos::bytesConstRef((bcos::byte*)data.data(), data.size()));
     }
 
-    bcostars::Error asyncSendMessageByNodeID(tars::Int32 moduleID,
-        const vector<tars::UInt8>& nodeID, const vector<tars::UInt8>& data, tars::UInt32 timeout,
-        vector<tars::UInt8>& responseNodeID, vector<tars::UInt8>& responseData, std::string& seq,
-        tars::TarsCurrentPtr current) override
+    bcostars::Error asyncSendMessageByNodeID(tars::Int32 moduleID, const vector<tars::Char>& nodeID,
+        const vector<tars::Char>& data, tars::UInt32 timeout, vector<tars::Char>& responseNodeID,
+        vector<tars::Char>& responseData, std::string& seq, tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
-        auto bcosNodeID = m_keyFactory->createKey(nodeID);
-        m_front->asyncSendMessageByNodeID(moduleID, bcosNodeID, bcos::ref(data), timeout,
+        auto bcosNodeID =
+            m_keyFactory->createKey(bcos::bytesConstRef((bcos::byte*)nodeID.data(), nodeID.size()));
+        m_front->asyncSendMessageByNodeID(moduleID, bcosNodeID,
+            bcos::bytesConstRef((bcos::byte*)data.data(), data.size()), timeout,
             [current](bcos::Error::Ptr _error, bcos::crypto::NodeIDPtr _nodeID,
                 bcos::bytesConstRef _data, const std::string& _id,
                 bcos::front::ResponseFunc _respFunc) {
-                async_response_asyncSendMessageByNodeID(
-                    current, toTarsError(_error), *_nodeID->encode(), _data.toBytes(), _id);
+                auto encodedNodeID = *_nodeID->encode();
+                async_response_asyncSendMessageByNodeID(current, toTarsError(_error),
+                    std::vector<char>(encodedNodeID.begin(), encodedNodeID.end()),
+                    std::vector<char>(_data.begin(), _data.end()), _id);
             });
 
         return bcostars::Error();
     }
 
-    void asyncSendMessageByNodeIDs(tars::Int32 moduleID, const vector<vector<tars::UInt8>>& nodeIDs,
-        const vector<tars::UInt8>& data, tars::TarsCurrentPtr current) override
+    void asyncSendMessageByNodeIDs(tars::Int32 moduleID, const vector<vector<tars::Char>>& nodeIDs,
+        const vector<tars::Char>& data, tars::TarsCurrentPtr current) override
     {
         std::vector<bcos::crypto::NodeIDPtr> bcosNodeIDs;
         bcosNodeIDs.reserve(nodeIDs.size());
         for (auto const& it : nodeIDs)
         {
-            bcosNodeIDs.push_back(m_keyFactory->createKey(it));
+            bcosNodeIDs.push_back(
+                m_keyFactory->createKey(bcos::bytesConstRef((bcos::byte*)it.data(), it.size())));
         }
 
-        m_front->asyncSendMessageByNodeIDs(moduleID, bcosNodeIDs, bcos::ref(data));
+        m_front->asyncSendMessageByNodeIDs(
+            moduleID, bcosNodeIDs, bcos::bytesConstRef((bcos::byte*)data.data(), data.size()));
     }
 
     bcostars::Error asyncSendResponse(const std::string& id, tars::Int32 moduleID,
-        const vector<tars::UInt8>& nodeID, const vector<tars::UInt8>& data,
+        const vector<tars::Char>& nodeID, const vector<tars::Char>& data,
         tars::TarsCurrentPtr current) override
     {
-        m_front->asyncSendResponse(id, moduleID, m_keyFactory->createKey(nodeID), bcos::ref(data),
+        m_front->asyncSendResponse(id, moduleID,
+            m_keyFactory->createKey(bcos::bytesConstRef((bcos::byte*)nodeID.data(), nodeID.size())),
+            bcos::bytesConstRef((bcos::byte*)data.data(), data.size()),
             [current](bcos::Error::Ptr error) {
                 async_response_asyncSendResponse(current, toTarsError(error));
             });
@@ -252,25 +262,29 @@ public:
     }
 
     bcostars::Error onReceiveBroadcastMessage(const std::string& groupID,
-        const vector<tars::UInt8>& nodeID, const vector<tars::UInt8>& data,
+        const vector<tars::Char>& nodeID, const vector<tars::Char>& data,
         tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
-        m_front->onReceiveBroadcastMessage(groupID, m_keyFactory->createKey(nodeID),
-            bcos::ref(data), [current](bcos::Error::Ptr error) {
+        m_front->onReceiveBroadcastMessage(groupID,
+            m_keyFactory->createKey(bcos::bytesConstRef((bcos::byte*)nodeID.data(), nodeID.size())),
+            bcos::bytesConstRef((bcos::byte*)data.data(), data.size()),
+            [current](bcos::Error::Ptr error) {
                 async_response_onReceiveBroadcastMessage(current, toTarsError(error));
             });
 
         return bcostars::Error();
     }
 
-    bcostars::Error onReceiveMessage(const std::string& groupID, const vector<tars::UInt8>& nodeID,
-        const vector<tars::UInt8>& data, tars::TarsCurrentPtr current) override
+    bcostars::Error onReceiveMessage(const std::string& groupID, const vector<tars::Char>& nodeID,
+        const vector<tars::Char>& data, tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
-        m_front->onReceiveMessage(groupID, m_keyFactory->createKey(nodeID), bcos::ref(data),
+        m_front->onReceiveMessage(groupID,
+            m_keyFactory->createKey(bcos::bytesConstRef((bcos::byte*)nodeID.data(), nodeID.size())),
+            bcos::bytesConstRef((bcos::byte*)data.data(), data.size()),
             [current](bcos::Error::Ptr error) {
                 async_response_onReceiveMessage(current, toTarsError(error));
             });
@@ -279,7 +293,7 @@ public:
     }
 
     bcostars::Error onReceivedNodeIDs(const std::string& groupID,
-        const vector<vector<tars::UInt8>>& nodeIDs, tars::TarsCurrentPtr current) override
+        const vector<vector<tars::Char>>& nodeIDs, tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
@@ -288,7 +302,7 @@ public:
 
         for (auto const& it : nodeIDs)
         {
-            bcosNodeIDs->push_back(m_keyFactory->createKey(it));
+            bcosNodeIDs->push_back(m_keyFactory->createKey(bcos::bytesConstRef((bcos::byte*)it.data(), it.size())));
         }
 
         m_front->onReceiveNodeIDs(groupID, bcosNodeIDs, [current](bcos::Error::Ptr error) {

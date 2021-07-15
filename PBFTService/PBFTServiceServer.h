@@ -65,11 +65,11 @@ public:
         tars::Int64 _unsealedTxsSize, tars::TarsCurrentPtr _current) override;
 
     bcostars::Error asyncNotifyConsensusMessage(std::string const& _uuid,
-        const vector<tars::UInt8>& _nodeId, const vector<tars::UInt8>& _data,
+        const vector<tars::Char>& _nodeId, const vector<tars::Char>& _data,
         tars::TarsCurrentPtr _current) override;
 
     bcostars::Error asyncNotifyBlockSyncMessage(std::string const& _uuid,
-        const vector<tars::UInt8>& _nodeId, const vector<tars::UInt8>& _data,
+        const vector<tars::Char>& _nodeId, const vector<tars::Char>& _data,
         tars::TarsCurrentPtr _current) override;
 
     // Note: since the blockSync module is intergrated with the PBFT, this interfaces is useless now
@@ -77,8 +77,8 @@ public:
         const bcostars::LedgerConfig& _ledgerConfig, tars::TarsCurrentPtr _current) override;
 
     // Note: since the sealer module is intergrated with the PBFT, the interface is useless now
-    bcostars::Error asyncSubmitProposal(const vector<tars::UInt8>& _proposalData,
-        tars::Int64 _proposalIndex, const vector<tars::UInt8>& _proposalHash,
+    bcostars::Error asyncSubmitProposal(const vector<tars::Char>& _proposalData,
+        tars::Int64 _proposalIndex, const vector<tars::Char>& _proposalHash,
         tars::TarsCurrentPtr _current) override;
 
 protected:
