@@ -164,9 +164,8 @@ public:
         std::function<void(bcos::Error::Ptr _error)> _onRecv) override
     {
         auto nodeIDData = _nodeID->data();
-        auto data = _data.toBytes();
         m_proxy->async_asyncNotifyBlockSyncMessage(
-            new PBFTServiceCommonCallback(_onRecv), _uuid, std::vector<char>(nodeIDData.begin(), nodeIDData.end()), std::vector<char>(data.begin(), data.end()));
+            new PBFTServiceCommonCallback(_onRecv), _uuid, std::vector<char>(nodeIDData.begin(), nodeIDData.end()), std::vector<char>(_data.begin(), _data.end()));
     }
 
 protected:

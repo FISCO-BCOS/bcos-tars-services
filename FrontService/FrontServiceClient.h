@@ -179,8 +179,7 @@ public:
         bcos::bytesConstRef _data, bcos::front::ReceiveMsgFunc _receiveMsgCallback) override
     {
         auto nodeIDData = _nodeID->data();
-        auto data = _data.toBytes();
-        m_proxy->asyncSendResponse(_id, _moduleID, std::vector<char>(nodeIDData.begin(), nodeIDData.end()), std::vector<char>(data.begin(), data.end()));
+        m_proxy->asyncSendResponse(_id, _moduleID, std::vector<char>(nodeIDData.begin(), nodeIDData.end()), std::vector<char>(_data.begin(), _data.end()));
     }
 
     void asyncSendMessageByNodeIDs(int _moduleID,
