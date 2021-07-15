@@ -44,6 +44,10 @@ std::once_flag PBFTServiceServer::m_initFlag;
 bcos::consensus::PBFTImpl::Ptr PBFTServiceServer::m_pbft;
 bcos::sealer::Sealer::Ptr PBFTServiceServer::m_sealer;
 bcos::sync::BlockSync::Ptr PBFTServiceServer::m_blockSync;
+bcos::crypto::KeyFactory::Ptr PBFTServiceServer::m_keyFactory;
+bcos::BoostLogInitializer::Ptr PBFTServiceServer::m_logInitializer;
+std::shared_ptr<bcos::ledger::Ledger> PBFTServiceServer::m_ledger;
+bcos::initializer::ProtocolInitializer::Ptr PBFTServiceServer::m_protocolInitializer;
 
 void PBFTServiceServer::initialize()
 {
@@ -133,6 +137,10 @@ void PBFTServiceServer::init()
     auto dispatcherProxy =
         Application::getCommunicator()->stringToProxy<bcostars::DispatcherServicePrx>(
             getProxyDesc(DISPATCHER_SERVICE_NAME));
+    // TODO: make this configuable
+    dispatcherProxy->tars_timeout(600000);
+    dispatcherProxy->tars_async_timeout(600000);
+
     m_dispatcher = std::make_shared<bcostars::DispatcherServiceClient>(
         dispatcherProxy, m_protocolInitializer->blockFactory());
 

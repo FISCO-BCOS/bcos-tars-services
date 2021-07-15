@@ -16,6 +16,8 @@ module bcostars {
         Error notifyConsensusNodeList(vector<ConsensusNode> consensusNodeList);
         Error notifyObserverNodeList(vector<ConsensusNode> observerNodeList);
         
+        Error asyncResetTxPool();
+        
         Error asyncGetPendingTransactionSize(out long _txsSize);
     };
 };

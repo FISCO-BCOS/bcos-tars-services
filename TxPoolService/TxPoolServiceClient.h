@@ -405,6 +405,31 @@ public:
         m_proxy->async_asyncGetPendingTransactionSize(new Callback(_onGetTxsSize));
     }
 
+    void asyncResetTxPool(std::function<void(bcos::Error::Ptr)> _onRecv) override
+    {
+        class Callback : public TxPoolServicePrxCallback
+        {
+        public:
+            explicit Callback(std::function<void(bcos::Error::Ptr)> _callback)
+              : TxPoolServicePrxCallback(), m_callback(_callback)
+            {}
+            ~Callback() override {}
+
+            void callback_asyncResetTxPool(const bcostars::Error& ret) override
+            {
+                m_callback(toBcosError(ret));
+            }
+            void callback_asyncResetTxPool_exception(tars::Int32 ret) override
+            {
+                m_callback(toBcosError(ret));
+            }
+
+        private:
+            std::function<void(bcos::Error::Ptr)> m_callback;
+        };
+        m_proxy->async_asyncResetTxPool(new Callback(_onRecv));
+    }
+
 protected:
     void start() override {}
     void stop() override {}

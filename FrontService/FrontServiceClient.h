@@ -62,11 +62,19 @@ public:
 
             void callback_onReceivedNodeIDs(const bcostars::Error& ret) override
             {
+                if (!m_callback)
+                {
+                    return;
+                }
                 m_callback(toBcosError(ret));
             }
 
             void callback_onReceivedNodeIDs_exception(tars::Int32 ret) override
             {
+                if (!m_callback)
+                {
+                    return;
+                }
                 m_callback(toBcosError(ret));
             }
 
@@ -94,11 +102,19 @@ public:
 
             void callback_onReceiveMessage(const bcostars::Error& ret) override
             {
+                if (!m_callback)
+                {
+                    return;
+                }
                 m_callback(toBcosError(ret));
             }
 
             void callback_onReceiveMessage_exception(tars::Int32 ret) override
             {
+                if (!m_callback)
+                {
+                    return;
+                }
                 m_callback(toBcosError(ret));
             }
 
@@ -110,6 +126,7 @@ public:
             new Callback(_receiveMsgCallback), _groupID, _nodeID->data(), _data.toBytes());
     }
 
+    // Note: the _receiveMsgCallback maybe null in some cases
     void onReceiveBroadcastMessage(const std::string& _groupID, bcos::crypto::NodeIDPtr _nodeID,
         bcos::bytesConstRef _data, bcos::front::ReceiveMsgFunc _receiveMsgCallback) override
     {
@@ -120,11 +137,19 @@ public:
 
             void callback_onReceiveBroadcastMessage(const bcostars::Error& ret) override
             {
+                if (!m_callback)
+                {
+                    return;
+                }
                 m_callback(toBcosError(ret));
             }
 
             void callback_onReceiveBroadcastMessage_exception(tars::Int32 ret) override
             {
+                if (!m_callback)
+                {
+                    return;
+                }
                 m_callback(toBcosError(ret));
             }
 
@@ -136,6 +161,7 @@ public:
             new Callback(_receiveMsgCallback), _groupID, _nodeID->data(), _data.toBytes());
     }
 
+    // Note: the _callback maybe null in some cases
     void asyncSendMessageByNodeID(int _moduleID, bcos::crypto::NodeIDPtr _nodeID,
         bcos::bytesConstRef _data, uint32_t _timeout, bcos::front::CallbackFunc _callback) override
     {
@@ -150,6 +176,10 @@ public:
                 const vector<tars::UInt8>& responseNodeID, const vector<tars::UInt8>& responseData,
                 const std::string& seq) override
             {
+                if (!m_callback)
+                {
+                    return;
+                }
                 auto bcosNodeID = m_self->m_keyFactory->createKey(responseNodeID);
                 m_callback(toBcosError(ret), bcosNodeID, bcos::ref(responseData), seq,
                     bcos::front::ResponseFunc());
@@ -157,6 +187,10 @@ public:
 
             void callback_asyncSendMessageByNodeID_exception(tars::Int32 ret) override
             {
+                if (!m_callback)
+                {
+                    return;
+                }
                 m_callback(toBcosError(ret), nullptr, bcos::bytesConstRef(), "",
                     bcos::front::ResponseFunc());
             }

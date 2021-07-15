@@ -25,6 +25,7 @@ namespace bcostars
 {
 class FrontServiceServer : public FrontService
 {
+public:
     ~FrontServiceServer() override {}
     void initialize() override
     {
@@ -63,15 +64,19 @@ class FrontServiceServer : public FrontService
             auto privateKeyPath = ServerConfig::BasePath + "node.pem";
             protocolInitializer->loadKeyPair(privateKeyPath);
             m_keyFactory = protocolInitializer->keyFactory();
+            FRONTSERVICE_LOG(INFO) << LOG_DESC("init crypto protocol success");
 
             // set the gateway interface
             auto gateWayProxy = Application::getCommunicator()->stringToProxy<GatewayServicePrx>(
                 getProxyDesc(GATEWAY_SERVICE_NAME));
             auto gateWay = std::make_shared<GatewayServiceClient>(gateWayProxy);
             frontServiceFactory.setGatewayInterface(gateWay);
+            FRONTSERVICE_LOG(INFO) << LOG_DESC("init the gateway client success");
 
             auto front = frontServiceFactory.buildFrontService(
                 nodeConfig->groupId(), protocolInitializer->keyPair()->publicKey());
+            FRONTSERVICE_LOG(INFO) << LOG_DESC("create the frontService success");
+
             // register the message dispatcher handler to the frontService
             auto pbftProxy = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
                 getProxyDesc(PBFT_SERVICE_NAME));
@@ -91,6 +96,8 @@ class FrontServiceServer : public FrontService
                             }
                         });
                 });
+            FRONTSERVICE_LOG(INFO)
+                << LOG_DESC("registerModuleMessageDispatcher for the consensus module success");
             // register the message dispatcher for the txsSync module
             auto txpoolProxy =
                 Application::getCommunicator()->stringToProxy<bcostars::TxPoolServicePrx>(
@@ -111,7 +118,8 @@ class FrontServiceServer : public FrontService
                             }
                         });
                 });
-
+            FRONTSERVICE_LOG(INFO)
+                << LOG_DESC("registerModuleMessageDispatcher for the txsSync module success");
             // register the message dispatcher for the block sync module
             auto blockSync = std::make_shared<BlockSyncServiceClient>(pbftProxy);
             front->registerModuleMessageDispatcher(bcos::protocol::ModuleID::BlockSync,
@@ -128,6 +136,9 @@ class FrontServiceServer : public FrontService
                             }
                         });
                 });
+            FRONTSERVICE_LOG(INFO)
+                << LOG_DESC("registerModuleMessageDispatcher for the BlockSync module success");
+
             // register the GetNodeIDsDispatcher to the frontService
             front->registerModuleNodeIDsDispatcher(bcos::protocol::ModuleID::TxsSync,
                 [txpoolClient](std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs,
@@ -137,9 +148,13 @@ class FrontServiceServer : public FrontService
                     FRONTSERVICE_LOG(DEBUG) << LOG_DESC("notifyConnectedNodes")
                                             << LOG_KV("connectedNodeSize", nodeIdSet.size());
                 });
+            FRONTSERVICE_LOG(INFO)
+                << LOG_DESC("registerModuleNodeIDsDispatcher for the TxsSync module success");
             m_front = front;
             // start the front service
+            FRONTSERVICE_LOG(INFO) << LOG_DESC("start the frontService");
             m_front->start();
+            FRONTSERVICE_LOG(INFO) << LOG_DESC("start the frontService success");
         });
     }
 
@@ -233,6 +248,7 @@ class FrontServiceServer : public FrontService
             [current](bcos::Error::Ptr error) {
                 async_response_asyncSendResponse(current, toTarsError(error));
             });
+        return bcostars::Error();
     }
 
     bcostars::Error onReceiveBroadcastMessage(const std::string& groupID,
@@ -287,6 +303,6 @@ private:
     static bcos::front::FrontServiceInterface::Ptr m_front;
     static bcos::BoostLogInitializer::Ptr m_logInitializer;
     std::atomic_bool m_running = {false};
-    bcos::crypto::KeyFactory::Ptr m_keyFactory;
+    static bcos::crypto::KeyFactory::Ptr m_keyFactory;
 };
 }  // namespace bcostars

@@ -69,11 +69,12 @@ public:
             STORAGESERVICE_LOG(INFO) << LOG_DESC("init protocol success");
 
 
+            auto storagePath = ServerConfig::BasePath + nodeConfig->storagePath();
             STORAGESERVICE_LOG(INFO)
                 << LOG_DESC("open DB") << LOG_KV("storageDBName", nodeConfig->storageDBName())
-                << LOG_KV("stateDBName", nodeConfig->stateDBName());
-            bcos::storage::RocksDBAdapterFactory rocksdbAdapterFactory(nodeConfig->storagePath());
-
+                << LOG_KV("stateDBName", nodeConfig->stateDBName())
+                << LOG_KV("storagePath", storagePath);
+            bcos::storage::RocksDBAdapterFactory rocksdbAdapterFactory(storagePath);
             auto ret = rocksdbAdapterFactory.createRocksDB(
                 nodeConfig->storageDBName(), bcos::storage::RocksDBAdapter::TABLE_PERFIX_LENGTH);
             if (!ret.first)
