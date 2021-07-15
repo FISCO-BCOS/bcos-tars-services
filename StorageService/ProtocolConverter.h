@@ -69,25 +69,21 @@ inline bcos::storage::TableFactoryInterface::Ptr toBcosTableFactory(
         std::make_shared<bcos::storage::TableFactory>(
             storage, cryptoSuite->hashImpl(), tableFactory.num);
 
+    // convert tars tableInfo to bcos tableInfo
     std::vector<bcos::storage::TableInfo::Ptr> tableInfos;
     for (auto const& tableInfo : tableFactory.tableInfos)
     {
         tableInfos.emplace_back(toBcosTableInfo(tableInfo));
     }
 
+    // convert tars tableData to bcos tableData
     std::vector<std::shared_ptr<std::map<std::string, bcos::storage::Entry::Ptr>>> tableDatas;
     for (auto const& tableData : tableFactory.datas)
     {
         auto bcosTableData = std::make_shared<std::map<std::string, bcos::storage::Entry::Ptr>>();
         for (auto const& entry : tableData)
         {
-            auto bcosEntry = std::make_shared<bcos::storage::Entry>();
-            bcosEntry->setNum(entry.second.num);
-            bcosEntry->setStatus((bcos::storage::Entry::Status)entry.second.status);
-            for (auto& field : entry.second.fields)
-            {
-                bcosEntry->setField(std::move(field.first), std::move(field.second));
-            }
+            auto bcosEntry = toBcosEntry(entry.second);
             bcosTableData->emplace(entry.first, bcosEntry);
         }
         tableDatas.emplace_back(bcosTableData);
@@ -105,6 +101,7 @@ inline bcostars::TableFactory toTarsTableFactory(
 
     tarsTableFactory.num = tableFactory->blockNumber();
     auto tableDatas = tableFactory->exportData(tableFactory->blockNumber());
+    // set the tableInfo
     for (auto const& tableInfo : tableDatas.first)
     {
         bcostars::TableInfo tarsTableInfo;
@@ -113,6 +110,21 @@ inline bcostars::TableFactory toTarsTableFactory(
         tarsTableInfo._key = tableInfo->key;
 
         tarsTableFactory.tableInfos.emplace_back(tarsTableInfo);
+    }
+    // set the tableData
+    for (auto tableData : tableDatas.second)
+    {
+        std::map<std::string, bcostars::Entry> tarsTableData;
+        if (!tableData)
+        {
+            continue;
+        }
+        for (auto tableDataItem : *tableData)
+        {
+            auto tarsEntry = toTarsEntry(tableDataItem.second);
+            tarsTableData[tableDataItem.first] = tarsEntry;
+        }
+        tarsTableFactory.datas.emplace_back(tarsTableData);
     }
     return tarsTableFactory;
 }

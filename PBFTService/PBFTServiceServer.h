@@ -102,17 +102,16 @@ private:
     bcos::txpool::TxPoolInterface::Ptr m_txpool;
     bcos::front::FrontServiceInterface::Ptr m_frontService;
     bcos::storage::StorageInterface::Ptr m_storage;
-    std::shared_ptr<bcos::ledger::Ledger> m_ledger;
     bcos::dispatcher::DispatcherInterface::Ptr m_dispatcher;
 
-    bcos::initializer::ProtocolInitializer::Ptr m_protocolInitializer;
+    static bcos::initializer::ProtocolInitializer::Ptr m_protocolInitializer;
 
-    bcos::protocol::BlockFactory::Ptr m_blockFactory;
-    bcos::crypto::KeyFactory::Ptr m_keyFactory;
+    static std::shared_ptr<bcos::ledger::Ledger> m_ledger;
+    static bcos::crypto::KeyFactory::Ptr m_keyFactory;
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
 
     std::atomic_bool m_running = {false};
     static std::once_flag m_initFlag;
-    bcos::BoostLogInitializer::Ptr m_logInitializer;
 };
 
 }  // namespace bcostars

@@ -375,6 +375,15 @@ public:
         return bcostars::Error();
     }
 
+    bcostars::Error asyncResetTxPool(tars::TarsCurrentPtr _current) override
+    {
+        _current->setResponse(false);
+        m_txpool->asyncResetTxPool([_current](bcos::Error::Ptr _error) {
+            async_response_asyncResetTxPool(_current, toTarsError(_error));
+        });
+        return bcostars::Error();
+    }
+
 private:
     static std::once_flag m_initFlag;
     static bcos::txpool::TxPool::Ptr m_txpool;
