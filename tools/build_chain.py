@@ -101,6 +101,7 @@ class TarsTool:
         self.upload_package_url = self.tars_url + 'api/upload_patch_package'
         self.add_task_url = self.tars_url + 'api/add_task'
         self.get_server_list_url = self.tars_url + 'api/server_list'
+        self.config_file_list_url = self.tars_url + 'api/config_file_list'
 
         self.app_name = app_name
         self.token_param = {'ticket': self.tars_token}
@@ -118,8 +119,8 @@ class TarsTool:
 
     def parse_response(operation, response):
         if response.status_code != 200:
-            log_error("%s failed, error message: %s" %
-                      (operation, response.content))
+            log_error("%s failed, error message: %s, error code: %d" %
+                      (operation, response.content, repsonse.status_code))
             return False
         result = response.json()
         error_msg = result['err_msg']
@@ -194,9 +195,52 @@ class TarsTool:
                         "server_name": "", "filename": config_file_name, "config": content}
         response = requests.post(
             self.add_config_url, params=self.token_param, json=request_data)
-        if TarsTool.parse_response("add application config file", response) is False:
+        if TarsTool.parse_response("add application config file", response) is True:
+            return True
+        if response.status_code != 200:
+            return False
+        # try to update config
+        log_info("add config file failed, try to update the config")
+        return self.update_app_config(config_file_name, config_file_path)
+
+    def update_app_config(self, config_file_name, config_file_path):
+        log_info("update config file for application %s, config file path: %s" %
+                 (self.app_name, config_file_path))
+        ret, config_id = self.get_config_file_id(config_file_name)
+        if ret is False:
+            return False
+        try:
+            fp = open(config_file_path)
+            content = fp.read()
+        except OSError as reason:
+            log_error("load the configuration failed, error: %s" % str(reason))
+        request_data = {"id": config_id, "config": content,
+                        "reason": "update config file"}
+        response = requests.post(
+            self.update_config_url, params=self.token_param, json=request_data)
+        if TarsTool.parse_response("update config file for application " + self.app_name + ", config file:" + config_file_name, response) is False:
             return False
         return True
+
+    def get_config_file_id(self, config_file_name):
+        log_info("query the config file id for %s" % config_file_name)
+        params = {"ticket": self.tars_token, "level": 1, "application": self.app_name,
+                  "server_name": "", "set_name": "", "set_area": "", "set_group": ""}
+        response = requests.get(
+            self.config_file_list_url, params=params)
+        if TarsTool.parse_response("query the config file id for " + config_file_name, response) is False:
+            return (False, 0)
+        result = response.json()
+        if "data" not in result or len(result["data"]) == 0:
+            log_error(
+                "query the config file id failed for %s because of empty return data" % config_file_name)
+            return (False, 0)
+        # try to find the config file info
+        for item in result["data"]:
+            if "filename" in item and item["filename"] == config_file_name:
+                return (True, item["id"])
+        log_error("the config file %s not found" % config_file_name)
+        return (False, 0)
 
     def add_app_config_list(self, config_list, config_file_list):
         i = 0
@@ -277,7 +321,7 @@ class TarsTool:
                 service_name, response.content))
             return (False, 0)
         result = response.json()
-        if "data" not in result or len(result) == 0 or "id" not in result["data"][0]:
+        if "data" not in result or len(result["data"]) == 0 or "id" not in result["data"][0]:
             log_error("get server info failed for empty return, server name: %s" %
                       service_name)
             return (False, 0)
@@ -352,6 +396,18 @@ class TarsTool:
         """
         return self.add_task(service_name, "restart")
 
+    def undeploy_tars(self, service_name):
+        """
+        undeploy the tars service
+        """
+        return self.add_task(service_name, "undeploy_tars")
+
+    def undeploy_server_list(self, server_list):
+        for server in server_list:
+            if self.undeploy_tars(server) is False:
+                return False
+        return True
+
     def restart_server_list(self, server_list):
         for server in server_list:
             if self.restart_server(server) is False:
@@ -367,7 +423,7 @@ class TarsTool:
             service_path = service_path_list[i]
             self.upload_and_publish_package(service, service_path)
             i = i+1
-            time.sleep(5)
+            time.sleep(10)
 
 
 def generate_pkg_path_list(config):
@@ -424,7 +480,6 @@ def generate_app_service_list(config):
                 config.tars_url, config.tars_token, app_name, item.deploy_ip)
             app_list.append(tars_tool)
             i = i + 1
-            log_info("begin create application %s" % app_name)
         j = j + 1
     return (True, app_list, config_base_dir_info)
 
@@ -437,7 +492,8 @@ def generate_tars_servers(config):
     # create service
     for app_service in app_list:
         # create the application
-        ret = tars_tool.create_application()
+        log_info("begin create application %s" % app_service.app_name)
+        ret = app_service.create_application()
         if ret is False:
             return (False)
         # create the service
@@ -477,6 +533,15 @@ def stop_all(config):
     return True
 
 
+def undeploy_all(config):
+    ret, app_list, config_base_dir_info = generate_app_service_list(config)
+    if ret is False:
+        return False
+    for app_service in app_list:
+        app_service.undeploy_server_list(service_list)
+    return True
+
+
 def create_blockchain_nodes(config):
     ret = generate_block_chain_config(config)
     if ret is False:
@@ -495,7 +560,7 @@ def parse_config_file(toml_file_path):
 def parse_command():
     parser = argparse.ArgumentParser(description='build_chain')
     parser.add_argument(
-        '--command', help="[Required]the command, current only support: generate_config/create_service/build_chain/restart_all/stop_all")
+        '--command', help="[Required]the command, current only support: generate_config/create_service/build_chain/restart_all/stop_all/undeploy_all")
     args = parser.parse_args()
     return args
 
@@ -538,6 +603,13 @@ def main():
             log_info("stop the blockchain and upload the service success")
         else:
             log_error("stop the blockchain failed")
+        return
+    if args.command == "undeploy_all":
+        ret = undeploy_all(config)
+        if ret is True:
+            log_info("undeploy the blockchain and upload the service success")
+        else:
+            log_error("undeploy the blockchain failed")
         return
 
 
