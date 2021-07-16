@@ -120,7 +120,7 @@ class TarsTool:
     def parse_response(operation, response):
         if response.status_code != 200:
             log_error("%s failed, error message: %s, error code: %d" %
-                      (operation, response.content, repsonse.status_code))
+                      (operation, response.content, response.status_code))
             return False
         result = response.json()
         error_msg = result['err_msg']
