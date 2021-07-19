@@ -49,7 +49,8 @@ public:
             bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
         };
 
-        m_proxy->async_asyncSubmit(new Callback(_txSubmitCallback, m_cryptoSuite), std::vector<char>(_tx->begin(), _tx->end()));
+        m_proxy->async_asyncSubmit(new Callback(_txSubmitCallback, m_cryptoSuite),
+            std::vector<char>(_tx->begin(), _tx->end()));
     }
 
     void asyncSealTxs(size_t _txsLimit, bcos::txpool::TxsHashSetPtr _avoidTxs,
@@ -73,13 +74,15 @@ public:
                 for (auto& it : return1)
                 {
                     bcos::crypto::HashType tmp;
-                    list1->push_back(bcos::crypto::HashType(bcos::bytesConstRef((bcos::byte*)it.data(), it.size())));
+                    list1->push_back(bcos::crypto::HashType(
+                        bcos::bytesConstRef((bcos::byte*)it.data(), it.size())));
                 }
 
                 auto list2 = std::make_shared<bcos::crypto::HashList>();
                 for (auto& it : return2)
                 {
-                    list2->push_back(bcos::crypto::HashType(bcos::bytesConstRef((bcos::byte*)it.data(), it.size())));
+                    list2->push_back(bcos::crypto::HashType(
+                        bcos::bytesConstRef((bcos::byte*)it.data(), it.size())));
                 }
 
                 m_callback(toBcosError(ret), list1, list2);
@@ -163,8 +166,9 @@ public:
         };
 
         auto nodeID = _generatedNodeID->data();
-        m_proxy->async_asyncVerifyBlock(
-            new Callback(_onVerifyFinished), std::vector<char>(nodeID.begin(), nodeID.end()), std::vector<char>(_block.begin(), _block.end()));
+        m_proxy->async_asyncVerifyBlock(new Callback(_onVerifyFinished),
+            std::vector<char>(nodeID.begin(), nodeID.end()),
+            std::vector<char>(_block.begin(), _block.end()));
     }
 
     void asyncFillBlock(bcos::crypto::HashListPtr _txsHash,
@@ -273,8 +277,9 @@ public:
         };
 
         auto nodeID = _nodeID->data();
-        m_proxy->async_asyncNotifyTxsSyncMessage(
-            new Callback(_onRecv), toTarsError(_error), _id, std::vector<char>(nodeID.begin(), nodeID.end()), std::vector<char>(_data.begin(), _data.data()));
+        m_proxy->async_asyncNotifyTxsSyncMessage(new Callback(_onRecv), toTarsError(_error), _id,
+            std::vector<char>(nodeID.begin(), nodeID.end()),
+            std::vector<char>(_data.begin(), _data.end()));
     }
 
     void notifyConnectedNodes(bcos::crypto::NodeIDSet const& _connectedNodes,

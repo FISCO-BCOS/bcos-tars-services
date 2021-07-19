@@ -109,7 +109,7 @@ public:
                 [txpoolClient](bcos::crypto::NodeIDPtr _nodeID, std::string const& _id,
                     bcos::bytesConstRef _data) {
                     txpoolClient->asyncNotifyTxsSyncMessage(
-                        nullptr, _id, _nodeID, _data, [](bcos::Error::Ptr _error) {
+                        nullptr, _id, _nodeID, _data, [_id](bcos::Error::Ptr _error) {
                             if (_error)
                             {
                                 FRONTSERVICE_LOG(WARNING)
@@ -127,11 +127,12 @@ public:
                 [blockSync](bcos::crypto::NodeIDPtr _nodeID, std::string const& _id,
                     bcos::bytesConstRef _data) {
                     blockSync->asyncNotifyBlockSyncMessage(
-                        nullptr, _id, _nodeID, _data, [](bcos::Error::Ptr _error) {
+                        nullptr, _id, _nodeID, _data, [_id, _nodeID](bcos::Error::Ptr _error) {
                             if (_error)
                             {
                                 FRONTSERVICE_LOG(WARNING)
                                     << LOG_DESC("asyncNotifyBlockSyncMessage failed")
+                                    << LOG_KV("peer", _nodeID->shortHex()) << LOG_KV("id", _id)
                                     << LOG_KV("code", _error->errorCode())
                                     << LOG_KV("msg", _error->errorMessage());
                             }
@@ -302,7 +303,8 @@ public:
 
         for (auto const& it : nodeIDs)
         {
-            bcosNodeIDs->push_back(m_keyFactory->createKey(bcos::bytesConstRef((bcos::byte*)it.data(), it.size())));
+            bcosNodeIDs->push_back(
+                m_keyFactory->createKey(bcos::bytesConstRef((bcos::byte*)it.data(), it.size())));
         }
 
         m_front->onReceiveNodeIDs(groupID, bcosNodeIDs, [current](bcos::Error::Ptr error) {

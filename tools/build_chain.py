@@ -412,6 +412,7 @@ class TarsTool:
         for server in server_list:
             if self.restart_server(server) is False:
                 return False
+            time.sleep(5)
         return True
 
     def get_service_list(self):
@@ -568,6 +569,9 @@ def parse_command():
 def main():
     config = parse_config_file("config.toml")
     args = parse_command()
+    if args.command is None or args.command == "":
+        log_error("Must set command, current supported_commands are: generate_config/create_service/build_chain/restart_all/stop_all/undeploy_all")
+        return
     if args.command == "generate_config":
         ret = generate_block_chain_config(config)
         if ret is True:
@@ -611,6 +615,7 @@ def main():
         else:
             log_error("undeploy the blockchain failed")
         return
+    log_error("Unsupported command %s, current supported commands are generate_config/create_service/build_chain/restart_all/stop_all/undeploy_all" % args.command)
 
 
 if __name__ == "__main__":
