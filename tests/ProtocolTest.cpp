@@ -33,6 +33,19 @@ struct Fixture
 
 BOOST_FIXTURE_TEST_SUITE(TestProtocol, Fixture)
 
+inline std::vector<bytes> fakeSealerList(
+    std::vector<KeyPairInterface::Ptr>& _keyPairVec, SignatureCrypto::Ptr _signImpl, size_t size)
+{
+    std::vector<bytes> sealerList;
+    for (size_t i = 0; i < size; i++)
+    {
+        auto keyPair = _signImpl->generateKeyPair();
+        _keyPairVec.emplace_back(keyPair);
+        sealerList.emplace_back(*(keyPair->publicKey()->encode()));
+    }
+    return sealerList;
+}
+
 BOOST_AUTO_TEST_CASE(transaction)
 {
     bcos::bytes to(bcos::asBytes("Target"));
@@ -40,7 +53,8 @@ BOOST_AUTO_TEST_CASE(transaction)
     bcos::u256 nonce(800);
 
     bcostars::protocol::TransactionFactoryImpl factory(cryptoSuite);
-    auto tx = factory.createTransaction(0, to, input, nonce, 100, "testChain", "testGroup", 1000, cryptoSuite->signatureImpl()->generateKeyPair());
+    auto tx = factory.createTransaction(0, to, input, nonce, 100, "testChain", "testGroup", 1000,
+        cryptoSuite->signatureImpl()->generateKeyPair());
 
     auto buffer = tx->encode(false);
 
@@ -138,11 +152,17 @@ BOOST_AUTO_TEST_CASE(block)
     bcos::bytes contractAddress(bcos::asBytes("contract Address!"));
 
     // set the blockHeader
+    std::vector<KeyPairInterface::Ptr> keyPairVec;
+    auto sealerList = fakeSealerList(keyPairVec, cryptoSuite->signatureImpl(), 4);
+
     auto header = block->blockHeader();
     header->setNumber(100);
     header->setGasUsed(1000);
     header->setStateRoot(bcos::crypto::HashType("62384386743874"));
     header->setTimestamp(500);
+
+    header->setSealerList(gsl::span<const bytes>(sealerList));
+    BOOST_CHECK(header->sealerList().size() == 4);
 
     auto logEntries = std::make_shared<std::vector<bcos::protocol::LogEntry>>();
     for (auto i : {1, 2, 3})
@@ -177,6 +197,15 @@ BOOST_AUTO_TEST_CASE(block)
 
     auto decodedBlock = blockFactory.createBlock(buffer);
 
+    BOOST_CHECK(decodedBlock->blockHeader()->sealerList().size() == header->sealerList().size());
+    // Note: decodedHeader must be here to ensure decodedSealerList not been released
+    auto decodedHeader = decodedBlock->blockHeader();
+    auto decodedSealerList = decodedHeader->sealerList();
+    for (auto i = 0; i < decodedSealerList.size(); i++)
+    {
+        BOOST_CHECK(decodedSealerList[i] == header->sealerList()[i]);
+        std::cout << "##### decodedSealerList size:" << decodedSealerList[i].size() << std::endl;
+    }
     BOOST_CHECK_EQUAL(block->blockHeader()->number(), decodedBlock->blockHeader()->number());
     BOOST_CHECK_EQUAL(block->blockHeader()->gasUsed(), decodedBlock->blockHeader()->gasUsed());
     BOOST_CHECK_EQUAL(block->blockHeader()->stateRoot(), decodedBlock->blockHeader()->stateRoot());
@@ -260,7 +289,7 @@ BOOST_AUTO_TEST_CASE(blockHeader)
 
     header->setParentInfo(std::move(parentInfoList));
 
-    for (auto flag : { false, true })
+    for (auto flag : {false, true})
     {
         auto buffer = header->encode(flag);
 
@@ -270,9 +299,12 @@ BOOST_AUTO_TEST_CASE(blockHeader)
         BOOST_CHECK_EQUAL(header->timestamp(), decodedHeader->timestamp());
         BOOST_CHECK_EQUAL(header->gasUsed(), decodedHeader->gasUsed());
         BOOST_CHECK_EQUAL(header->parentInfo().size(), decodedHeader->parentInfo().size());
-        for(int i = 0; i < decodedHeader->parentInfo().size(); ++i) {
-            BOOST_CHECK_EQUAL(bcos::toString(header->parentInfo()[i].blockHash), bcos::toString(decodedHeader->parentInfo()[i].blockHash));
-            BOOST_CHECK_EQUAL(header->parentInfo()[i].blockNumber, decodedHeader->parentInfo()[i].blockNumber);
+        for (int i = 0; i < decodedHeader->parentInfo().size(); ++i)
+        {
+            BOOST_CHECK_EQUAL(bcos::toString(header->parentInfo()[i].blockHash),
+                bcos::toString(decodedHeader->parentInfo()[i].blockHash));
+            BOOST_CHECK_EQUAL(
+                header->parentInfo()[i].blockNumber, decodedHeader->parentInfo()[i].blockNumber);
         }
     }
 

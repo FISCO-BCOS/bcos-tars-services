@@ -173,12 +173,21 @@ public:
         auto hashList = std::make_shared<std::vector<bcos::crypto::HashType>>();
         for (auto const& hashData : txHashs)
         {
-            hashList->push_back(bcos::crypto::HashType(reinterpret_cast<const bcos::byte*>(hashData.data()), hashData.size()));
+            hashList->push_back(bcos::crypto::HashType(
+                reinterpret_cast<const bcos::byte*>(hashData.data()), hashData.size()));
         }
 
         m_txpool->asyncFillBlock(hashList, [current](bcos::Error::Ptr error,
                                                bcos::protocol::TransactionsPtr txs) {
             std::vector<bcostars::Transaction> txList;
+            if (error)
+            {
+                async_response_asyncFillBlock(current, toTarsError(error), txList);
+                TXPOOLSERVICE_LOG(WARNING)
+                    << LOG_DESC("asyncFillBlock failed") << LOG_KV("code", error->errorCode())
+                    << LOG_KV("msg", error->errorMessage());
+                return;
+            }
             for (auto tx : *txs)
             {
                 txList.push_back(
@@ -198,7 +207,8 @@ public:
         auto hashList = std::make_shared<std::vector<bcos::crypto::HashType>>();
         for (auto hashData : txHashs)
         {
-            hashList->push_back(bcos::crypto::HashType(reinterpret_cast<const bcos::byte*>(hashData.data()), hashData.size()));
+            hashList->push_back(bcos::crypto::HashType(
+                reinterpret_cast<const bcos::byte*>(hashData.data()), hashData.size()));
         }
 
         m_txpool->asyncMarkTxs(hashList, sealedFlag, [current](bcos::Error::Ptr error) {
@@ -235,10 +245,12 @@ public:
     {
         current->setResponse(false);
 
-        auto bcosNodeID = m_cryptoSuite->keyFactory()->createKey(bcos::bytes(nodeID.begin(), nodeID.end()));
+        auto bcosNodeID =
+            m_cryptoSuite->keyFactory()->createKey(bcos::bytes(nodeID.begin(), nodeID.end()));
 
-        m_txpool->asyncNotifyTxsSyncMessage(
-            toBcosError(error), id, bcosNodeID, bcos::bytesConstRef(reinterpret_cast<const bcos::byte*>(data.data()), data.size()), [current](bcos::Error::Ptr error) {
+        m_txpool->asyncNotifyTxsSyncMessage(toBcosError(error), id, bcosNodeID,
+            bcos::bytesConstRef(reinterpret_cast<const bcos::byte*>(data.data()), data.size()),
+            [current](bcos::Error::Ptr error) {
                 async_response_asyncNotifyTxsSyncMessage(current, toTarsError(error));
             });
 
@@ -260,6 +272,15 @@ public:
         m_txpool->asyncSealTxs(txsLimit, bcosAvoidTxs,
             [current](bcos::Error::Ptr error, bcos::crypto::HashListPtr list1,
                 bcos::crypto::HashListPtr list2) {
+                if (error)
+                {
+                    TXPOOLSERVICE_LOG(WARNING)
+                        << LOG_DESC("asyncSealTxs failed") << LOG_KV("code", error->errorCode())
+                        << LOG_KV("msg", error->errorMessage());
+                    async_response_asyncSealTxs(current, toTarsError(error),
+                        vector<vector<tars::Char>>(), vector<vector<tars::Char>>());
+                    return;
+                }
                 vector<vector<tars::Char>> returnList1;
                 for (auto hash1 : *list1)
                 {
@@ -298,9 +319,11 @@ public:
     {
         current->setResponse(false);
 
-        bcos::crypto::PublicPtr pk = m_cryptoSuite->keyFactory()->createKey(bcos::bytesConstRef((const bcos::byte*)generatedNodeID.data(), generatedNodeID.size()));
-        m_txpool->asyncVerifyBlock(
-            pk, bcos::bytesConstRef((const bcos::byte*)block.data(), block.size()), [current](bcos::Error::Ptr error, bool result) {
+        bcos::crypto::PublicPtr pk = m_cryptoSuite->keyFactory()->createKey(
+            bcos::bytesConstRef((const bcos::byte*)generatedNodeID.data(), generatedNodeID.size()));
+        m_txpool->asyncVerifyBlock(pk,
+            bcos::bytesConstRef((const bcos::byte*)block.data(), block.size()),
+            [current](bcos::Error::Ptr error, bool result) {
                 async_response_asyncVerifyBlock(current, toTarsError(error), result);
             });
 
@@ -315,7 +338,8 @@ public:
         bcos::crypto::NodeIDSet bcosNodeIDSet;
         for (auto const& it : connectedNodes)
         {
-            bcosNodeIDSet.insert(m_cryptoSuite->keyFactory()->createKey(bcos::bytesConstRef((const bcos::byte*)it.data(), it.size())));
+            bcosNodeIDSet.insert(m_cryptoSuite->keyFactory()->createKey(
+                bcos::bytesConstRef((const bcos::byte*)it.data(), it.size())));
         }
 
         m_txpool->notifyConnectedNodes(bcosNodeIDSet, [current](bcos::Error::Ptr error) {
@@ -335,7 +359,9 @@ public:
         for (auto const& it : consensusNodeList)
         {
             bcos::consensus::ConsensusNode node(
-                m_cryptoSuite->keyFactory()->createKey(bcos::bytesConstRef((const bcos::byte*)it.nodeID.data(), it.nodeID.size())), it.weight);
+                m_cryptoSuite->keyFactory()->createKey(
+                    bcos::bytesConstRef((const bcos::byte*)it.nodeID.data(), it.nodeID.size())),
+                it.weight);
         }
 
         m_txpool->notifyConsensusNodeList(bcosNodeList, [current](bcos::Error::Ptr error) {
@@ -354,7 +380,9 @@ public:
         for (auto const& it : observerNodeList)
         {
             bcos::consensus::ConsensusNode node(
-                m_cryptoSuite->keyFactory()->createKey(bcos::bytesConstRef((const bcos::byte*)it.nodeID.data(), it.nodeID.size())), it.weight);
+                m_cryptoSuite->keyFactory()->createKey(
+                    bcos::bytesConstRef((const bcos::byte*)it.nodeID.data(), it.nodeID.size())),
+                it.weight);
         }
 
         m_txpool->notifyObserverNodeList(bcosObserverNodeList, [current](bcos::Error::Ptr error) {

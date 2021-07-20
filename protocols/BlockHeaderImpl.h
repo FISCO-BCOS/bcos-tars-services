@@ -203,7 +203,8 @@ public:
     void setSealerList(gsl::span<const bcos::bytes> const& _sealerList) override
     {
         m_inner->sealerList.clear();
-        for(auto const& it: m_sealerList) {
+        for (auto const& it : _sealerList)
+        {
             m_inner->sealerList.push_back(std::vector<char>(it.begin(), it.end()));
         }
     }
