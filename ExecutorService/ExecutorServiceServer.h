@@ -70,6 +70,12 @@ public:
     void init()
     {
         std::call_once(m_initFlag, [this]() {
+            auto communicator = Application::getCommunicator();
+            communicator->setProperty("sendqueuelimit", "10000000");
+            communicator->setProperty("asyncqueuecap", "10000000");
+            communicator->setProperty("nosendqueuelimit", "10000000");
+            communicator->setProperty("async-invoke-timeout", "60000");
+
             auto configPath = ServerConfig::BasePath + "config.ini";
             TLOGINFO(LOG_DESC("ExecutorService: initLog")
                      << LOG_KV("configPath", configPath) << std::endl);
@@ -175,8 +181,8 @@ public:
         return bcostars::Error();
     }
 
-    bcostars::Error asyncGetCode(const std::string& address, vector<tars::Char>& code,
-        tars::TarsCurrentPtr current) override
+    bcostars::Error asyncGetCode(
+        const std::string& address, vector<tars::Char>& code, tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
@@ -189,7 +195,8 @@ public:
                     return;
                 }
 
-                async_response_asyncGetCode(current, toTarsError(error), std::vector<char>(code->begin(), code->end()));
+                async_response_asyncGetCode(
+                    current, toTarsError(error), std::vector<char>(code->begin(), code->end()));
             });
 
         return bcostars::Error();
