@@ -87,6 +87,15 @@ public:
         m_dispatcher->asyncExecuteBlock(bcosBlock, verify,
             [current](const bcos::Error::Ptr& error,
                 const bcos::protocol::BlockHeader::Ptr& blockHeader) {
+                if (error)
+                {
+                    DISPATCHERSERVICE_LOG(WARNING) << LOG_DESC("asyncExecuteBlock failed")
+                                                   << LOG_KV("code", error->errorCode())
+                                                   << LOG_KV("msg", error->errorMessage());
+                    async_response_asyncExecuteBlock(
+                        current, toTarsError(error), bcostars::BlockHeader());
+                    return;
+                }
                 async_response_asyncExecuteBlock(current, toTarsError(error),
                     std::dynamic_pointer_cast<bcostars::protocol::BlockHeaderImpl>(blockHeader)
                         ->inner());
@@ -99,11 +108,19 @@ public:
     {
         current->setResponse(false);
 
-        m_dispatcher->asyncGetLatestBlock(
-            [current](const bcos::Error::Ptr& error, const bcos::protocol::Block::Ptr& block) {
-                async_response_asyncGetLatestBlock(current, toTarsError(error),
-                    std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(block)->inner());
-            });
+        m_dispatcher->asyncGetLatestBlock([current](const bcos::Error::Ptr& error,
+                                              const bcos::protocol::Block::Ptr& block) {
+            if (error)
+            {
+                DISPATCHERSERVICE_LOG(WARNING)
+                    << LOG_DESC("asyncGetLatestBlock failed") << LOG_KV("code", error->errorCode())
+                    << LOG_KV("msg", error->errorMessage());
+                async_response_asyncGetLatestBlock(current, toTarsError(error), bcostars::Block());
+                return;
+            }
+            async_response_asyncGetLatestBlock(current, toTarsError(error),
+                std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(block)->inner());
+        });
 
         return bcostars::Error();
     }
