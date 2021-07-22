@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bcos-framework/libutilities/Common.h>
+#include <bcos-framework/interfaces/crypto/Hash.h>
 #include <tup/Tars.h>
 #include <cstdint>
 #include <functional>
@@ -10,6 +11,9 @@ namespace bcostars
 {
 namespace protocol
 {
+
+static bcos::crypto::HashType emptyHash;
+
 class BufferWriterByteVector
 {
 protected:

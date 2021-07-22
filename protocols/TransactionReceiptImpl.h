@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Block.h"
 #include "Common.h"
 #include "TransactionReceipt.h"
 #include "bcos-framework/libutilities/Common.h"
@@ -10,6 +11,7 @@
 #include <bcos-framework/interfaces/protocol/TransactionReceipt.h>
 #include <bcos-framework/interfaces/protocol/TransactionReceiptFactory.h>
 #include <bcos-framework/libprotocol/LogEntry.h>
+#include <variant>
 
 namespace bcostars
 {
@@ -18,18 +20,17 @@ namespace protocol
 class TransactionReceiptImpl : public bcos::protocol::TransactionReceipt
 {
 public:
-    TransactionReceiptImpl(bcos::crypto::CryptoSuite::Ptr _cryptoSuite)
+    explicit TransactionReceiptImpl(bcos::crypto::CryptoSuite::Ptr _cryptoSuite)
       : bcos::protocol::TransactionReceipt(_cryptoSuite),
-        m_inner(std::make_shared<bcostars::TransactionReceipt>())
+        m_innerData(bcostars::TransactionReceipt()),
+        m_inner(&std::get<bcostars::TransactionReceipt>(m_innerData))
     {}
 
-    TransactionReceiptImpl(bcos::crypto::CryptoSuite::Ptr _cryptoSuite,
-        bcostars::TransactionReceipt* receipt, bcos::protocol::Block::Ptr block)
-      : bcos::protocol::TransactionReceipt(_cryptoSuite)
-    {
-        m_inner = std::shared_ptr<bcostars::TransactionReceipt>(
-            receipt, [block](bcostars::TransactionReceipt*) {});
-    }
+    explicit TransactionReceiptImpl(bcos::crypto::CryptoSuite::Ptr _cryptoSuite,
+        std::shared_ptr<bcostars::Block> block, bcostars::TransactionReceipt* receipt)
+      : bcos::protocol::TransactionReceipt(_cryptoSuite), m_innerData(block), m_inner(receipt)
+
+    {}
 
     ~TransactionReceiptImpl() override {}
 
@@ -50,7 +51,8 @@ public:
             {
                 topics.emplace_back((const bcos::byte*)topicIt.data(), topicIt.size());
             }
-            bcos::protocol::LogEntry logEntry(bcos::bytes(it.address.begin(), it.address.end()), topics, bcos::bytes(it.data.begin(), it.data.end()));
+            bcos::protocol::LogEntry logEntry(bcos::bytes(it.address.begin(), it.address.end()),
+                topics, bcos::bytes(it.data.begin(), it.data.end()));
             m_logEntries.emplace_back(logEntry);
         }
     };
@@ -66,8 +68,7 @@ public:
             logEntry.address.assign(it.address().begin(), it.address().end());
             for (auto& topicIt : it.topics())
             {
-                logEntry.topic.push_back(
-                    std::vector<char>(topicIt.begin(), topicIt.end()));
+                logEntry.topic.push_back(std::vector<char>(topicIt.begin(), topicIt.end()));
             }
             logEntry.data.assign(it.data().begin(), it.data().end());
 
@@ -125,10 +126,9 @@ public:
     void setInner(bcostars::TransactionReceipt&& inner) { *m_inner = std::move(inner); }
 
 private:
-    mutable bcos::crypto::HashType m_hash;
-
+    std::variant<bcostars::TransactionReceipt, std::shared_ptr<bcostars::Block>> m_innerData;
+    bcostars::TransactionReceipt* m_inner;
     mutable bcos::bytes m_buffer;
-    mutable std::shared_ptr<bcostars::TransactionReceipt> m_inner;
     mutable bcos::u256 m_gasUsed;
     std::vector<bcos::protocol::LogEntry> m_logEntries;
 };
@@ -162,7 +162,8 @@ public:
     {
         auto transactionReceipt = std::make_shared<TransactionReceiptImpl>(m_cryptoSuite);
         transactionReceipt->m_inner->version = 0;
-        transactionReceipt->m_inner->contractAddress.assign(_contractAddress.begin(), _contractAddress.end());
+        transactionReceipt->m_inner->contractAddress.assign(
+            _contractAddress.begin(), _contractAddress.end());
         transactionReceipt->m_inner->status = _status;
         transactionReceipt->m_inner->output.assign(_output.begin(), _output.end());
 

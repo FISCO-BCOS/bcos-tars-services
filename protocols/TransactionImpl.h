@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Block.h"
 #include "Common.h"
 #include "Transaction.h"
 #include "bcos-framework/libutilities/DataConvertUtility.h"
@@ -19,15 +20,14 @@ class TransactionImpl : public bcos::protocol::Transaction
 public:
     explicit TransactionImpl(bcos::crypto::CryptoSuite::Ptr _cryptoSuite)
       : bcos::protocol::Transaction(_cryptoSuite),
-        m_inner(std::make_shared<bcostars::Transaction>())
+        m_innerData(bcostars::Transaction()),
+        m_inner(&std::get<bcostars::Transaction>(m_innerData))
     {}
 
-    TransactionImpl(bcos::crypto::CryptoSuite::Ptr _cryptoSuite, bcostars::Transaction* tx,
-        bcos::protocol::Block::Ptr block)
-      : bcos::protocol::Transaction(_cryptoSuite)
-    {
-        m_inner = std::shared_ptr<bcostars::Transaction>(tx, [block](bcostars::Transaction*) {});
-    }
+    explicit TransactionImpl(bcos::crypto::CryptoSuite::Ptr _cryptoSuite,
+        std::shared_ptr<bcostars::Block> block, bcostars::Transaction* tx)
+      : bcos::protocol::Transaction(_cryptoSuite), m_innerData(block), m_inner(tx)
+    {}
 
     ~TransactionImpl() {}
 
@@ -99,11 +99,13 @@ public:
     }
     bcos::bytesConstRef to() const override
     {
-        return bcos::bytesConstRef(reinterpret_cast<const bcos::byte*>(m_inner->data.to.data()), m_inner->data.to.size());
+        return bcos::bytesConstRef(
+            reinterpret_cast<const bcos::byte*>(m_inner->data.to.data()), m_inner->data.to.size());
     }
     bcos::bytesConstRef input() const override
     {
-        return bcos::bytesConstRef(reinterpret_cast<const bcos::byte*>(m_inner->data.input.data()), m_inner->data.input.size());
+        return bcos::bytesConstRef(reinterpret_cast<const bcos::byte*>(m_inner->data.input.data()),
+            m_inner->data.input.size());
     }
     int64_t importTime() const override { return m_inner->importTime; }
     void setImportTime(int64_t _importTime) override { m_inner->importTime = _importTime; }
@@ -125,7 +127,8 @@ public:
     void setInner(bcostars::Transaction&& inner) { *m_inner = std::move(inner); }
 
 private:
-    mutable std::shared_ptr<bcostars::Transaction> m_inner;
+    std::variant<bcostars::Transaction, std::shared_ptr<bcostars::Block>> m_innerData;
+    bcostars::Transaction* m_inner;
     mutable bcos::bytes m_buffer;
     mutable bcos::bytes m_dataBuffer;
     mutable bcos::u256 m_nonce;
