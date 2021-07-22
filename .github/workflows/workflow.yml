@@ -155,11 +155,7 @@ jobs:
       - name: install CentOS dependencies
         run: |
           yum install -y epel-release centos-release-scl
-<<<<<<< HEAD
           yum install -y git make gcc gcc-c++ glibc-static glibc-devel cmake3 ccache devtoolset-7 libzstd-devel zlib-devel flex bison && source /opt/rh/devtoolset-7/enable
-=======
-          yum install -y git make gcc gcc-c++ glibc-static glibc-devel cmake3 ccache devtoolset-7 libzstd-devel zlib-devel flex && source /opt/rh/devtoolset-7/enable
->>>>>>> upstream/dev
           alias cmake='cmake3'
       - name: configure and compile
         run: |
