@@ -23,16 +23,17 @@ public:
     BlockHeaderImpl() = delete;
 
     BlockHeaderImpl(bcos::crypto::CryptoSuite::Ptr cryptoSuite)
-      : bcos::protocol::BlockHeader(cryptoSuite), m_inner(std::make_shared<bcostars::BlockHeader>())
+      : bcos::protocol::BlockHeader(cryptoSuite),
+        m_innerData(bcostars::BlockHeader()),
+        m_inner(&std::get<bcostars::BlockHeader>(m_innerData))
     {}
 
-    BlockHeaderImpl(bcos::crypto::CryptoSuite::Ptr cryptoSuite, bcostars::BlockHeader* header,
-        bcos::protocol::Block::Ptr block)
-      : bcos::protocol::BlockHeader(cryptoSuite)
-    {
-        m_inner =
-            std::shared_ptr<bcostars::BlockHeader>(header, [block](bcostars::BlockHeader*) {});
-    }
+    BlockHeaderImpl(
+        bcos::crypto::CryptoSuite::Ptr cryptoSuite, std::shared_ptr<bcostars::Block> block)
+      : bcos::protocol::BlockHeader(cryptoSuite),
+        m_innerData(block),
+        m_inner(&(std::get<std::shared_ptr<bcostars::Block>>(m_innerData)->blockHeader))
+    {}
 
     virtual void decode(bcos::bytesConstRef _data) override
     {
@@ -70,7 +71,7 @@ public:
 
     void clear() override { *m_inner = bcostars::BlockHeader(); }
 
-    int32_t version() const override { return inner().version; }
+    int32_t version() const override { return m_inner->version; }
 
     gsl::span<const bcos::protocol::ParentInfo> parentInfo() const override
     {
@@ -93,27 +94,25 @@ public:
     {
         if (!m_inner->txsRoot.empty())
         {
-            m_txsRoot = *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner->txsRoot.data()));
+            return *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner->txsRoot.data()));
         }
-        return m_txsRoot;
+        return bcostars::protocol::emptyHash;
     }
     bcos::crypto::HashType const& stateRoot() const override
     {
         if (!m_inner->stateRoot.empty())
         {
-            m_stateRoot =
-                *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner->stateRoot.data()));
+            return *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner->stateRoot.data()));
         }
-        return m_stateRoot;
+        return bcostars::protocol::emptyHash;
     }
     bcos::crypto::HashType const& receiptsRoot() const override
     {
         if (!m_inner->receiptRoot.empty())
         {
-            m_receiptRoot =
-                *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner->receiptRoot.data()));
+            return *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner->receiptRoot.data()));
         }
-        return m_receiptRoot;
+        return bcostars::protocol::emptyHash;
     }
     bcos::protocol::BlockNumber number() const override { return m_inner->blockNumber; }
     bcos::u256 const& gasUsed() override
@@ -126,19 +125,11 @@ public:
     }
     int64_t timestamp() override { return m_inner->timestamp; }
     int64_t sealer() override { return m_inner->sealer; }
+
     gsl::span<const bcos::bytes> sealerList() const override
     {
-        if (m_sealerList.empty())
-        {
-            m_sealerList.reserve(m_inner->sealerList.size());
-
-            for (auto const& it : m_inner->sealerList)
-            {
-                m_sealerList.emplace_back(bcos::bytes(it.begin(), it.end()));
-            }
-        }
-
-        return m_sealerList;
+        return gsl::span(reinterpret_cast<const bcos::bytes*>(m_inner->sealerList.data()),
+            m_inner->sealerList.size());
     }
     bcos::bytesConstRef extraData() const override
     {
@@ -254,14 +245,11 @@ public:
     void setInner(const bcostars::BlockHeader&& blockHeader) { *m_inner = std::move(blockHeader); }
 
 private:
-    mutable std::vector<bcos::bytes> m_sealerList;
-    mutable bcos::crypto::HashType m_txsRoot;
-    mutable bcos::crypto::HashType m_stateRoot;
-    mutable bcos::crypto::HashType m_receiptRoot;
-    bcos::protocol::Block::Ptr m_blockPtr;
+    std::variant<bcostars::BlockHeader, std::shared_ptr<bcostars::Block>> m_innerData;
+    bcostars::BlockHeader* m_inner;
+
     mutable std::vector<bcos::protocol::ParentInfo> m_parentInfo;
     mutable bcos::u256 m_gasUsed;
-    mutable std::shared_ptr<bcostars::BlockHeader> m_inner;
     mutable bcos::bytes m_buffer;
 };
 

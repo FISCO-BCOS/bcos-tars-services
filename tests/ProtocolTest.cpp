@@ -26,9 +26,22 @@ struct Fixture
         cryptoSuite =
             std::make_shared<bcos::crypto::CryptoSuite>(std::make_shared<bcos::test::Sm3Hash>(),
                 std::make_shared<bcos::test::SM2SignatureImpl>(), nullptr);
+
+        blockHeaderFactory =
+            std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(cryptoSuite);
+        transactionFactory =
+            std::make_shared<bcostars::protocol::TransactionFactoryImpl>(cryptoSuite);
+        transactionReceiptFactory =
+            std::make_shared<bcostars::protocol::TransactionReceiptFactoryImpl>(cryptoSuite);
+        blockFactory = std::make_shared<bcostars::protocol::BlockFactoryImpl>(
+            cryptoSuite, blockHeaderFactory, transactionFactory, transactionReceiptFactory);
     }
 
     bcos::crypto::CryptoSuite::Ptr cryptoSuite;
+    std::shared_ptr<bcostars::protocol::BlockHeaderFactoryImpl> blockHeaderFactory;
+    std::shared_ptr<bcostars::protocol::TransactionFactoryImpl> transactionFactory;
+    std::shared_ptr<bcostars::protocol::TransactionReceiptFactoryImpl> transactionReceiptFactory;
+    std::shared_ptr<bcostars::protocol::BlockFactoryImpl> blockFactory;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestProtocol, Fixture)
@@ -130,16 +143,7 @@ BOOST_AUTO_TEST_CASE(transactionReceipt)
 
 BOOST_AUTO_TEST_CASE(block)
 {
-    auto blockHeaderFactory =
-        std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(cryptoSuite);
-    auto transactionFactory =
-        std::make_shared<bcostars::protocol::TransactionFactoryImpl>(cryptoSuite);
-    auto transactionReceiptFactory =
-        std::make_shared<bcostars::protocol::TransactionReceiptFactoryImpl>(cryptoSuite);
-    bcostars::protocol::BlockFactoryImpl blockFactory(
-        cryptoSuite, blockHeaderFactory, transactionFactory, transactionReceiptFactory);
-
-    auto block = blockFactory.createBlock();
+    auto block = blockFactory->createBlock();
     block->setVersion(883);
     block->setBlockType(bcos::protocol::WithTransactionsHash);
 
@@ -195,16 +199,23 @@ BOOST_AUTO_TEST_CASE(block)
     bcos::bytes buffer;
     BOOST_CHECK_NO_THROW(block->encode(buffer));
 
-    auto decodedBlock = blockFactory.createBlock(buffer);
+    auto decodedBlock = blockFactory->createBlock(buffer);
 
     BOOST_CHECK(decodedBlock->blockHeader()->sealerList().size() == header->sealerList().size());
-    // Note: decodedHeader must be here to ensure decodedSealerList not been released
-    auto decodedHeader = decodedBlock->blockHeader();
-    auto decodedSealerList = decodedHeader->sealerList();
+    // ensure the sealerlist lifetime
+    auto decodedSealerList = decodedBlock->blockHeader()->sealerList();
     for (auto i = 0; i < decodedSealerList.size(); i++)
     {
-        BOOST_CHECK(decodedSealerList[i] == header->sealerList()[i]);
+        BOOST_CHECK(decodedSealerList[i] == sealerList[i]);
         std::cout << "##### decodedSealerList size:" << decodedSealerList[i].size() << std::endl;
+    }
+
+    // ensure the blockheader lifetime
+    for (auto i = 0; i < decodedBlock->blockHeader()->sealerList().size(); i++)
+    {
+        BOOST_CHECK(decodedBlock->blockHeader()->sealerList()[i] == sealerList[i]);
+        std::cout << "##### decodedSealerList size:"
+                  << decodedBlock->blockHeader()->sealerList()[i].size() << std::endl;
     }
     BOOST_CHECK_EQUAL(block->blockHeader()->number(), decodedBlock->blockHeader()->number());
     BOOST_CHECK_EQUAL(block->blockHeader()->gasUsed(), decodedBlock->blockHeader()->gasUsed());
@@ -217,59 +228,115 @@ BOOST_AUTO_TEST_CASE(block)
     BOOST_CHECK_EQUAL(block->transactionsSize(), decodedBlock->transactionsSize());
     for (size_t i = 0; i < block->transactionsSize(); ++i)
     {
-        auto lhs = block->transaction(i);
-        auto rhs = decodedBlock->transaction(i);
+        {
+            auto lhs = block->transaction(i);
+            auto rhs = decodedBlock->transaction(i);
 
-        BOOST_CHECK_EQUAL(lhs->hash().hex(), rhs->hash().hex());
-        BOOST_CHECK_EQUAL(lhs->version(), rhs->version());
-        BOOST_CHECK_EQUAL(lhs->to().toString(), rhs->to().toString());
-        BOOST_CHECK_EQUAL(bcos::asString(lhs->input()), bcos::asString(rhs->input()));
+            BOOST_CHECK_EQUAL(lhs->hash().hex(), rhs->hash().hex());
+            BOOST_CHECK_EQUAL(lhs->version(), rhs->version());
+            BOOST_CHECK_EQUAL(lhs->to().toString(), rhs->to().toString());
+            BOOST_CHECK_EQUAL(bcos::asString(lhs->input()), bcos::asString(rhs->input()));
 
-        BOOST_CHECK_EQUAL(lhs->nonce(), rhs->nonce());
-        BOOST_CHECK_EQUAL(lhs->blockLimit(), rhs->blockLimit());
-        BOOST_CHECK_EQUAL(lhs->chainId(), rhs->chainId());
-        BOOST_CHECK_EQUAL(lhs->groupId(), rhs->groupId());
-        BOOST_CHECK_EQUAL(lhs->importTime(), rhs->importTime());
+            BOOST_CHECK_EQUAL(lhs->nonce(), rhs->nonce());
+            BOOST_CHECK_EQUAL(lhs->blockLimit(), rhs->blockLimit());
+            BOOST_CHECK_EQUAL(lhs->chainId(), rhs->chainId());
+            BOOST_CHECK_EQUAL(lhs->groupId(), rhs->groupId());
+            BOOST_CHECK_EQUAL(lhs->importTime(), rhs->importTime());
+        }
+
+        {
+            // ensure the transaction's lifetime
+            BOOST_CHECK_EQUAL(
+                block->transaction(i)->hash().hex(), decodedBlock->transaction(i)->hash().hex());
+            BOOST_CHECK_EQUAL(
+                block->transaction(i)->version(), decodedBlock->transaction(i)->version());
+            BOOST_CHECK_EQUAL(block->transaction(i)->to().toString(),
+                decodedBlock->transaction(i)->to().toString());
+            BOOST_CHECK_EQUAL(bcos::asString(block->transaction(i)->input()),
+                bcos::asString(decodedBlock->transaction(i)->input()));
+
+            BOOST_CHECK_EQUAL(
+                block->transaction(i)->nonce(), decodedBlock->transaction(i)->nonce());
+            BOOST_CHECK_EQUAL(
+                block->transaction(i)->blockLimit(), decodedBlock->transaction(i)->blockLimit());
+            BOOST_CHECK_EQUAL(
+                block->transaction(i)->chainId(), decodedBlock->transaction(i)->chainId());
+            BOOST_CHECK_EQUAL(
+                block->transaction(i)->groupId(), decodedBlock->transaction(i)->groupId());
+            BOOST_CHECK_EQUAL(
+                block->transaction(i)->importTime(), decodedBlock->transaction(i)->importTime());
+        }
     }
 
     BOOST_CHECK_EQUAL(block->receiptsSize(), decodedBlock->receiptsSize());
     for (size_t i = 0; i < block->receiptsSize(); ++i)
     {
-        auto lhs = block->receipt(i);
-        auto rhs = decodedBlock->receipt(i);
-
-        BOOST_CHECK_EQUAL(lhs->hash().hex(), rhs->hash().hex());
-        BOOST_CHECK_EQUAL(lhs->version(), rhs->version());
-        BOOST_CHECK_EQUAL(lhs->gasUsed(), rhs->gasUsed());
-        BOOST_CHECK_EQUAL(
-            bcos::asString(lhs->contractAddress()), bcos::asString(rhs->contractAddress()));
-        BOOST_CHECK_EQUAL(lhs->logEntries().size(), rhs->logEntries().size());
-        for (auto i = 0; i < lhs->logEntries().size(); ++i)
         {
-            BOOST_CHECK_EQUAL(lhs->logEntries()[i].address().toString(),
-                rhs->logEntries()[i].address().toString());
+            auto lhs = block->receipt(i);
+            auto rhs = decodedBlock->receipt(i);
+
+            BOOST_CHECK_EQUAL(lhs->hash().hex(), rhs->hash().hex());
+            BOOST_CHECK_EQUAL(lhs->version(), rhs->version());
+            BOOST_CHECK_EQUAL(lhs->gasUsed(), rhs->gasUsed());
             BOOST_CHECK_EQUAL(
-                lhs->logEntries()[i].topics().size(), rhs->logEntries()[i].topics().size());
-            for (auto j = 0; j < lhs->logEntries()[i].topics().size(); ++j)
+                bcos::asString(lhs->contractAddress()), bcos::asString(rhs->contractAddress()));
+            BOOST_CHECK_EQUAL(lhs->logEntries().size(), rhs->logEntries().size());
+            for (auto i = 0; i < lhs->logEntries().size(); ++i)
             {
+                BOOST_CHECK_EQUAL(lhs->logEntries()[i].address().toString(),
+                    rhs->logEntries()[i].address().toString());
                 BOOST_CHECK_EQUAL(
-                    lhs->logEntries()[i].topics()[j].hex(), rhs->logEntries()[i].topics()[j].hex());
+                    lhs->logEntries()[i].topics().size(), rhs->logEntries()[i].topics().size());
+                for (auto j = 0; j < lhs->logEntries()[i].topics().size(); ++j)
+                {
+                    BOOST_CHECK_EQUAL(lhs->logEntries()[i].topics()[j].hex(),
+                        rhs->logEntries()[i].topics()[j].hex());
+                }
+                BOOST_CHECK_EQUAL(
+                    lhs->logEntries()[i].data().toString(), rhs->logEntries()[i].data().toString());
             }
-            BOOST_CHECK_EQUAL(
-                lhs->logEntries()[i].data().toString(), rhs->logEntries()[i].data().toString());
+
+            BOOST_CHECK_EQUAL(lhs->status(), rhs->status());
+            BOOST_CHECK_EQUAL(bcos::asString(lhs->output()), bcos::asString(rhs->output()));
+            BOOST_CHECK_EQUAL(lhs->blockNumber(), rhs->blockNumber());
         }
 
-        BOOST_CHECK_EQUAL(lhs->status(), rhs->status());
-        BOOST_CHECK_EQUAL(bcos::asString(lhs->output()), bcos::asString(rhs->output()));
-        BOOST_CHECK_EQUAL(lhs->blockNumber(), rhs->blockNumber());
+        // ensure the receipt's lifetime
+        {
+            BOOST_CHECK_EQUAL(
+                block->receipt(i)->hash().hex(), decodedBlock->receipt(i)->hash().hex());
+            BOOST_CHECK_EQUAL(block->receipt(i)->version(), decodedBlock->receipt(i)->version());
+            BOOST_CHECK_EQUAL(block->receipt(i)->gasUsed(), decodedBlock->receipt(i)->gasUsed());
+            BOOST_CHECK_EQUAL(bcos::asString(block->receipt(i)->contractAddress()),
+                bcos::asString(decodedBlock->receipt(i)->contractAddress()));
+            BOOST_CHECK_EQUAL(block->receipt(i)->logEntries().size(),
+                decodedBlock->receipt(i)->logEntries().size());
+            for (auto i = 0; i < block->receipt(i)->logEntries().size(); ++i)
+            {
+                BOOST_CHECK_EQUAL(block->receipt(i)->logEntries()[i].address().toString(),
+                    decodedBlock->receipt(i)->logEntries()[i].address().toString());
+                BOOST_CHECK_EQUAL(block->receipt(i)->logEntries()[i].topics().size(),
+                    decodedBlock->receipt(i)->logEntries()[i].topics().size());
+                for (auto j = 0; j < block->receipt(i)->logEntries()[i].topics().size(); ++j)
+                {
+                    BOOST_CHECK_EQUAL(block->receipt(i)->logEntries()[i].topics()[j].hex(),
+                        decodedBlock->receipt(i)->logEntries()[i].topics()[j].hex());
+                }
+                BOOST_CHECK_EQUAL(block->receipt(i)->logEntries()[i].data().toString(),
+                    decodedBlock->receipt(i)->logEntries()[i].data().toString());
+            }
+
+            BOOST_CHECK_EQUAL(block->receipt(i)->status(), decodedBlock->receipt(i)->status());
+            BOOST_CHECK_EQUAL(bcos::asString(block->receipt(i)->output()),
+                bcos::asString(decodedBlock->receipt(i)->output()));
+            BOOST_CHECK_EQUAL(
+                block->receipt(i)->blockNumber(), decodedBlock->receipt(i)->blockNumber());
+        }
     }
 }
 
 BOOST_AUTO_TEST_CASE(blockHeader)
 {
-    auto blockHeaderFactory =
-        std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(cryptoSuite);
-
     auto header = blockHeaderFactory->createBlockHeader();
 
     BOOST_CHECK_EQUAL(header->gasUsed(), bcos::u256(0));

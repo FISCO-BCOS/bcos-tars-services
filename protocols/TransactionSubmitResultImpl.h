@@ -9,6 +9,7 @@
 #include <bcos-framework/interfaces/protocol/TransactionSubmitResultFactory.h>
 #include <boost/lexical_cast.hpp>
 #include <memory>
+#include "Common.h"
 
 namespace bcostars
 {
@@ -35,9 +36,9 @@ public:
     {
         if (!m_inner.txHash.empty())
         {
-            m_txHash = *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner.txHash.data()));
+            return *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner.txHash.data()));
         }
-        return m_txHash;
+        return emptyHash;
     }
     bcos::bytesConstRef from() const override
     {
@@ -47,10 +48,9 @@ public:
     {
         if (!m_inner.blockHash.empty())
         {
-            m_blockHash =
-                *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner.blockHash.data()));
+            return *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner.blockHash.data()));
         }
-        return m_blockHash;
+        return emptyHash;
     }
     bcos::bytesConstRef to() const override
     {
@@ -76,8 +76,6 @@ public:
     void setInner(const bcostars::TransactionSubmitResult& result) { m_inner = result; }
 
 private:
-    mutable bcos::crypto::HashType m_txHash;
-    mutable bcos::crypto::HashType m_blockHash;
     mutable bcos::protocol::NonceType m_nonce;
     bcostars::TransactionSubmitResult m_inner;
     bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
