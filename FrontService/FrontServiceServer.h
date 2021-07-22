@@ -253,6 +253,8 @@ public:
         const vector<tars::Char>& nodeID, const vector<tars::Char>& data,
         tars::TarsCurrentPtr current) override
     {
+        FRONTSERVICE_LOG(TRACE) << LOG_DESC("asyncSendResponse server") << LOG_KV("id", id);
+        current->setResponse(false);
         m_front->asyncSendResponse(id, moduleID,
             m_keyFactory->createKey(bcos::bytesConstRef((bcos::byte*)nodeID.data(), nodeID.size())),
             bcos::bytesConstRef((bcos::byte*)data.data(), data.size()),

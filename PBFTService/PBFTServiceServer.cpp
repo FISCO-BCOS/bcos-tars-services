@@ -186,7 +186,10 @@ void PBFTServiceServer::registerHandlers()
             sealer->asyncNotifySealProposal(
                 _proposalIndex, _proposalEndIndex, _maxTxsToSeal, _onRecvResponse);
         });
-
+    // handler to notify the sealer reset the sealing proposals
+    m_pbft->registerSealerResetNotifier([sealer](std::function<void(bcos::Error::Ptr)> _onRecv) {
+        sealer->asyncResetSealing(_onRecv);
+    });
     // the consensus module notify the latest blockNumber to the sealer
     m_pbft->registerStateNotifier([sealer](bcos::protocol::BlockNumber _blockNumber) {
         sealer->asyncNoteLatestBlockNumber(_blockNumber);
