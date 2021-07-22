@@ -1,11 +1,11 @@
 [tars]
 tars_url = "http://127.0.0.1:3000"
 tars_token = ""
-tars_pkg_dir = "/home/more/FISCO-BCOS-dev/bcos-tars-services-build/"
+tars_pkg_dir = "../build"
 
 [chain]
 # the chain name
-app_name = "my_node"
+app_name = "mynode"
 # use sm or not
 sm_mode = false 
 p2p_listen_port = 30300
