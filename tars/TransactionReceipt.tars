@@ -8,11 +8,11 @@ module bcostars {
     struct TransactionReceipt {
         1 require int version;
         2 require string gasUsed;
-        3 require vector<byte> contractAddress;
+        3 optional vector<byte> contractAddress;
         4 require byte bloom[256];
         5 require int status;
-        6 require vector<byte> output;
-        7 require vector<LogEntry> logEntries;
+        6 optional vector<byte> output;
+        7 optional vector<LogEntry> logEntries;
         8 require long blockNumber;
     };
 };

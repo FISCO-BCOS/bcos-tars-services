@@ -1,11 +1,11 @@
 [tars]
 tars_url = "http://127.0.0.1:3000"
 tars_token = ""
-tars_pkg_dir = "../build"
+tars_pkg_dir = "/home/more/FISCO-BCOS-dev/bcos-tars-services-build/"
 
 [chain]
 # the chain name
-app_name = "nodes"
+app_name = "my_node"
 # use sm or not
 sm_mode = false 
 p2p_listen_port = 30300
@@ -18,5 +18,5 @@ consensus_type = "pbft"
 gas_limit = "300000000"
 
 [[deploy_info]]
-deploy_ip = "192.168.192.168"
-node_count = 2
+deploy_ip = "192.168.86.16"
+node_count = 4
