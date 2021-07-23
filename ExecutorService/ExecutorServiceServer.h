@@ -95,13 +95,6 @@ public:
             nodeConfig->loadConfig(configPath);
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init nodeConfig success");
 
-            // load the gensisConfig
-            auto genesisConfigPath = ServerConfig::BasePath + "config.genesis";
-            EXECUTORSERVICE_LOG(INFO)
-                << LOG_DESC("init GenesisConfig") << LOG_KV("configPath", genesisConfigPath);
-            nodeConfig->loadGenesisConfig(genesisConfigPath);
-            EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init GenesisConfig success");
-
             // load the protocol
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init protocol");
             auto protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
@@ -122,15 +115,6 @@ public:
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init ledger");
             auto ledger = std::make_shared<bcos::ledger::Ledger>(
                 protocolInitializer->blockFactory(), storageServiceClient);
-            EXECUTORSERVICE_LOG(INFO) << LOG_DESC("build the genesis block");
-            // write the genesis block through ledger
-            auto ret = ledger->buildGenesisBlock(
-                nodeConfig->ledgerConfig(), nodeConfig->txGasLimit(), nodeConfig->genesisData());
-            if (!ret)
-            {
-                EXECUTORSERVICE_LOG(ERROR) << LOG_DESC("build genesis failed");
-                exit(0);
-            }
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init ledger success");
 
             // init the dispatcher
