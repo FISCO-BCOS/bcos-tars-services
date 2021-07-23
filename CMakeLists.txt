@@ -46,7 +46,7 @@ add_subdirectory(protocols)
 add_subdirectory(libinitializer)
 
 # import services
-list(APPEND SERVICE_LIST StorageService FrontService GatewayService PBFTService ExecutorService DispatcherService TxPoolService)
+list(APPEND SERVICE_LIST StorageService FrontService GatewayService PBFTService ExecutorService DispatcherService TxPoolService RpcService)
 foreach(SERVICE ${SERVICE_LIST})
     add_subdirectory(${SERVICE})
 
