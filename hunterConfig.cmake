@@ -1,7 +1,8 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-    URL "https://${URL_BASE}/cyjseagull/bcos-framework/archive/c1079bbd5bb57c473e468dcf73f5d4e11ca4da20.tar.gz"
-    SHA1 fbc3c3352317ab27255e63df579482a3ec5a68dd
+    URL "https://${URL_BASE}/cyjseagull/bcos-framework/archive/fd9c116368c11d54057ce37b21d6f32e8b366553.tar.gz"
+    SHA1 6103aa7c53938c453277961309f000a1d6b9e2d4
+    CMAKE_ARGS DEBUG=OFF
 )
 
 hunter_config(bcos-crypto
@@ -12,13 +13,13 @@ hunter_config(bcos-crypto
 )
 
 hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
-    URL "https://${URL_BASE}/cyjseagull/bcos-txpool/archive/079af98cd49362e83e095107e80138479781b3d2.tar.gz"
-    SHA1 3e8a9a641ea41ec6bc4a7d753fe719b1c3d317df
+    URL "https://${URL_BASE}/cyjseagull/bcos-txpool/archive/8314037afd0fa377cb86656a927416c730091c58.tar.gz"
+    SHA1 72830d685a3955cf63152e1c113e94c84a6b795a
 )
 
 hunter_config(bcos-pbft VERSION 3.0.0-local-a2a9f7d2
-    URL "https://${URL_BASE}/cyjseagull/bcos-pbft/archive/a1b9a65bdc18376b658b7c4e7734ff0c870f7d22.tar.gz"
-    SHA1 39a128f379b299165884195c669375b4785311f8
+    URL "https://${URL_BASE}/cyjseagull/bcos-pbft/archive/e9a134e22e7fb5af14b0db81a6503573f25f45af.tar.gz"
+    SHA1 088603373423e0153c28e679dea3e50215ee006d
 )
 
 hunter_config(bcos-sync VERSION 3.0.0-local-50e0e264

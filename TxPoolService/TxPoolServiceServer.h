@@ -201,6 +201,7 @@ public:
     }
 
     bcostars::Error asyncMarkTxs(const vector<vector<tars::Char>>& txHashs, tars::Bool sealedFlag,
+        tars::Int64 _batchId, const vector<tars::Char>& _batchHash,
         tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
@@ -210,10 +211,12 @@ public:
             hashList->push_back(bcos::crypto::HashType(
                 reinterpret_cast<const bcos::byte*>(hashData.data()), hashData.size()));
         }
-
-        m_txpool->asyncMarkTxs(hashList, sealedFlag, [current](bcos::Error::Ptr error) {
-            async_response_asyncMarkTxs(current, toTarsError(error));
-        });
+        auto batchHash = bcos::crypto::HashType(
+            reinterpret_cast<const bcos::byte*>(_batchHash.data()), _batchHash.size());
+        m_txpool->asyncMarkTxs(
+            hashList, sealedFlag, _batchId, batchHash, [current](bcos::Error::Ptr error) {
+                async_response_asyncMarkTxs(current, toTarsError(error));
+            });
         return bcostars::Error();
     }
 
