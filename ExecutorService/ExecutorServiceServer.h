@@ -74,7 +74,6 @@ public:
             communicator->setProperty("sendqueuelimit", "10000000");
             communicator->setProperty("asyncqueuecap", "10000000");
             communicator->setProperty("nosendqueuelimit", "10000000");
-            communicator->setProperty("async-invoke-timeout", "60000");
 
             auto configPath = ServerConfig::BasePath + "config.ini";
             TLOGINFO(LOG_DESC("ExecutorService: initLog")

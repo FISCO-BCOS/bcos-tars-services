@@ -7,5 +7,6 @@ module bcostars {
         Error asyncSendMessageByNodeIDs(string groupID, vector<byte> srcNodeID, vector<vector<byte>> dstNodeID, vector<byte> payload);
 
         Error asyncSendBroadcastMessage(string groupID, vector<byte> srcNodeID, vector<byte> payload);
+        Error asyncGetPeers(out string peers);
     };
 };

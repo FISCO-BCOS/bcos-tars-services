@@ -118,6 +118,8 @@ public:
                 async_response_asyncGetLatestBlock(current, toTarsError(error), bcostars::Block());
                 return;
             }
+            BCOS_LOG(INFO) << LOG_DESC("async_response_asyncGetLatestBlock")
+                           << LOG_KV("number", block->blockHeader()->number());
             async_response_asyncGetLatestBlock(current, toTarsError(error),
                 std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(block)->inner());
         });
@@ -126,15 +128,17 @@ public:
     }
 
     bcostars::Error asyncNotifyExecutionResult(const bcostars::Error& error,
-        const bcostars::BlockHeader& blockHeader, tars::TarsCurrentPtr current) override
+        const vector<tars::Char>& orgHash, const bcostars::BlockHeader& blockHeader,
+        tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
         auto bcosBlockHeader = m_blockFactory->blockHeaderFactory()->createBlockHeader();
         std::dynamic_pointer_cast<bcostars::protocol::BlockHeaderImpl>(bcosBlockHeader)
             ->setInner(blockHeader);
-        m_dispatcher->asyncNotifyExecutionResult(
-            toBcosError(error), bcosBlockHeader, [current](const bcos::Error::Ptr& error) {
+        auto orgBlockHash = bcos::crypto::HashType(bcos::bytes(orgHash.begin(), orgHash.end()));
+        m_dispatcher->asyncNotifyExecutionResult(toBcosError(error), orgBlockHash, bcosBlockHeader,
+            [current](const bcos::Error::Ptr& error) {
                 async_response_asyncNotifyExecutionResult(current, toTarsError(error));
             });
         return bcostars::Error();

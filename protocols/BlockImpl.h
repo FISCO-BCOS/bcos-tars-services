@@ -112,10 +112,10 @@ public:
         {
             m_inner->receipts.resize(m_inner->transactions.size());
         }
-
-        m_inner->receipts[_index] =
+        auto innerReceipt =
             std::dynamic_pointer_cast<bcostars::protocol::TransactionReceiptImpl>(_receipt)
                 ->inner();
+        m_inner->receipts[_index] = innerReceipt;
     }
     void appendReceipt(bcos::protocol::TransactionReceipt::Ptr _receipt) override
     {

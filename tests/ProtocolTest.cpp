@@ -152,7 +152,6 @@ BOOST_AUTO_TEST_CASE(block)
     bcos::u256 nonce(100);
 
     bcos::crypto::HashType stateRoot(bcos::asBytes("root1"));
-    bcos::u256 gasUsed(8858);
     bcos::bytes contractAddress(bcos::asBytes("contract Address!"));
 
     // set the blockHeader

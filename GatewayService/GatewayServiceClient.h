@@ -36,7 +36,32 @@ public:
         auto srcNodeID = _srcNodeID->data();
         auto destNodeID = _dstNodeID->data();
         m_proxy->async_asyncSendMessageByNodeID(new Callback(_errorRespFunc), _groupID,
-            std::vector<char>(srcNodeID.begin(), srcNodeID.end()), std::vector<char>(destNodeID.begin(), destNodeID.end()), std::vector<char>(_payload.begin(), _payload.end()));
+            std::vector<char>(srcNodeID.begin(), srcNodeID.end()),
+            std::vector<char>(destNodeID.begin(), destNodeID.end()),
+            std::vector<char>(_payload.begin(), _payload.end()));
+    }
+
+    void asyncGetPeers(bcos::gateway::PeerRespFunc _peerRespFunc) override
+    {
+        class Callback : public bcostars::GatewayServicePrxCallback
+        {
+        public:
+            Callback(bcos::gateway::PeerRespFunc callback) : m_callback(callback) {}
+
+            void callback_asyncGetPeers(
+                const bcostars::Error& ret, const std::string& _peers) override
+            {
+                m_callback(toBcosError(ret), _peers);
+            }
+            void callback_asyncGetPeers_exception(tars::Int32 ret) override
+            {
+                m_callback(toBcosError(ret), "");
+            }
+
+        private:
+            bcos::gateway::PeerRespFunc m_callback;
+        };
+        m_proxy->async_asyncGetPeers(new Callback(_peerRespFunc));
     }
 
     void asyncSendMessageByNodeIDs(const std::string& _groupID, bcos::crypto::NodeIDPtr _srcNodeID,
@@ -50,16 +75,18 @@ public:
         }
 
         auto srcNodeID = _srcNodeID->data();
-        m_proxy->async_asyncSendMessageByNodeIDs(
-            nullptr, _groupID, std::vector<char>(srcNodeID.begin(), srcNodeID.end()), tarsNodeIDs, std::vector<char>(_payload.begin(), _payload.end()));
+        m_proxy->async_asyncSendMessageByNodeIDs(nullptr, _groupID,
+            std::vector<char>(srcNodeID.begin(), srcNodeID.end()), tarsNodeIDs,
+            std::vector<char>(_payload.begin(), _payload.end()));
     }
 
     void asyncSendBroadcastMessage(const std::string& _groupID, bcos::crypto::NodeIDPtr _srcNodeID,
         bcos::bytesConstRef _payload) override
     {
         auto srcNodeID = _srcNodeID->data();
-        m_proxy->async_asyncSendBroadcastMessage(
-            nullptr, _groupID, std::vector<char>(srcNodeID.begin(), srcNodeID.end()), std::vector<char>(_payload.begin(), _payload.end()));
+        m_proxy->async_asyncSendBroadcastMessage(nullptr, _groupID,
+            std::vector<char>(srcNodeID.begin(), srcNodeID.end()),
+            std::vector<char>(_payload.begin(), _payload.end()));
     }
 
 protected:
