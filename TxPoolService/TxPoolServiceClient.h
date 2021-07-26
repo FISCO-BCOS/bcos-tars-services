@@ -112,6 +112,7 @@ public:
     }
 
     void asyncMarkTxs(bcos::crypto::HashListPtr _txsHash, bool _sealedFlag,
+        bcos::protocol::BlockNumber _batchId, bcos::crypto::HashType const& _batchHash,
         std::function<void(bcos::Error::Ptr)> _onRecvResponse) override
     {
         class Callback : public bcostars::TxPoolServicePrxCallback
@@ -139,7 +140,8 @@ public:
             txHashList.push_back(std::vector<char>(it.begin(), it.end()));
         }
 
-        m_proxy->async_asyncMarkTxs(new Callback(_onRecvResponse), txHashList, _sealedFlag);
+        m_proxy->async_asyncMarkTxs(new Callback(_onRecvResponse), txHashList, _sealedFlag,
+            _batchId, std::vector<char>(_batchHash.begin(), _batchHash.end()));
     }
 
     void asyncVerifyBlock(bcos::crypto::PublicPtr _generatedNodeID,

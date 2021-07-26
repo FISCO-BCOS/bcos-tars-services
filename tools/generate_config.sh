@@ -695,8 +695,7 @@ exit_with_clean()
 main() {
     # FIXME: use openssl 1.1 to generate gm certificates
     parse_params "$@"
-
-cert_conf="${output_dir}/cert.cnf"
+    cert_conf="${output_dir}/cert.cnf"
 
     [ -z $use_ip_param ] && help 'ERROR: Please set -l or -f option.'
     if [ "${use_ip_param}" == "true" ];then

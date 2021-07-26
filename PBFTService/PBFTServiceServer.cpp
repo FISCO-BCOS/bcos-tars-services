@@ -122,6 +122,12 @@ void PBFTServiceServer::init()
     auto privateKeyPath = ServerConfig::BasePath + "node.pem";
     m_protocolInitializer->loadKeyPair(privateKeyPath);
 
+    auto communicator = Application::getCommunicator();
+    communicator->setProperty("sendqueuelimit", "10000000");
+    communicator->setProperty("asyncqueuecap", "10000000");
+    communicator->setProperty("nosendqueuelimit", "10000000");
+    communicator->setProperty("async-invoke-timeout", "60000");
+
     // create the frontService
     auto frontServiceProxy =
         Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
@@ -132,6 +138,7 @@ void PBFTServiceServer::init()
     // create the storage
     auto storageProxy = Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(
         getProxyDesc(STORAGE_SERVICE_NAME));
+
     m_storage = std::make_shared<bcostars::StorageServiceClient>(storageProxy);
 
     // create dispatcher
@@ -179,7 +186,10 @@ void PBFTServiceServer::registerHandlers()
             sealer->asyncNotifySealProposal(
                 _proposalIndex, _proposalEndIndex, _maxTxsToSeal, _onRecvResponse);
         });
-
+    // handler to notify the sealer reset the sealing proposals
+    m_pbft->registerSealerResetNotifier([sealer](std::function<void(bcos::Error::Ptr)> _onRecv) {
+        sealer->asyncResetSealing(_onRecv);
+    });
     // the consensus module notify the latest blockNumber to the sealer
     m_pbft->registerStateNotifier([sealer](bcos::protocol::BlockNumber _blockNumber) {
         sealer->asyncNoteLatestBlockNumber(_blockNumber);
@@ -279,9 +289,11 @@ Error PBFTServiceServer::asyncNotifyConsensusMessage(std::string const& _uuid,
     tars::TarsCurrentPtr _current)
 {
     _current->setResponse(false);
-    auto nodeId = m_keyFactory->createKey(bcos::bytesConstRef((const bcos::byte*)_nodeId.data(), _nodeId.size()));
-    m_pbft->asyncNotifyConsensusMessage(
-        nullptr, _uuid, nodeId, bcos::bytesConstRef((const bcos::byte*)_data.data(), _data.size()), [_current](bcos::Error::Ptr _error) {
+    auto nodeId = m_keyFactory->createKey(
+        bcos::bytesConstRef((const bcos::byte*)_nodeId.data(), _nodeId.size()));
+    m_pbft->asyncNotifyConsensusMessage(nullptr, _uuid, nodeId,
+        bcos::bytesConstRef((const bcos::byte*)_data.data(), _data.size()),
+        [_current](bcos::Error::Ptr _error) {
             async_response_asyncNotifyConsensusMessage(_current, toTarsError(_error));
         });
     return bcostars::Error();
@@ -292,9 +304,11 @@ bcostars::Error PBFTServiceServer::asyncNotifyBlockSyncMessage(std::string const
     tars::TarsCurrentPtr _current)
 {
     _current->setResponse(false);
-    auto nodeId = m_keyFactory->createKey(bcos::bytesConstRef((const bcos::byte*)_nodeId.data(), _nodeId.size()));
-    m_blockSync->asyncNotifyBlockSyncMessage(
-        nullptr, _uuid, nodeId, bcos::bytesConstRef((const bcos::byte*)_data.data(), _data.size()), [_current](bcos::Error::Ptr _error) {
+    auto nodeId = m_keyFactory->createKey(
+        bcos::bytesConstRef((const bcos::byte*)_nodeId.data(), _nodeId.size()));
+    m_blockSync->asyncNotifyBlockSyncMessage(nullptr, _uuid, nodeId,
+        bcos::bytesConstRef((const bcos::byte*)_data.data(), _data.size()),
+        [_current](bcos::Error::Ptr _error) {
             async_response_asyncNotifyBlockSyncMessage(_current, toTarsError(_error));
         });
     return bcostars::Error();
@@ -320,10 +334,12 @@ Error PBFTServiceServer::asyncSubmitProposal(const vector<tars::Char>& _proposal
     auto proposalHash = bcos::crypto::HashType();
     if (_proposalHash.size() >= bcos::crypto::HashType::size)
     {
-        proposalHash = bcos::crypto::HashType((const bcos::byte*)_proposalHash.data(), bcos::crypto::HashType::size);
+        proposalHash = bcos::crypto::HashType(
+            (const bcos::byte*)_proposalHash.data(), bcos::crypto::HashType::size);
     }
-    m_pbft->asyncSubmitProposal(bcos::bytesConstRef((const bcos::byte*)_proposalData.data(), _proposalData.size()), _proposalIndex, proposalHash,
-        [_current](bcos::Error::Ptr _error) {
+    m_pbft->asyncSubmitProposal(
+        bcos::bytesConstRef((const bcos::byte*)_proposalData.data(), _proposalData.size()),
+        _proposalIndex, proposalHash, [_current](bcos::Error::Ptr _error) {
             async_response_asyncSubmitProposal(_current, toTarsError(_error));
         });
     return bcostars::Error();

@@ -5,6 +5,6 @@ module bcostars {
     interface DispatcherService {
         Error asyncExecuteBlock(Block block, bool verify, out BlockHeader blockHeader);
         Error asyncGetLatestBlock(out Block block);
-        Error asyncNotifyExecutionResult(Error error, BlockHeader blockHeader);
+        Error asyncNotifyExecutionResult(Error error, vector<byte> orgHash, BlockHeader blockHeader);
     };
 };

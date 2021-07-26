@@ -76,12 +76,15 @@ public:
                 auto bcosBlock = m_blockFactory->createBlock();
                 std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(bcosBlock)->setInner(
                     block);
-
+                BCOS_LOG(INFO) << LOG_DESC("callback_asyncGetLatestBlock")
+                               << LOG_KV("number", bcosBlock->blockHeader()->number())
+                               << LOG_KV("hash", bcosBlock->blockHeader()->hash().abridged());
                 m_callback(toBcosError(ret), bcosBlock);
             }
 
             void callback_asyncGetLatestBlock_exception(tars::Int32 ret) override
             {
+                BCOS_LOG(INFO) << LOG_DESC("callback_asyncGetLatestBlock exception");
                 m_callback(toBcosError(ret), nullptr);
             }
 
@@ -90,11 +93,12 @@ public:
                 m_callback;
             bcos::protocol::BlockFactory::Ptr m_blockFactory;
         };
-        m_proxy->async_asyncGetLatestBlock(new Callback(_callback, m_blockFactory));
+        m_proxy->tars_set_timeout(1000)->async_asyncGetLatestBlock(
+            new Callback(_callback, m_blockFactory));
     }
 
     void asyncNotifyExecutionResult(const bcos::Error::Ptr& _error,
-        const bcos::protocol::BlockHeader::Ptr& _header,
+        bcos::crypto::HashType const& _orgHash, const bcos::protocol::BlockHeader::Ptr& _header,
         std::function<void(const bcos::Error::Ptr&)> _callback) override
     {
         class Callback : public bcostars::DispatcherServicePrxCallback
@@ -118,6 +122,7 @@ public:
         };
 
         m_proxy->async_asyncNotifyExecutionResult(new Callback(_callback), toTarsError(_error),
+            std::vector<char>(_orgHash.begin(), _orgHash.end()),
             std::dynamic_pointer_cast<bcostars::protocol::BlockHeaderImpl>(_header)->inner());
     }
 

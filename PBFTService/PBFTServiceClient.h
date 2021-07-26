@@ -143,6 +143,12 @@ public:
         throw std::runtime_error("asyncNoteLatestBlockNumber: unimplemented interface!");
     }
 
+    // the consensus module notify the sealer to reset sealing when viewchange
+    void asyncResetSealing(std::function<void(bcos::Error::Ptr)> _onRecvResponse) override
+    {
+        throw std::runtime_error("asyncResetSealing: unimplemented interface!");
+    }
+
 private:
     bcostars::PBFTServicePrx m_proxy;
 };
@@ -174,8 +180,9 @@ public:
         std::function<void(bcos::Error::Ptr _error)> _onRecv) override
     {
         auto nodeIDData = _nodeID->data();
-        m_proxy->async_asyncNotifyBlockSyncMessage(
-            new PBFTServiceCommonCallback(_onRecv), _uuid, std::vector<char>(nodeIDData.begin(), nodeIDData.end()), std::vector<char>(_data.begin(), _data.end()));
+        m_proxy->async_asyncNotifyBlockSyncMessage(new PBFTServiceCommonCallback(_onRecv), _uuid,
+            std::vector<char>(nodeIDData.begin(), nodeIDData.end()),
+            std::vector<char>(_data.begin(), _data.end()));
     }
 
 protected:

@@ -11,6 +11,7 @@
 #include <bcos-framework/interfaces/protocol/TransactionReceipt.h>
 #include <bcos-framework/interfaces/protocol/TransactionReceiptFactory.h>
 #include <bcos-framework/libprotocol/LogEntry.h>
+#include <bcos-framework/libutilities/DataConvertUtility.h>
 #include <variant>
 
 namespace bcostars
@@ -60,7 +61,6 @@ public:
     void encode(bcos::bytes& _encodedData) const override
     {
         tars::TarsOutputStream<bcostars::protocol::BufferWriterByteVector> output;
-
         m_inner->logEntries.clear();
         for (auto& it : m_logEntries)
         {
@@ -74,7 +74,6 @@ public:
 
             m_inner->logEntries.emplace_back(logEntry);
         }
-
         m_inner->writeTo(output);
         output.getByteBuffer().swap(_encodedData);
     }
@@ -85,7 +84,6 @@ public:
         {
             encode(m_buffer);
         }
-
         return bcos::ref(m_buffer);
     }
 
@@ -103,10 +101,6 @@ public:
     {
         return bcos::bytesConstRef(
             (const unsigned char*)m_inner->contractAddress.data(), m_inner->contractAddress.size());
-    }
-    bcos::LogBloom const& bloom() const override
-    {
-        return *(reinterpret_cast<bcos::LogBloom*>(m_inner->bloom));
     }
     int32_t status() const override { return m_inner->status; }
     bcos::bytesConstRef output() const override
@@ -161,16 +155,24 @@ public:
         bcos::bytes const& _output, bcos::protocol::BlockNumber _blockNumber) override
     {
         auto transactionReceipt = std::make_shared<TransactionReceiptImpl>(m_cryptoSuite);
+        // required: version
         transactionReceipt->m_inner->version = 0;
+        // required: gasUsed
+        transactionReceipt->m_inner->gasUsed = boost::lexical_cast<std::string>(_gasUsed);
+        // optional: contractAddress
         transactionReceipt->m_inner->contractAddress.assign(
             _contractAddress.begin(), _contractAddress.end());
+        // optional: logEntries
+        // Note: swap will make passed _logEntries be empty
+        _logEntries->swap(transactionReceipt->m_logEntries);
+        // required: status
         transactionReceipt->m_inner->status = _status;
+        // optional: output
         transactionReceipt->m_inner->output.assign(_output.begin(), _output.end());
 
         transactionReceipt->m_inner->gasUsed = boost::lexical_cast<std::string>(_gasUsed);
         transactionReceipt->m_logEntries = *_logEntries;
         transactionReceipt->m_inner->blockNumber = _blockNumber;
-
         return transactionReceipt;
     }
 
