@@ -21,8 +21,6 @@ public:
     std::vector<std::string> getPrimaryKeys(const bcos::storage::TableInfo::Ptr& _tableInfo,
         const bcos::storage::Condition::Ptr& _condition) const override
     {
-        // TODO: remove this log
-        STORAGECLIENT_LOG(DEBUG) << LOG_DESC("getPrimaryKeys") << LOG_KV("table", _tableInfo->name);
         std::vector<std::string> keys;
         auto error =
             m_proxy->getPrimaryKeys(toTarsTableInfo(_tableInfo), toTarsCondition(_condition), keys);
@@ -42,12 +40,8 @@ public:
     bcos::storage::Entry::Ptr getRow(
         const bcos::storage::TableInfo::Ptr& _tableInfo, const std::string_view& _key) override
     {
-        // TODO: remove this log
-        STORAGECLIENT_LOG(DEBUG) << LOG_DESC("getRow") << LOG_KV("table", _tableInfo->name);
         bcostars::Entry entry;
         auto error = m_proxy->getRow(toTarsTableInfo(_tableInfo), std::string(_key), entry);
-        // TODO: remove this log
-        STORAGECLIENT_LOG(DEBUG) << LOG_DESC("getRow success") << LOG_KV("table", _tableInfo->name);
         auto bcosError = toBcosError(error);
         if (bcosError)
         {
@@ -64,8 +58,6 @@ public:
         const bcos::storage::TableInfo::Ptr& _tableInfo,
         const std::vector<std::string>& _keys) override
     {
-        // TODO: remove this log
-        STORAGECLIENT_LOG(DEBUG) << LOG_DESC("getRows") << LOG_KV("table", _tableInfo->name);
         std::map<std::string, bcostars::Entry> rowsRet;
         std::map<std::string, bcos::storage::Entry::Ptr> bcosRows;
         auto error = m_proxy->getRows(toTarsTableInfo(_tableInfo), _keys, rowsRet);

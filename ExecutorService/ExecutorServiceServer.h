@@ -70,6 +70,11 @@ public:
     void init()
     {
         std::call_once(m_initFlag, [this]() {
+            auto communicator = Application::getCommunicator();
+            communicator->setProperty("sendqueuelimit", "10000000");
+            communicator->setProperty("asyncqueuecap", "10000000");
+            communicator->setProperty("nosendqueuelimit", "10000000");
+
             auto configPath = ServerConfig::BasePath + "config.ini";
             TLOGINFO(LOG_DESC("ExecutorService: initLog")
                      << LOG_KV("configPath", configPath) << std::endl);
@@ -88,13 +93,6 @@ public:
             auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>(keyFactory);
             nodeConfig->loadConfig(configPath);
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init nodeConfig success");
-
-            // load the gensisConfig
-            auto genesisConfigPath = ServerConfig::BasePath + "config.genesis";
-            EXECUTORSERVICE_LOG(INFO)
-                << LOG_DESC("init GenesisConfig") << LOG_KV("configPath", genesisConfigPath);
-            nodeConfig->loadGenesisConfig(genesisConfigPath);
-            EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init GenesisConfig success");
 
             // load the protocol
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init protocol");
@@ -116,15 +114,6 @@ public:
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init ledger");
             auto ledger = std::make_shared<bcos::ledger::Ledger>(
                 protocolInitializer->blockFactory(), storageServiceClient);
-            EXECUTORSERVICE_LOG(INFO) << LOG_DESC("build the genesis block");
-            // write the genesis block through ledger
-            auto ret = ledger->buildGenesisBlock(
-                nodeConfig->ledgerConfig(), nodeConfig->txGasLimit(), nodeConfig->genesisData());
-            if (!ret)
-            {
-                EXECUTORSERVICE_LOG(ERROR) << LOG_DESC("build genesis failed");
-                exit(0);
-            }
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init ledger success");
 
             // init the dispatcher
@@ -175,8 +164,8 @@ public:
         return bcostars::Error();
     }
 
-    bcostars::Error asyncGetCode(const std::string& address, vector<tars::Char>& code,
-        tars::TarsCurrentPtr current) override
+    bcostars::Error asyncGetCode(
+        const std::string& address, vector<tars::Char>& code, tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
@@ -189,7 +178,8 @@ public:
                     return;
                 }
 
-                async_response_asyncGetCode(current, toTarsError(error), std::vector<char>(code->begin(), code->end()));
+                async_response_asyncGetCode(
+                    current, toTarsError(error), std::vector<char>(code->begin(), code->end()));
             });
 
         return bcostars::Error();

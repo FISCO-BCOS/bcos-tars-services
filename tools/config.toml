@@ -5,7 +5,7 @@ tars_pkg_dir = "../build"
 
 [chain]
 # the chain name
-app_name = "mynode"
+app_name = "nodes"
 # use sm or not
 sm_mode = false 
 p2p_listen_port = 30300
@@ -18,5 +18,5 @@ consensus_type = "pbft"
 gas_limit = "300000000"
 
 [[deploy_info]]
-deploy_ip = "192.168.86.16"
-node_count = 4
+deploy_ip = "192.168.192.168"
+node_count = 2

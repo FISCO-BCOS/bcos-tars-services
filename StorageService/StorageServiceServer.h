@@ -10,6 +10,7 @@
 #include <bcos-framework/libtable/TableFactory.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
+#include <bcos-ledger/libledger/Ledger.h>
 #include <bcos-storage/KVDBImpl.h>
 #include <bcos-storage/RocksDBAdapter.h>
 #include <bcos-storage/RocksDBAdapterFactory.h>
@@ -58,7 +59,8 @@ public:
             m_logInitializer->initLog(pt);
             STORAGESERVICE_LOG(INFO) << LOG_DESC("init log success");
 
-            auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
+            auto keyFactory = std::make_shared<bcos::crypto::KeyFactoryImpl>();
+            auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>(keyFactory);
             nodeConfig->loadConfig(configPath);
 
             // load the protocol
@@ -90,6 +92,28 @@ public:
             STORAGESERVICE_LOG(INFO) << LOG_DESC("start the storage");
             m_storage->start();
             STORAGESERVICE_LOG(INFO) << LOG_DESC("start the storage success");
+
+            // load the gensisConfig
+            auto genesisConfigPath = ServerConfig::BasePath + "config.genesis";
+            STORAGESERVICE_LOG(INFO)
+                << LOG_DESC("init GenesisConfig") << LOG_KV("configPath", genesisConfigPath);
+            nodeConfig->loadGenesisConfig(genesisConfigPath);
+            STORAGESERVICE_LOG(INFO) << LOG_DESC("init GenesisConfig success");
+
+            // init the ledger
+            STORAGESERVICE_LOG(INFO) << LOG_DESC("init ledger");
+            auto ledger = std::make_shared<bcos::ledger::Ledger>(
+                protocolInitializer->blockFactory(), m_storage);
+            STORAGESERVICE_LOG(INFO) << LOG_DESC("build the genesis block");
+            // write the genesis block through ledger
+            auto succ = ledger->buildGenesisBlock(
+                nodeConfig->ledgerConfig(), nodeConfig->txGasLimit(), nodeConfig->genesisData());
+            if (!succ)
+            {
+                STORAGESERVICE_LOG(ERROR) << LOG_DESC("build genesis failed");
+                exit(0);
+            }
+            STORAGESERVICE_LOG(INFO) << LOG_DESC("init ledger success");
         });
     }
 
