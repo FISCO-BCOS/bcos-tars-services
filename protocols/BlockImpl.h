@@ -90,7 +90,7 @@ public:
         if (_blockHeader)
         {
             m_inner->blockHeader =
-                std::reinterpret_pointer_cast<bcostars::protocol::BlockHeaderImpl>(_blockHeader)
+                std::dynamic_pointer_cast<bcostars::protocol::BlockHeaderImpl>(_blockHeader)
                     ->inner();
         }
     }
@@ -98,12 +98,12 @@ public:
     void setTransaction(size_t _index, bcos::protocol::Transaction::Ptr _transaction) override
     {
         m_inner->transactions[_index] =
-            std::reinterpret_pointer_cast<bcostars::protocol::TransactionImpl>(_transaction)->inner();
+            std::dynamic_pointer_cast<bcostars::protocol::TransactionImpl>(_transaction)->inner();
     }
     void appendTransaction(bcos::protocol::Transaction::Ptr _transaction) override
     {
         m_inner->transactions.push_back(
-            std::reinterpret_pointer_cast<bcostars::protocol::TransactionImpl>(_transaction)->inner());
+            std::dynamic_pointer_cast<bcostars::protocol::TransactionImpl>(_transaction)->inner());
     }
 
     void setReceipt(size_t _index, bcos::protocol::TransactionReceipt::Ptr _receipt) override
@@ -113,14 +113,14 @@ public:
             m_inner->receipts.resize(m_inner->transactions.size());
         }
         auto innerReceipt =
-            std::reinterpret_pointer_cast<bcostars::protocol::TransactionReceiptImpl>(_receipt)
+            std::dynamic_pointer_cast<bcostars::protocol::TransactionReceiptImpl>(_receipt)
                 ->inner();
         m_inner->receipts[_index] = innerReceipt;
     }
     void appendReceipt(bcos::protocol::TransactionReceipt::Ptr _receipt) override
     {
         m_inner->receipts.push_back(
-            std::reinterpret_pointer_cast<bcostars::protocol::TransactionReceiptImpl>(_receipt)
+            std::dynamic_pointer_cast<bcostars::protocol::TransactionReceiptImpl>(_receipt)
                 ->inner());
     }
 
