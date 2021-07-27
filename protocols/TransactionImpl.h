@@ -187,7 +187,7 @@ public:
             _version, _to, _input, _nonce, _blockLimit, _chainId, _groupId, _importTime);
         auto sign = m_cryptoSuite->signatureImpl()->sign(keyPair, tx->hash(), true);
 
-        auto tarsTx = std::dynamic_pointer_cast<bcostars::protocol::TransactionImpl>(tx);
+        auto tarsTx = std::reinterpret_pointer_cast<bcostars::protocol::TransactionImpl>(tx);
         tarsTx->m_inner->signature.assign(sign->begin(), sign->end());
 
         return tx;

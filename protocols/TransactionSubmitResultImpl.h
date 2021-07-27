@@ -113,7 +113,7 @@ public:
     {
         auto result = std::make_shared<TransactionSubmitResultImpl>(m_cryptoSuite);
         result->m_inner.receipt =
-            std::dynamic_pointer_cast<bcostars::protocol::TransactionReceiptImpl>(_receipt)
+            std::reinterpret_pointer_cast<bcostars::protocol::TransactionReceiptImpl>(_receipt)
                 ->inner();
         result->m_inner.txHash.assign(_txHash.data(), _txHash.data() + _txHash.size);
         result->m_inner.transactionIndex = _txIndex;

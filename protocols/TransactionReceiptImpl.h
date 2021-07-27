@@ -114,7 +114,7 @@ public:
     }
     bcos::protocol::BlockNumber blockNumber() const override { return m_inner->blockNumber; }
 
-    const bcostars::TransactionReceipt inner() const { return *m_inner; }
+    const bcostars::TransactionReceipt& inner() const { return *m_inner; }
 
     void setInner(const bcostars::TransactionReceipt& inner) { *m_inner = inner; }
     void setInner(bcostars::TransactionReceipt&& inner) { *m_inner = std::move(inner); }
@@ -162,9 +162,6 @@ public:
         // optional: contractAddress
         transactionReceipt->m_inner->contractAddress.assign(
             _contractAddress.begin(), _contractAddress.end());
-        // optional: logEntries
-        // Note: swap will make passed _logEntries be empty
-        _logEntries->swap(transactionReceipt->m_logEntries);
         // required: status
         transactionReceipt->m_inner->status = _status;
         // optional: output
