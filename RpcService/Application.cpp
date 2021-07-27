@@ -7,7 +7,7 @@ using namespace bcostars;
 class RpcServiceApp : public Application
 {
 public:
-    virtual ~RpcServiceApp() override{};
+    virtual ~RpcServiceApp() override {}
 
     virtual void initialize() override
     {
