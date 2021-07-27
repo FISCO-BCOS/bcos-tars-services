@@ -166,8 +166,6 @@ public:
         transactionReceipt->m_inner->status = _status;
         // optional: output
         transactionReceipt->m_inner->output.assign(_output.begin(), _output.end());
-
-        transactionReceipt->m_inner->gasUsed = boost::lexical_cast<std::string>(_gasUsed);
         transactionReceipt->m_logEntries = *_logEntries;
         transactionReceipt->m_inner->blockNumber = _blockNumber;
         return transactionReceipt;
