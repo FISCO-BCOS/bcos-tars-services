@@ -52,7 +52,7 @@ add_subdirectory(libinitializer)
 include(BuildInfoGenerator)
 
 # import services
-list(APPEND SERVICE_LIST StorageService FrontService GatewayService PBFTService ExecutorService DispatcherService TxPoolService)
+list(APPEND SERVICE_LIST StorageService FrontService GatewayService PBFTService ExecutorService DispatcherService TxPoolService RpcService)
 foreach(SERVICE ${SERVICE_LIST})
     add_subdirectory(${SERVICE})
 

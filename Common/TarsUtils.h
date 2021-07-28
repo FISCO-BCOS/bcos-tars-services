@@ -25,6 +25,9 @@ const std::string TXPOOL_SERVICE_NAME = "TxPoolService." + TXPOOL_SERVANT_NAME;
 const std::string PBFT_SERVANT_NAME = "PBFTServiceObj";
 const std::string PBFT_SERVICE_NAME = "PBFTService." + PBFT_SERVANT_NAME;
 
+const std::string RPC_SERVANT_NAME = "RpcServiceObj";
+const std::string RPC_SERVICE_NAME = "RpcService." + RPC_SERVANT_NAME;
+
 inline std::string getProxyDesc(const std::string& serviceName)
 {
     std::string desc = ServerConfig::Application + "." + serviceName;

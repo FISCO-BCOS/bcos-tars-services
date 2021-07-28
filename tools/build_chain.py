@@ -10,7 +10,7 @@ import os
 import toml
 
 service_list = ["StorageService", "DispatcherService", "ExecutorService",
-                "FrontService", "GatewayService", "TxPoolService", "PBFTService"]
+                "FrontService", "GatewayService", "TxPoolService", "PBFTService", "RpcService"]
 config_list = ["config.ini", "config.genesis", "nodes.json",
                "node.nodeid", "node.pem", "ca.crt", "ssl.key", "ssl.crt"]
 tars_pkg_post_fix = ".tgz"
@@ -58,6 +58,8 @@ class BuildChainConfig:
             config, "chain", "sm_mode", False, False)
         self.p2p_listen_port = BuildChainConfig.get_value(
             config, "chain", "p2p_listen_port", 30300, False)
+        self.rpc_listen_port = BuildChainConfig.get_value(
+            config, "chain", "rpc_listen_port", 20200, False)
         self.leader_period = BuildChainConfig.get_value(
             config, "chain", "leader_period", 1, False)
         self.block_tx_count_limit = BuildChainConfig.get_value(
@@ -452,8 +454,8 @@ def generate_block_chain_config(config):
         ip_params += deploy_info.deploy_ip + \
             ":" + str(deploy_info.node_count) + ","
     ip_params = ip_params[0:-1]
-    generate_config_cmd = "bash generate_config.sh -l %s -o %s -p %d -r %d -c %d -g %s -b %d -n pbft %s" % (
-        ip_params, config.app_name, config.p2p_listen_port, config.leader_period, config.consensus_timeout, config.gas_limit, config.block_tx_count_limit, sm_mode)
+    generate_config_cmd = "bash generate_config.sh -l %s -o %s -p %d,%d -r %d -c %d -g %s -b %d -n pbft %s" % (
+        ip_params, config.app_name, config.p2p_listen_port, config.rpc_listen_port, config.leader_period, config.consensus_timeout, config.gas_limit, config.block_tx_count_limit, sm_mode)
 
     # generate the node config
     status, output = subprocess.getstatusoutput(generate_config_cmd)
