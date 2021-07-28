@@ -23,6 +23,7 @@ int main(int argc, char* argv[])
 {
     try
     {
+        bcos::initializer::initCommandLine(argc, argv);
         PBFTServiceApp app;
         app.main(argc, argv);
         app.waitForShutdown();
