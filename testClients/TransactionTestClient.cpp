@@ -136,6 +136,9 @@ int main(int argc, char* argv[])
 
     auto storageProxy =
         c->stringToProxy<bcostars::StorageServicePrx>(app + "." + bcostars::STORAGE_SERVICE_NAME);
+    storageProxy->tars_timeout(60000);
+    storageProxy->tars_async_timeout(60000);
+
     auto txpoolProxy =
         c->stringToProxy<bcostars::TxPoolServicePrx>(app + "." + bcostars::TXPOOL_SERVICE_NAME);
     txpoolProxy->tars_timeout(600000);
