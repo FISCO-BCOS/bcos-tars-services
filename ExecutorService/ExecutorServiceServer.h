@@ -69,7 +69,7 @@ public:
 
     void init()
     {
-        std::call_once(m_initFlag, [this]() {
+        std::call_once(m_initFlag, []() {
             auto communicator = Application::getCommunicator();
             communicator->setProperty("sendqueuelimit", "10000000");
             communicator->setProperty("asyncqueuecap", "10000000");
