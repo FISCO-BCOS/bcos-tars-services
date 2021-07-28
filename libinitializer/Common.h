@@ -84,7 +84,7 @@ inline void printVersion()
     std::cout << "Build Type         : " << FISCO_BCOS_BUILD_PLATFORM << "/"
               << FISCO_BCOS_BUILD_TYPE << std::endl;
     std::cout << "Git Branch         : " << FISCO_BCOS_BUILD_BRANCH << std::endl;
-    std::cout << "Git Commit Hash    : " << FISCO_BCOS_COMMIT_HASH << std::endl;
+    std::cout << "Git Commit         : " << FISCO_BCOS_COMMIT_HASH << std::endl;
 }
 
 inline void initCommandLine(int argc, char* argv[])
