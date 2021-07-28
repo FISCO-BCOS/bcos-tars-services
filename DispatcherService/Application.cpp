@@ -26,6 +26,7 @@ int main(int argc, char* argv[])
 {
     try
     {
+        bcos::initializer::initCommandLine(argc, argv);
         DispatcherServiceApp app;
         app.main(argc, argv);
         app.waitForShutdown();
