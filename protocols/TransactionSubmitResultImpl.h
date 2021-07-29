@@ -31,7 +31,7 @@ public:
     {
         auto inner = std::const_pointer_cast<bcostars::TransactionSubmitResult>(m_inner);
         auto receipt = std::make_shared<bcostars::protocol::TransactionReceiptImpl>(
-            m_cryptoSuite, [m_inner = std::move(inner)]() { return &m_inner->receipt; });
+            m_cryptoSuite, [m_inner = std::move(inner)]() mutable { return &m_inner->receipt; });
 
         return receipt;
     }
