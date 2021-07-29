@@ -1,19 +1,19 @@
 #include "servant/Application.h"
 #include "../Common/TarsUtils.h"
-#include "FrontServiceServer.h"
+#include "RpcServiceServer.h"
 
 using namespace bcostars;
 
-class FrontServiceApp : public Application
+class RpcServiceApp : public Application
 {
 public:
-    virtual ~FrontServiceApp() override{};
+    virtual ~RpcServiceApp() override {}
 
     virtual void initialize() override
     {
         addAllConfig(this);
-        addServant<FrontServiceServer>(
-            ServerConfig::Application + "." + ServerConfig::ServerName + "." + FRONT_SERVANT_NAME);
+        addServant<RpcServiceServer>(
+            ServerConfig::Application + "." + ServerConfig::ServerName + "." + RPC_SERVANT_NAME);
     }
 
     virtual void destroyApp() override {}
@@ -23,8 +23,7 @@ int main(int argc, char* argv[])
 {
     try
     {
-        bcos::initializer::initCommandLine(argc, argv);
-        FrontServiceApp app;
+        RpcServiceApp app;
         app.main(argc, argv);
         app.waitForShutdown();
 

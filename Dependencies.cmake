@@ -21,6 +21,7 @@ include(InstallBcosLedgerDependencies)
 include(InstallBcosSyncDependencies)
 include(InstallBcosFrontDependencies)
 include(InstallBcosGateWayDependencies)
+include(InstallBcosRpcDependencies)
 include(InstallBcosDispatcherDependencies)
 
 include(ProjectBCOSExecutor)

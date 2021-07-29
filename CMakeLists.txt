@@ -32,6 +32,10 @@ include (Dependencies.cmake)
 # copy .clang-format into the project path
 include(CopyClangFormat)
 
+include_directories(${CMAKE_INSTALL_INCLUDEDIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
 set(TARS_GENERATE_DIR ${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${TARS_GENERATE_DIR}/tarscpp-install/thirdparty/include)
 link_directories(${TARS_GENERATE_DIR}/tarscpp-install/thirdparty/lib)
@@ -45,8 +49,10 @@ add_subdirectory(tars)
 add_subdirectory(protocols)
 add_subdirectory(libinitializer)
 
+include(BuildInfoGenerator)
+
 # import services
-list(APPEND SERVICE_LIST StorageService FrontService GatewayService PBFTService ExecutorService DispatcherService TxPoolService)
+list(APPEND SERVICE_LIST StorageService FrontService GatewayService PBFTService ExecutorService DispatcherService TxPoolService RpcService)
 foreach(SERVICE ${SERVICE_LIST})
     add_subdirectory(${SERVICE})
 

@@ -47,7 +47,7 @@ public:
     }
     void init()
     {
-        std::call_once(m_storageFlag, [this]() {
+        std::call_once(m_storageFlag, []() {
             // load the config
             auto configPath = ServerConfig::BasePath + "config.ini";
             // init the log

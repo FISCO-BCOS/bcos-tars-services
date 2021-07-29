@@ -2,8 +2,9 @@
 
 dirpath="$(cd "$(dirname "$0")" && pwd)"
 listen_ip="0.0.0.0"
-port_start=(30300)
+port_start=(30300 20200)
 p2p_listen_port=port_start[0]
+rpc_listen_port=port_start[1]
 use_ip_param=
 ip_array=
 output_dir="./nodes"
@@ -378,7 +379,7 @@ help() {
 Usage:
     -l <IP list>                        [Required] "ip1:nodeNum1,ip2:nodeNum2" e.g:"192.168.0.1:2,192.168.0.2:3"
     -o <output dir>                     [Optional] output directory, default ./nodes
-    -p <Start Port>                     Default 30300 means p2p_port start from 30300
+    -p <start Port>                     [Optional] Default 30300,20200 means p2p port start from 30300, rpc port start from 20200
     -s <SM model>                       [Optional] SM SSL connection or not, default no
     -r <leader_period>                  [Optional] leader_period, default 1
     -b <block_tx_count_limit>           [Optional] block_tx_count_limit, default 1000
@@ -387,8 +388,8 @@ Usage:
     -n <consensus_type>                 [Optional] consensus_type default pbft
     -h Help
 e.g
-    bash $0 -p 30300 -l 127.0.0.1:4 -o nodes -e ./mini-consensus
-    bash $0 -p 30300 -l 127.0.0.1:4 -o nodes -e ./mini-consensus -s
+    bash $0 -p 30300,20200 -l 127.0.0.1:4 -o nodes -e ./mini-consensus
+    bash $0 -p 30300,20200 -l 127.0.0.1:4 -o nodes -e ./mini-consensus -s
 EOF
 
     exit 0
@@ -416,7 +417,9 @@ parse_params() {
             dir_must_exists "${output_dir}"
             ;;
         p) port_start=(${OPTARG//,/ })
-        if [ ${#port_start[@]} -ne 1 ];then LOG_WARN "start port error. e.g: 30300" && exit 1;fi
+        if [ ${#port_start[@]} -ne 2 ];then LOG_WARN "p2p start port error. e.g: 30300" && exit 1;fi
+            p2p_listen_port=port_start[0]
+            rpc_listen_port=port_start[1]
         ;;
         s) sm_mode="true" ;;
         h) help ;;
@@ -456,16 +459,22 @@ generate_chain_cert(){
 }
 generate_config_ini() {
     local output="${1}"
-    local listen_port="${2}"
+    local p2p_listen_port="${2}"
+    local rpc_listen_port="${3}"
     local file_dir="./"
     cat <<EOF >"${output}"
 [p2p]
     listen_ip=${listen_ip}
-    listen_port=${listen_port}
+    listen_port=${p2p_listen_port}
     ; ssl or sm ssl
     sm_ssl=false
     nodes_path=${file_dir}
     nodes_file=${nodes_json_file_name}
+
+[rpc]
+    listen_ip=${listen_ip}
+    listen_port=${rpc_listen_port}
+    thread_count=4
 
 [cert]
     ; directory the certificates located in
@@ -528,15 +537,21 @@ EOF
 
 generate_sm_config_ini() {
     local output=${1}
-    local listen_port="${2}"
+    local p2p_listen_port="${2}"
+    local rpc_listen_port="${3}"
     cat <<EOF >"${output}"
 [p2p]
     listen_ip=${listen_ip}
-    listen_port=${listen_port}
+    listen_port=${p2p_listen_port}
     ; ssl or sm ssl
     sm_ssl=true
     nodes_path=${file_dir}
     nodes_file=${nodes_json_file_name}
+
+[rpc]
+    listen_ip=${listen_ip}
+    listen_port=${rpc_listen_port}
+    thread_count=4
 
 [cert]
     ; directory the certificates located in
@@ -584,11 +599,12 @@ generate_config()
     local node_config_path="${2}"
     local node_json_config_path="${3}"
     local connected_nodes="${4}"
-    local listen_port="${5}"
+    local p2p_listen_port="${5}"
+    local rpc_listen_port="${6}"
     if [ "${sm_mode}" == "false" ]; then
-        generate_config_ini "${node_config_path}" "${listen_port}"
+        generate_config_ini "${node_config_path}" "${p2p_listen_port}" "${rpc_listen_port}"
     else
-        generate_sm_config_ini "${node_config_path}" "${listen_port}"
+        generate_sm_config_ini "${node_config_path}" "${p2p_listen_port}" "${rpc_listen_port}"
     fi
     generate_nodes_json "${node_json_config_path}/${nodes_json_file_name}" "${connected_nodes}"
 }
@@ -727,13 +743,13 @@ main() {
         ca_cert_dir="${nodes_dir}"/ca
         generate_chain_cert "${sm_mode}" "${ca_cert_dir}"
         for ((i=0;i<num;++i));do
-            local node_coount=$(get_value ${ip//./}_count)
-            node_dir="${output_dir}/${ip}/node${node_coount}"
+            local node_count=$(get_value ${ip//./}_count)
+            node_dir="${output_dir}/${ip}/node${node_count}"
             mkdir -p "${node_dir}"
             generate_node_cert "${sm_mode}" "${ca_cert_dir}" "${node_dir}"
             account_dir="${node_dir}"
 
-            local port=$((p2p_listen_port + node_coount))
+            local port=$((p2p_listen_port + node_count))
             connected_nodes=${connected_nodes}"${ip}:${port}, "
 
             if [[ "${sm_mode}" == "false" ]]; then
@@ -758,10 +774,11 @@ main() {
         [ "$num" == "$ip" ] || [ -z "${num}" ] && num=${node_num} 
         set_value ${ip//./}_count 0
         for ((i=0;i<num;++i));do
-            local node_coount=$(get_value ${ip//./}_count)
-            node_dir="${output_dir}/${ip}/node${node_coount}"
-            local port=$((p2p_listen_port + node_coount))
-            generate_config "${sm_mode}" "${node_dir}/config.ini" "${node_dir}" "${connected_nodes}" "${port}"
+            local node_count=$(get_value ${ip//./}_count)
+            node_dir="${output_dir}/${ip}/node${node_count}"
+            local p2p_port=$((p2p_listen_port + node_count))
+            local rpc_port=$((rpc_listen_port + node_count))
+            generate_config "${sm_mode}" "${node_dir}/config.ini" "${node_dir}" "${connected_nodes}" "${p2p_port}" "${rpc_port}"
             generate_genesis_config "${node_dir}/config.genesis" "${nodeid_list}"
             set_value ${ip//./}_count $(( $(get_value ${ip//./}_count) + 1 ))
             ((++count))
