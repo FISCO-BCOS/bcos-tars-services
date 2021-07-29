@@ -97,10 +97,9 @@ public:
         }
         return m_nonce;
     }
-    bcos::bytesConstRef to() const override
+    std::string_view to() const override
     {
-        return bcos::bytesConstRef(
-            reinterpret_cast<const bcos::byte*>(m_inner->data.to.data()), m_inner->data.to.size());
+        return m_inner->data.to;
     }
     bcos::bytesConstRef input() const override
     {
@@ -160,10 +159,10 @@ public:
         return createTransaction(bcos::ref(_txData), _checkSig);
     }
 
-    bcos::protocol::Transaction::Ptr createTransaction(int32_t const& _version,
-        bcos::bytes const& _to, bcos::bytes const& _input, bcos::u256 const& _nonce,
-        int64_t const& _blockLimit, std::string const& _chainId, std::string const& _groupId,
-        int64_t const& _importTime) override
+    bcos::protocol::Transaction::Ptr createTransaction(int32_t _version,
+        const std::string_view& _to, bcos::bytes const& _input, bcos::u256 const& _nonce,
+        int64_t _blockLimit, std::string const& _chainId, std::string const& _groupId,
+        int64_t _importTime) override
     {
         auto transaction = std::make_shared<bcostars::protocol::TransactionImpl>(m_cryptoSuite);
         transaction->m_inner->data.version = _version;
@@ -178,10 +177,10 @@ public:
         return transaction;
     }
 
-    bcos::protocol::Transaction::Ptr createTransaction(int32_t const& _version,
-        bcos::bytes const& _to, bcos::bytes const& _input, bcos::u256 const& _nonce,
-        int64_t const& _blockLimit, std::string const& _chainId, std::string const& _groupId,
-        int64_t const& _importTime, bcos::crypto::KeyPairInterface::Ptr keyPair) override
+    bcos::protocol::Transaction::Ptr createTransaction(int32_t _version,
+        const std::string_view& _to, bcos::bytes const& _input, bcos::u256 const& _nonce,
+        int64_t _blockLimit, std::string const& _chainId, std::string const& _groupId,
+        int64_t _importTime, bcos::crypto::KeyPairInterface::Ptr keyPair) override
     {
         auto tx = createTransaction(
             _version, _to, _input, _nonce, _blockLimit, _chainId, _groupId, _importTime);
