@@ -9,6 +9,7 @@ app_name = "nodes"
 # use sm or not
 sm_mode = false 
 p2p_listen_port = 30300
+rpc_listen_port = 20200
 
 # the genesis config
 leader_period = 5
