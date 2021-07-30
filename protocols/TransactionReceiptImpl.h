@@ -97,11 +97,7 @@ public:
         return m_gasUsed;
     }
 
-    bcos::bytesConstRef contractAddress() const override
-    {
-        return bcos::bytesConstRef(
-            (const unsigned char*)m_inner->contractAddress.data(), m_inner->contractAddress.size());
-    }
+    std::string_view contractAddress() const override { return m_inner->contractAddress; }
     int32_t status() const override { return m_inner->status; }
     bcos::bytesConstRef output() const override
     {
@@ -150,7 +146,7 @@ public:
     }
 
     TransactionReceiptImpl::Ptr createReceipt(bcos::u256 const& _gasUsed,
-        bcos::bytes const& _contractAddress,
+        const std::string_view& _contractAddress,
         std::shared_ptr<std::vector<bcos::protocol::LogEntry>> _logEntries, int32_t _status,
         bcos::bytes const& _output, bcos::protocol::BlockNumber _blockNumber) override
     {
@@ -175,7 +171,7 @@ public:
     }
 
     TransactionReceiptImpl::Ptr createReceipt(bcos::u256 const& _gasUsed,
-        bcos::bytes const& _contractAddress,
+        const std::string_view& _contractAddress,
         std::shared_ptr<std::vector<bcos::protocol::LogEntry>> _logEntries, int32_t _status,
         bcos::bytes&& _output, bcos::protocol::BlockNumber _blockNumber) override
     {
