@@ -108,7 +108,7 @@ public:
     }
     void appendTransaction(bcos::protocol::Transaction::Ptr _transaction) override
     {
-        m_inner->transactions.push_back(
+        m_inner->transactions.emplace_back(
             std::dynamic_pointer_cast<bcostars::protocol::TransactionImpl>(_transaction)->inner());
     }
 

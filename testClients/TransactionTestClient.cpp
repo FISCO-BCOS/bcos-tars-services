@@ -6,6 +6,7 @@
 #include "Block.h"
 #include "TxPoolService.h"
 #include "libutilities/Common.h"
+#include "libutilities/DataConvertUtility.h"
 #include "protocols/TransactionSubmitResultImpl.h"
 #include <bcos-crypto/encrypt/AESCrypto.h>
 #include <bcos-crypto/encrypt/SM4Crypto.h>
@@ -224,13 +225,16 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+    std::cout << "Contract address: " << bcos::toHexString(contractAddress) << std::endl;
+
     tbb::atomic<size_t> failed = 0;
     tbb::atomic<size_t> success = 0;
 
     auto now = bcos::utcTime();
     std::promise<bool> finished;
     tbb::parallel_for(
-        tbb::blocked_range<size_t>(0, count, count / std::thread::hardware_concurrency()),
+        // tbb::blocked_range<size_t>(0, count, count / std::thread::hardware_concurrency()),
+        tbb::blocked_range<size_t>(0, count),
         [&](const tbb::blocked_range<size_t>& r) {
             for (auto i = r.begin(); i != r.end(); ++i)
             {
@@ -243,7 +247,7 @@ int main(int argc, char* argv[])
                     std::make_shared<bcos::bytes>(encodedTxData.begin(), encodedTxData.end());
 
                 txpool->asyncSubmit(
-                    txData, [&, tx](bcos::Error::Ptr error,
+                    txData, [&failed, &success, count, &finished](bcos::Error::Ptr error,
                                 bcos::protocol::TransactionSubmitResult::Ptr result) {
                         if (!result)
                         {
@@ -260,7 +264,7 @@ int main(int argc, char* argv[])
                     });
             }
         },
-        tbb::simple_partitioner());
+        tbb::auto_partitioner());
 
     finished.get_future().get();
 
@@ -268,7 +272,7 @@ int main(int argc, char* argv[])
     std::cout << "Total cost: " << cost << " ms" << std::endl;
     std::cout << "Success: " << success << std::endl;
     std::cout << "Failed: " << failed << std::endl;
-    std::cout << "TPS: " << (double)count / cost << std::endl;
+    std::cout << "TPS: " << (double)(count * 1000) / cost << std::endl;
 
     return 0;
 }
