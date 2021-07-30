@@ -67,7 +67,7 @@ public:
         auto inner = std::const_pointer_cast<bcostars::Block>(m_inner);
         return std::make_shared<bcostars::protocol::TransactionImpl>(
             m_transactionFactory->cryptoSuite(),
-            [m_inner = std::move(inner), _index]() { return &m_inner->transactions[_index]; });
+            [m_inner = std::move(inner), _index]() { return &(m_inner->transactions[_index]); });
     }
 
     bcos::protocol::TransactionReceipt::ConstPtr receipt(size_t _index) const override
@@ -76,7 +76,7 @@ public:
 
         return std::make_shared<bcostars::protocol::TransactionReceiptImpl>(
             m_transactionFactory->cryptoSuite(),
-            [m_inner = std::move(inner), _index]() { return &m_inner->receipts[_index]; });
+            [m_inner = std::move(inner), _index]() { return &(m_inner->receipts[_index]); });
     };
 
     bcos::crypto::HashType const& transactionHash(size_t _index) const override

@@ -20,6 +20,8 @@ class TransactionSubmitResultImpl : public bcos::protocol::TransactionSubmitResu
 public:
     friend class TransactionSubmitResultFactoryImpl;
 
+    TransactionSubmitResultImpl() = delete;
+
     TransactionSubmitResultImpl(bcos::crypto::CryptoSuite::Ptr cryptoSuite)
       : bcos::protocol::TransactionSubmitResult(),
         m_cryptoSuite(cryptoSuite),

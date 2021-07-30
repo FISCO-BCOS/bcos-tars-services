@@ -168,6 +168,9 @@ int main(int argc, char* argv[])
             blockNumberPromise.set_value(_blockNumber);
         });
     auto blockNumber = blockNumberPromise.get_future().get();
+
+    std::cout << "Get block number success: " << blockNumber << std::endl;
+
     auto blockLimit = blockNumber + 500;
 
     // deploy first
@@ -179,9 +182,9 @@ int main(int argc, char* argv[])
     auto txData = std::make_shared<bcos::bytes>(encodedTxData.begin(), encodedTxData.end());
 
     std::promise<bcos::bytes> address;
-    txpool->asyncSubmit(txData,
-        [&](bcos::Error::Ptr error, bcos::protocol::TransactionSubmitResult::Ptr result) {
-            if (error || error->errorCode())
+    txpool->asyncSubmit(
+        txData, [&](bcos::Error::Ptr error, bcos::protocol::TransactionSubmitResult::Ptr result) {
+            if (error && error->errorCode())
             {
                 std::cout << "Deploy contract error! " << error->errorCode() << " "
                           << error->errorMessage() << std::endl;
@@ -189,19 +192,23 @@ int main(int argc, char* argv[])
                 return;
             }
 
-            std::cout << std::dynamic_pointer_cast<bcostars::protocol::TransactionSubmitResultImpl>(
-                             result)
-                             ->inner()
-                             .writeToJsonString()
-                      << std::endl;
+            std::cout << "Deploy success, tx hash: " << result->txHash().hex() << std::endl;
+            std::cout << "Block hash: " << result->blockHash() << std::endl;
 
             ledger->asyncGetTransactionReceiptByHash(result->txHash(), false,
                 [&](bcos::Error::Ptr error, bcos::protocol::TransactionReceipt::ConstPtr receipt,
                     bcos::ledger::MerkleProofPtr) {
-                    if (error || error->errorCode())
+                    if (error && error->errorCode())
                     {
                         std::cout << "GetTransactionReceipt error! " << error->errorCode() << " "
                                   << error->errorMessage() << std::endl;
+                        address.set_value(bcos::bytes());
+                        return;
+                    }
+
+                    if (receipt == nullptr)
+                    {
+                        std::cout << "Get receipt empty!" << std::endl;
                         address.set_value(bcos::bytes());
                         return;
                     }

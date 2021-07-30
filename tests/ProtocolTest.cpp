@@ -207,7 +207,6 @@ BOOST_AUTO_TEST_CASE(block)
     for (auto i = 0; i < decodedSealerList.size(); i++)
     {
         BOOST_CHECK(decodedSealerList[i] == sealerList[i]);
-        std::cout << "##### decodedSealerList size:" << decodedSealerList[i].size() << std::endl;
     }
 
     // ensure the blockheader lifetime
