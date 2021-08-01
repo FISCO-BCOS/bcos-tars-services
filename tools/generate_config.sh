@@ -753,9 +753,9 @@ main() {
             connected_nodes=${connected_nodes}"${ip}:${port}, "
 
             if [[ "${sm_mode}" == "false" ]]; then
-                generate_node_account "${account_dir}" "${node_count}"
+                generate_node_account "${account_dir}" "${count}"
             else
-                generate_sm_node_account "${account_dir}" "${node_count}"
+                generate_sm_node_account "${account_dir}" "${count}"
             fi
             set_value ${ip//./}_count $(( $(get_value ${ip//./}_count) + 1 ))
             ((++count))
