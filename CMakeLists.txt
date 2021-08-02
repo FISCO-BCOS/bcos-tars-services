@@ -58,7 +58,7 @@ foreach(SERVICE ${SERVICE_LIST})
 
     add_custom_command(OUTPUT ${SERVICE}.tgz
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    COMMAND cmake -E chdir ${CMAKE_BINARY_DIR} tar czfv ${SERVICE}.tgz ${SERVICE}/${SERVICE}
+    COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR} tar czfv ${SERVICE}.tgz ${SERVICE}/${SERVICE}
     COMMENT "Compressing ${SERVICE}...")
     add_custom_target(${SERVICE}-tar DEPENDS ${SERVICE}.tgz ${SERVICE})
 
