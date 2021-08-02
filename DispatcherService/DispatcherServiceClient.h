@@ -37,7 +37,7 @@ public:
             {
                 auto bcosBlockHeader = m_blockHeaderFactory->createBlockHeader();
                 std::dynamic_pointer_cast<bcostars::protocol::BlockHeaderImpl>(bcosBlockHeader)
-                    ->setInner(blockHeader);
+                    ->setInner(std::move(*const_cast<bcostars::BlockHeader*>(&blockHeader)));
 
                 m_callback(toBcosError(ret), bcosBlockHeader);
             }
@@ -75,7 +75,7 @@ public:
             {
                 auto bcosBlock = m_blockFactory->createBlock();
                 std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(bcosBlock)->setInner(
-                    block);
+                    std::move(*const_cast<bcostars::Block*>(&block)));
                 BCOS_LOG(INFO) << LOG_DESC("callback_asyncGetLatestBlock")
                                << LOG_KV("number", bcosBlock->blockHeader()->number())
                                << LOG_KV("hash", bcosBlock->blockHeader()->hash().abridged());

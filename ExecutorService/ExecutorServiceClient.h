@@ -33,7 +33,8 @@ public:
             void callback_asyncGetCode(
                 const bcostars::Error& ret, const vector<tars::Char>& code) override
             {
-                m_callback(toBcosError(ret), std::make_shared<bcos::bytes>(code.begin(), code.end()));
+                m_callback(
+                    toBcosError(ret), std::make_shared<bcos::bytes>(code.begin(), code.end()));
             }
 
             void callback_asyncGetCode_exception(tars::Int32 ret) override
@@ -67,9 +68,9 @@ public:
             void callback_asyncExecuteTransaction(
                 const bcostars::Error& ret, const bcostars::TransactionReceipt& receipt) override
             {
-                auto bcosReceipt =
-                    std::make_shared<bcostars::protocol::TransactionReceiptImpl>(m_cryptoSuite);
-                bcosReceipt->setInner(receipt);
+                auto bcosReceipt = std::make_shared<bcostars::protocol::TransactionReceiptImpl>(
+                    m_cryptoSuite, [m_inner = std::move(*const_cast<bcostars::TransactionReceipt*>(
+                                        &receipt))]() mutable { return &m_inner; });
 
                 m_callback(toBcosError(ret), bcosReceipt);
             }

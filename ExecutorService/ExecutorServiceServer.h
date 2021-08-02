@@ -143,8 +143,10 @@ public:
     {
         current->setResponse(false);
 
-        auto bcosTransaction = std::make_shared<bcostars::protocol::TransactionImpl>(m_cryptoSuite);
-        bcosTransaction->setInner(transaction);
+        auto bcosTransaction = std::make_shared<bcostars::protocol::TransactionImpl>(m_cryptoSuite,
+            [m_tx = std::move(*const_cast<bcostars::Transaction*>(&transaction))]() mutable {
+                return &m_tx;
+            });
         m_executor->asyncExecuteTransaction(
             bcosTransaction, [current](const bcos::Error::Ptr& error,
                                  const bcos::protocol::TransactionReceipt::ConstPtr& receipt) {

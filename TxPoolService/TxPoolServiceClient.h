@@ -3,6 +3,7 @@
 #include "../Common/ErrorConverter.h"
 #include "../protocols/TransactionImpl.h"
 #include "../protocols/TransactionSubmitResultImpl.h"
+#include "Transaction.h"
 #include "TransactionSubmitResult.h"
 #include "TxPoolService.h"
 #include "bcos-framework/interfaces/txpool/TxPoolInterface.h"
@@ -189,11 +190,12 @@ public:
             void callback_asyncFillBlock(
                 const bcostars::Error& ret, const vector<bcostars::Transaction>& filled) override
             {
+                auto mutableFilled = const_cast<vector<bcostars::Transaction>*>(&filled);
                 auto txs = std::make_shared<bcos::protocol::Transactions>();
-                for (auto& it : filled)
+                for (auto&& it : *mutableFilled)
                 {
-                    auto tx = std::make_shared<bcostars::protocol::TransactionImpl>(m_cryptoSuite);
-                    tx->setInner(it);
+                    auto tx = std::make_shared<bcostars::protocol::TransactionImpl>(
+                        m_cryptoSuite, [m_tx = std::move(it)]() mutable { return &m_tx; });
                     txs->push_back(tx);
                 }
                 m_callback(toBcosError(ret), txs);
