@@ -96,9 +96,7 @@ void init() {}
 
 int main(int argc, char* argv[])
 {
-    auto iniConfigPath = "config.ini";
     boost::property_tree::ptree pt;
-    boost::property_tree::read_ini(iniConfigPath, pt);
     bcos::BoostLogInitializer logInit;
     logInit.initLog(pt);
 
