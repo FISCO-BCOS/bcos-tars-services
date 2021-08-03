@@ -138,8 +138,14 @@ public:
     bcos::protocol::Transaction::Ptr createTransaction(
         bcos::bytesConstRef _txData, bool _checkSig = true) override
     {
+<<<<<<< HEAD
         auto transaction = std::make_shared<TransactionImpl>(m_cryptoSuite,
             [m_transaction = bcostars::Transaction()]() mutable { return &m_transaction; });
+=======
+        bcostars::Transaction tx;
+        auto transaction = std::make_shared<TransactionImpl>(
+            m_cryptoSuite, [m_transaction = std::move(tx)]() mutable { return &m_transaction; });
+>>>>>>> upstream/dev
 
         transaction->decode(_txData);
         if (_checkSig)
@@ -159,8 +165,14 @@ public:
         bcos::bytes const& _input, bcos::u256 const& _nonce, int64_t _blockLimit,
         std::string const& _chainId, std::string const& _groupId, int64_t _importTime) override
     {
+<<<<<<< HEAD
         auto transaction = std::make_shared<bcostars::protocol::TransactionImpl>(
             m_cryptoSuite, [m_transaction = bcostars::Transaction()]() mutable { return &m_transaction; });
+=======
+        bcostars::Transaction tx;
+        auto transaction = std::make_shared<bcostars::protocol::TransactionImpl>(
+            m_cryptoSuite, [m_transaction = std::move(tx)]() mutable { return &m_transaction; });
+>>>>>>> upstream/dev
         transaction->m_inner()->data.version = _version;
         transaction->m_inner()->data.to.assign(_to.begin(), _to.end());
         transaction->m_inner()->data.input.assign(_input.begin(), _input.end());

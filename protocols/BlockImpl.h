@@ -63,6 +63,7 @@ public:
 
     bcos::protocol::Transaction::ConstPtr transaction(size_t _index) const override
     {
+        auto inner = std::const_pointer_cast<bcostars::Block>(m_inner);
         return std::make_shared<bcostars::protocol::TransactionImpl>(
             m_transactionFactory->cryptoSuite(),
             [m_inner = this->m_inner, _index]() { return &(m_inner->transactions[_index]); });
@@ -70,6 +71,8 @@ public:
 
     bcos::protocol::TransactionReceipt::ConstPtr receipt(size_t _index) const override
     {
+        auto inner = m_inner;
+
         return std::make_shared<bcostars::protocol::TransactionReceiptImpl>(
             m_transactionFactory->cryptoSuite(),
             [m_inner = this->m_inner, _index]() { return &(m_inner->receipts[_index]); });
