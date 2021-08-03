@@ -259,9 +259,8 @@ public:
     ~BlockHeaderFactoryImpl() override {}
     bcos::protocol::BlockHeader::Ptr createBlockHeader() override
     {
-        bcostars::BlockHeader header;
         return std::make_shared<bcostars::protocol::BlockHeaderImpl>(
-            m_cryptoSuite, [m_header = std::move(header)]() mutable { return &m_header; });
+            m_cryptoSuite, [m_header = bcostars::BlockHeader()]() mutable { return &m_header; });
     }
     bcos::protocol::BlockHeader::Ptr createBlockHeader(bcos::bytes const& _data) override
     {

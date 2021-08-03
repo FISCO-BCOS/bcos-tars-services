@@ -28,10 +28,9 @@ public:
       : bcos::protocol::Block(_transactionFactory, _receiptFactory),
         m_inner(std::make_shared<bcostars::Block>())
     {
-        auto inner = m_inner;
         m_blockHeader = std::make_shared<bcostars::protocol::BlockHeaderImpl>(
             m_transactionFactory->cryptoSuite(),
-            [m_inner = std::move(inner)]() mutable { return &m_inner->blockHeader; });
+            [m_inner = this->m_inner]() mutable { return &m_inner->blockHeader; });
     }
 
     ~BlockImpl() override{};
@@ -64,19 +63,16 @@ public:
 
     bcos::protocol::Transaction::ConstPtr transaction(size_t _index) const override
     {
-        auto inner = std::const_pointer_cast<bcostars::Block>(m_inner);
         return std::make_shared<bcostars::protocol::TransactionImpl>(
             m_transactionFactory->cryptoSuite(),
-            [m_inner = std::move(inner), _index]() { return &(m_inner->transactions[_index]); });
+            [m_inner = this->m_inner, _index]() { return &(m_inner->transactions[_index]); });
     }
 
     bcos::protocol::TransactionReceipt::ConstPtr receipt(size_t _index) const override
     {
-        auto inner = m_inner;
-
         return std::make_shared<bcostars::protocol::TransactionReceiptImpl>(
             m_transactionFactory->cryptoSuite(),
-            [m_inner = std::move(inner), _index]() { return &(m_inner->receipts[_index]); });
+            [m_inner = this->m_inner, _index]() { return &(m_inner->receipts[_index]); });
     };
 
     bcos::crypto::HashType const& transactionHash(size_t _index) const override
@@ -147,7 +143,7 @@ public:
         m_inner->nonceList.reserve(_nonceList.size());
         for (auto const& it : _nonceList)
         {
-            m_inner->nonceList.push_back(boost::lexical_cast<std::string>(it));
+            m_inner->nonceList.emplace_back(boost::lexical_cast<std::string>(it));
         }
 
         m_nonceList.clear();
@@ -158,7 +154,7 @@ public:
         m_inner->nonceList.reserve(_nonceList.size());
         for (auto const& it : _nonceList)
         {
-            m_inner->nonceList.push_back(boost::lexical_cast<std::string>(it));
+            m_inner->nonceList.emplace_back(boost::lexical_cast<std::string>(it));
         }
 
         m_nonceList.clear();

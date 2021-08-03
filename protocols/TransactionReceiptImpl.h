@@ -131,9 +131,8 @@ public:
 
     TransactionReceiptImpl::Ptr createReceipt(bcos::bytesConstRef _receiptData) override
     {
-        bcostars::TransactionReceipt receipt;
-        auto transactionReceipt = std::make_shared<TransactionReceiptImpl>(
-            m_cryptoSuite, [m_receipt = std::move(receipt)]() mutable { return &m_receipt; });
+        auto transactionReceipt = std::make_shared<TransactionReceiptImpl>(m_cryptoSuite,
+            [m_receipt = bcostars::TransactionReceipt()]() mutable { return &m_receipt; });
 
         transactionReceipt->decode(_receiptData);
 
@@ -150,9 +149,8 @@ public:
         std::shared_ptr<std::vector<bcos::protocol::LogEntry>> _logEntries, int32_t _status,
         bcos::bytes const& _output, bcos::protocol::BlockNumber _blockNumber) override
     {
-        bcostars::TransactionReceipt receipt;
         auto transactionReceipt = std::make_shared<TransactionReceiptImpl>(
-            m_cryptoSuite, [m_receipt = std::move(receipt)]() mutable { return &m_receipt; });
+            m_cryptoSuite, [m_receipt = bcostars::TransactionReceipt()]() mutable { return &m_receipt; });
         // required: version
         transactionReceipt->m_inner()->version = 0;
         // required: gasUsed

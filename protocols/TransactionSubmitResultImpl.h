@@ -31,9 +31,8 @@ public:
     uint32_t status() const override { return m_inner->status; }
     bcos::protocol::TransactionReceipt::Ptr receipt() const override
     {
-        auto inner = std::const_pointer_cast<bcostars::TransactionSubmitResult>(m_inner);
         auto receipt = std::make_shared<bcostars::protocol::TransactionReceiptImpl>(
-            m_cryptoSuite, [m_inner = std::move(inner)]() mutable { return &m_inner->receipt; });
+            m_cryptoSuite, [m_inner = this->m_inner]() { return &m_inner->receipt; });
 
         return receipt;
     }

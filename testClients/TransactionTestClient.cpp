@@ -5,6 +5,7 @@
 #include "../protocols/BlockImpl.h"
 #include "Block.h"
 #include "TxPoolService.h"
+#include "libutilities/BoostLogInitializer.h"
 #include "libutilities/Common.h"
 #include "libutilities/DataConvertUtility.h"
 #include "protocols/TransactionSubmitResultImpl.h"
@@ -95,6 +96,12 @@ void init() {}
 
 int main(int argc, char* argv[])
 {
+    auto iniConfigPath = "config.ini";
+    boost::property_tree::ptree pt;
+    boost::property_tree::read_ini(iniConfigPath, pt);
+    bcos::BoostLogInitializer logInit;
+    logInit.initLog(pt);
+
     std::string ip;
     unsigned short port;
     std::string app;
@@ -163,6 +170,8 @@ int main(int argc, char* argv[])
         [&](bcos::Error::Ptr _error, bcos::protocol::BlockNumber _blockNumber) {
             if (_error)
             {
+                std::cerr << "Get block number error! " << _error->errorCode() << " "
+                          << _error->errorMessage() << std::endl;
                 return;
             }
 
@@ -229,6 +238,7 @@ int main(int argc, char* argv[])
 
     tbb::atomic<size_t> failed = 0;
     tbb::atomic<size_t> success = 0;
+    tbb::atomic<uint64_t> nonceCount = bcos::utcTimeUs();
 
     auto now = bcos::utcTime();
     std::promise<bool> finished;
@@ -238,7 +248,7 @@ int main(int argc, char* argv[])
         [&](const tbb::blocked_range<size_t>& r) {
             for (auto i = r.begin(); i != r.end(); ++i)
             {
-                bcos::u256 nonce = bcos::utcTimeUs();
+                bcos::u256 nonce = nonceCount.fetch_and_increment();
                 auto tx = blockFactory->transactionFactory()->createTransaction(0, contractAddress,
                     fakeHelloWorldSet(), nonce, blockLimit, chainID, groupID, 0, keyPair);
 
@@ -247,16 +257,46 @@ int main(int argc, char* argv[])
                     std::make_shared<bcos::bytes>(encodedTxData.begin(), encodedTxData.end());
 
                 txpool->asyncSubmit(
-                    txData, [&failed, &success, count, &finished](bcos::Error::Ptr error,
+                    txData, [&](bcos::Error::Ptr error,
                                 bcos::protocol::TransactionSubmitResult::Ptr result) {
-                        if (!result)
+                        if (error && error->errorCode())
                         {
+                            std::cerr << "Submit transaction error! " << error->errorCode() << " "
+                                      << error->errorMessage() << std::endl;
                             ++failed;
                         }
                         else
                         {
-                            ++success;
+                            ledger->asyncGetTransactionReceiptByHash(result->txHash(), false,
+                                [&](bcos::Error::Ptr error,
+                                    bcos::protocol::TransactionReceipt::ConstPtr receipt,
+                                    bcos::ledger::MerkleProofPtr) {
+                                    if (error && error->errorCode())
+                                    {
+                                        std::cerr << "Get receipt error! " << error->errorCode()
+                                                  << " " << error->errorMessage() << std::endl;
+                                        ++failed;
+                                    }
+                                    else
+                                    {
+                                        if (receipt->status())
+                                        {
+                                            std::cerr << "Receipt error! " << receipt->status()
+                                                      << std::endl;
+                                            ;
+                                            ++failed;
+                                        }
+
+                                        ++success;
+                                    }
+
+                                    if (failed + success == count)
+                                    {
+                                        finished.set_value(true);
+                                    }
+                                });
                         }
+
                         if (failed + success == count)
                         {
                             finished.set_value(true);
@@ -272,7 +312,7 @@ int main(int argc, char* argv[])
     std::cout << "Total cost: " << cost << " ms" << std::endl;
     std::cout << "Success: " << success << std::endl;
     std::cout << "Failed: " << failed << std::endl;
-    std::cout << "TPS: " << (double)(count * 1000) / cost << std::endl;
+    std::cout << "TPS: " << (double)(success * 1000) / cost << std::endl;
 
     return 0;
 }

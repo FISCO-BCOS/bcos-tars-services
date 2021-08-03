@@ -29,10 +29,8 @@ void PBFTServiceClient::asyncSubmitProposal(bcos::bytesConstRef _proposalData,
     bcos::protocol::BlockNumber _proposalIndex, bcos::crypto::HashType const& _proposalHash,
     std::function<void(bcos::Error::Ptr)> _onProposalSubmitted)
 {
-    auto data = _proposalData.toBytes();
-    auto hash = _proposalHash.asBytes();
     m_proxy->async_asyncSubmitProposal(new PBFTServiceCommonCallback(_onProposalSubmitted),
-        std::vector<char>(data.begin(), data.end()), _proposalIndex, std::vector<char>(hash.begin(), hash.end()));
+        std::vector<char>(_proposalData.begin(), _proposalData.end()), _proposalIndex, std::vector<char>(_proposalHash.begin(), _proposalHash.end()));
 }
 
 void PBFTServiceClient::asyncGetPBFTView(
