@@ -63,8 +63,8 @@ public:
             if (m_buffer.empty())
             {
                 tars::TarsOutputStream<bcostars::protocol::BufferWriterByteVector> output;
-
-                auto hash = m_cryptoSuite->hash(m_dataBuffer);
+                auto buffer = encode(true);
+                auto hash = m_cryptoSuite->hash(buffer);
                 m_inner->dataHash.assign(hash.begin(), hash.end());
                 m_inner->writeTo(output);
                 output.getByteBuffer().swap(m_buffer);
@@ -97,10 +97,7 @@ public:
         }
         return m_nonce;
     }
-    std::string_view to() const override
-    {
-        return m_inner->data.to;
-    }
+    std::string_view to() const override { return m_inner->data.to; }
     bcos::bytesConstRef input() const override
     {
         return bcos::bytesConstRef(reinterpret_cast<const bcos::byte*>(m_inner->data.input.data()),
