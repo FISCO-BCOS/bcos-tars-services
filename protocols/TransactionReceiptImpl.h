@@ -92,8 +92,8 @@ public:
         return m_gasUsed;
     }
 
-    std::string_view contractAddress() const override { return m_inner->contractAddress; }
-    int32_t status() const override { return m_inner->status; }
+    std::string_view contractAddress() const override { return m_inner()->contractAddress; }
+    int32_t status() const override { return m_inner()->status; }
     bcos::bytesConstRef output() const override
     {
         return bcos::bytesConstRef(

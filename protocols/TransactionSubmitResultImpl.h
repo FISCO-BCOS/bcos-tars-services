@@ -28,7 +28,7 @@ public:
         m_inner(std::make_shared<bcostars::TransactionSubmitResult>())
     {}
 
-    uint32_t status() const override { return m_inner.status; }
+    uint32_t status() const override { return m_inner->status; }
     bcos::crypto::HashType const& txHash() const override
     {
         if (!m_inner->txHash.empty())
@@ -46,7 +46,7 @@ public:
         return emptyHash;
     }
 
-    int64_t transactionIndex() const override { return m_inner.transactionIndex; }
+    int64_t transactionIndex() const override { return m_inner->transactionIndex; }
     void setNonce(bcos::protocol::NonceType const& _nonce) override
     {
         m_inner->nonce = boost::lexical_cast<std::string>(_nonce);

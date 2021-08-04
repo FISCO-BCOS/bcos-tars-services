@@ -93,7 +93,7 @@ public:
     }
     std::string_view to() const override
     {
-        return m_inner->data.to;
+        return m_inner()->data.to;
     }
     bcos::bytesConstRef input() const override
     {

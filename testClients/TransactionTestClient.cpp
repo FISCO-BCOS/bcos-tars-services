@@ -176,20 +176,20 @@ int main(int argc, char* argv[])
 
     // deploy first
     bcos::u256 nonce = bcos::utcTimeUs();
-    auto tx = blockFactory->transactionFactory()->createTransaction(0, bcos::bytes(),
+    auto tx = blockFactory->transactionFactory()->createTransaction(0, "",
         fakeHelloWorldDeployInput(), nonce, blockLimit, chainID, groupID, 0, keyPair);
 
     auto encodedTxData = tx->encode();
     auto txData = std::make_shared<bcos::bytes>(encodedTxData.begin(), encodedTxData.end());
 
-    std::promise<bcos::bytes> address;
+    std::promise<std::string> address;
     txpool->asyncSubmit(
         txData, [&](bcos::Error::Ptr error, bcos::protocol::TransactionSubmitResult::Ptr result) {
             if (error && error->errorCode())
             {
                 std::cout << "Deploy contract error! " << error->errorCode() << " "
                           << error->errorMessage() << std::endl;
-                address.set_value(bcos::bytes());
+                address.set_value("");
                 return;
             }
 
@@ -203,44 +203,21 @@ int main(int argc, char* argv[])
                     {
                         std::cout << "GetTransactionReceipt error! " << error->errorCode() << " "
                                   << error->errorMessage() << std::endl;
-                        address.set_value(bcos::bytes());
+                        address.set_value("");
                         return;
                     }
 
                     if (receipt == nullptr)
                     {
                         std::cout << "Get receipt empty!" << std::endl;
-                        address.set_value(bcos::bytes());
+                        address.set_value("");
                         return;
                     }
 
-                    address.set_value(receipt->contractAddress().toBytes());
+                    address.set_value(std::string(receipt->contractAddress()));
                 });
         }
-
-        auto txBlockLimit = blockNumber + 500;
-        bcos::u256 nonce = bcos::utcTimeUs();
-        auto tx = blockFactory->transactionFactory()->createTransaction(
-            0, "", fakeHelloWorldDeployInput(), nonce, txBlockLimit, chainID, groupID, 0, keyPair);
-
-        auto encodedTxData = tx->encode();
-        auto txData = std::make_shared<bcos::bytes>(encodedTxData.begin(), encodedTxData.end());
-        txpool->asyncSubmit(txData, [&, tx](bcos::Error::Ptr error,
-                                        bcos::protocol::TransactionSubmitResult::Ptr result) {
-            if (!result)
-            {
-                std::cout << "Transaction submit failed: " << tx->hash().abridged() << std::endl;
-                return;
-            }
-            if (printStat)
-            {
-                std::cout << "Transaction status: " << result->status() << std::endl;
-                std::cout << "Transaction hash: " << result->txHash() << std::endl;
-                std::cout << "Block hash" << result->blockHash() << std::endl;
-                std::cout << std::endl;
-            }
-            receivedTxs++;
-        });
+    );
 
     auto contractAddress = address.get_future().get();
     if (contractAddress.empty())
