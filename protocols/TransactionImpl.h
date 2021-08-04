@@ -47,7 +47,7 @@ public:
             m_inner()->data.writeTo(output);
             output.getByteBuffer().swap(m_dataBuffer);
         }
-        
+
         if (_onlyHashFields)
         {
             return bcos::ref(m_dataBuffer);
