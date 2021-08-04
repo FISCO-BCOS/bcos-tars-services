@@ -223,33 +223,6 @@ int main(int argc, char* argv[])
 
                     address.set_value(receipt->contractAddress().toBytes());
                 });
-<<<<<<< HEAD
-=======
-        }
-
-        auto txBlockLimit = blockNumber + 500;
-        bcos::u256 nonce = bcos::utcTimeUs();
-        auto tx = blockFactory->transactionFactory()->createTransaction(
-            0, "", fakeHelloWorldDeployInput(), nonce, txBlockLimit, chainID, groupID, 0, keyPair);
-
-        auto encodedTxData = tx->encode();
-        auto txData = std::make_shared<bcos::bytes>(encodedTxData.begin(), encodedTxData.end());
-        txpool->asyncSubmit(txData, [&, tx](bcos::Error::Ptr error,
-                                        bcos::protocol::TransactionSubmitResult::Ptr result) {
-            if (!result)
-            {
-                std::cout << "Transaction submit failed: " << tx->hash().abridged() << std::endl;
-                return;
-            }
-            if (printStat)
-            {
-                std::cout << "Transaction status: " << result->status() << std::endl;
-                std::cout << "Transaction hash: " << result->txHash() << std::endl;
-                std::cout << "Block hash" << result->blockHash() << std::endl;
-                std::cout << std::endl;
-            }
-            receivedTxs++;
->>>>>>> upstream/release-3.0.0
         });
 
     auto contractAddress = address.get_future().get();
