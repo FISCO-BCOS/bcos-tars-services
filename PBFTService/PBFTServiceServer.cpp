@@ -257,7 +257,7 @@ Error PBFTServiceServer::asyncCheckBlock(
     _current->setResponse(false);
     auto block = std::make_shared<bcostars::protocol::BlockImpl>(
         blockFactory->transactionFactory(), blockFactory->receiptFactory());
-    block->setInner(_block);
+    block->setInner(std::move(*const_cast<bcostars::Block*>(&_block)));
     m_pbft->asyncCheckBlock(block, [_current](bcos::Error::Ptr _error, bool _verifyResult) {
         async_response_asyncCheckBlock(_current, toTarsError(_error), _verifyResult);
     });

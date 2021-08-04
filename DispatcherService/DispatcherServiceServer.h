@@ -83,7 +83,7 @@ public:
         current->setResponse(false);
 
         auto bcosBlock = m_blockFactory->createBlock();
-        std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(bcosBlock)->setInner(block);
+        std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(bcosBlock)->setInner(std::move(*const_cast<bcostars::Block*>(&block)));
         m_dispatcher->asyncExecuteBlock(bcosBlock, verify,
             [current](const bcos::Error::Ptr& error,
                 const bcos::protocol::BlockHeader::Ptr& blockHeader) {
@@ -135,7 +135,7 @@ public:
 
         auto bcosBlockHeader = m_blockFactory->blockHeaderFactory()->createBlockHeader();
         std::dynamic_pointer_cast<bcostars::protocol::BlockHeaderImpl>(bcosBlockHeader)
-            ->setInner(blockHeader);
+            ->setInner(std::move(*const_cast<bcostars::BlockHeader*>(&blockHeader)));
         auto orgBlockHash = bcos::crypto::HashType(bcos::bytes(orgHash.begin(), orgHash.end()));
         m_dispatcher->asyncNotifyExecutionResult(toBcosError(error), orgBlockHash, bcosBlockHeader,
             [current](const bcos::Error::Ptr& error) {

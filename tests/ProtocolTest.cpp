@@ -9,6 +9,7 @@
 #include "bcos-framework/libutilities/DataConvertUtility.h"
 #include "bcos-framework/testutils/crypto/HashImpl.h"
 #include "bcos-framework/testutils/crypto/SignatureImpl.h"
+#include "Transaction.h"
 #include "interfaces/protocol/ProtocolTypeDef.h"
 #include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
@@ -205,7 +206,6 @@ BOOST_AUTO_TEST_CASE(block)
     for (auto i = 0; i < decodedSealerList.size(); i++)
     {
         BOOST_CHECK(decodedSealerList[i] == sealerList[i]);
-        std::cout << "##### decodedSealerList size:" << decodedSealerList[i].size() << std::endl;
     }
 
     // ensure the blockheader lifetime
@@ -229,6 +229,11 @@ BOOST_AUTO_TEST_CASE(block)
         {
             auto lhs = block->transaction(i);
             auto rhs = decodedBlock->transaction(i);
+
+            // check if transaction hash re-encode
+            auto reencodeBuffer = rhs->encode(false);
+            auto redecodeBlock = transactionFactory->createTransaction(reencodeBuffer, false);
+            BOOST_CHECK_EQUAL(redecodeBlock->hash().hex(), lhs->hash().hex());
 
             BOOST_CHECK_EQUAL(lhs->hash().hex(), rhs->hash().hex());
             BOOST_CHECK_EQUAL(lhs->version(), rhs->version());
@@ -387,6 +392,21 @@ BOOST_AUTO_TEST_CASE(emptyBlockHeader)
     auto block = blockFactory.createBlock();
 
     BOOST_CHECK_NO_THROW(block->setBlockHeader(nullptr));
+}
+
+BOOST_AUTO_TEST_CASE(tarsMovable) {
+    bcostars::Transaction tx1;
+    tx1.data.chainID = "chainID";
+    std::string input("input data for test");
+    tx1.data.input.assign(input.begin(), input.end());
+
+    auto addressTx1 = tx1.data.input.data();
+
+    bcostars::Transaction tx2 = std::move(tx1);
+
+    BOOST_CHECK_EQUAL((intptr_t)addressTx1, (intptr_t)tx2.data.input.data());
+
+    BOOST_CHECK_EQUAL((intptr_t)tx1.data.input.data(), (intptr_t)nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -26,10 +26,12 @@ public:
     BlockImpl(bcos::protocol::TransactionFactory::Ptr _transactionFactory,
         bcos::protocol::TransactionReceiptFactory::Ptr _receiptFactory)
       : bcos::protocol::Block(_transactionFactory, _receiptFactory),
-        m_inner(std::make_shared<bcostars::Block>()),
-        m_blockHeader(std::make_shared<bcostars::protocol::BlockHeaderImpl>(
-            m_transactionFactory->cryptoSuite(), m_inner))
-    {}
+        m_inner(std::make_shared<bcostars::Block>())
+    {
+        m_blockHeader = std::make_shared<bcostars::protocol::BlockHeaderImpl>(
+            m_transactionFactory->cryptoSuite(),
+            [m_inner = this->m_inner]() mutable { return &m_inner->blockHeader; });
+    }
 
     ~BlockImpl() override{};
 
@@ -61,16 +63,19 @@ public:
 
     bcos::protocol::Transaction::ConstPtr transaction(size_t _index) const override
     {
+        auto inner = std::const_pointer_cast<bcostars::Block>(m_inner);
         return std::make_shared<bcostars::protocol::TransactionImpl>(
-            m_transactionFactory->cryptoSuite(), m_inner,
-            const_cast<bcostars::Transaction*>(&(m_inner->transactions[_index])));
+            m_transactionFactory->cryptoSuite(),
+            [m_inner = this->m_inner, _index]() { return &(m_inner->transactions[_index]); });
     }
 
     bcos::protocol::TransactionReceipt::ConstPtr receipt(size_t _index) const override
     {
+        auto inner = m_inner;
+
         return std::make_shared<bcostars::protocol::TransactionReceiptImpl>(
-            m_transactionFactory->cryptoSuite(), m_inner,
-            const_cast<bcostars::TransactionReceipt*>(&(m_inner->receipts[_index])));
+            m_transactionFactory->cryptoSuite(),
+            [m_inner = this->m_inner, _index]() { return &(m_inner->receipts[_index]); });
     };
 
     bcos::crypto::HashType const& transactionHash(size_t _index) const override
@@ -102,7 +107,7 @@ public:
     }
     void appendTransaction(bcos::protocol::Transaction::Ptr _transaction) override
     {
-        m_inner->transactions.push_back(
+        m_inner->transactions.emplace_back(
             std::dynamic_pointer_cast<bcostars::protocol::TransactionImpl>(_transaction)->inner());
     }
 
@@ -141,7 +146,7 @@ public:
         m_inner->nonceList.reserve(_nonceList.size());
         for (auto const& it : _nonceList)
         {
-            m_inner->nonceList.push_back(boost::lexical_cast<std::string>(it));
+            m_inner->nonceList.emplace_back(boost::lexical_cast<std::string>(it));
         }
 
         m_nonceList.clear();
@@ -152,7 +157,7 @@ public:
         m_inner->nonceList.reserve(_nonceList.size());
         for (auto const& it : _nonceList)
         {
-            m_inner->nonceList.push_back(boost::lexical_cast<std::string>(it));
+            m_inner->nonceList.emplace_back(boost::lexical_cast<std::string>(it));
         }
 
         m_nonceList.clear();
@@ -181,6 +186,7 @@ public:
 
     const bcostars::Block& inner() const { return *m_inner; }
     void setInner(const bcostars::Block& inner) { *m_inner = inner; }
+    void setInner(bcostars::Block&& inner) { *m_inner = std::move(inner); }
 
 private:
     std::shared_ptr<bcostars::Block> m_inner;
