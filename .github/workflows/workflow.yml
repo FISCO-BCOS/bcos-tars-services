@@ -57,7 +57,7 @@ jobs:
         if: runner.os == 'Linux'
         run: CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake . -DTEST=ON
       - name: compile
-        run: make -j4
+        run: make -j4 && make tar
       - name: run test
         run: CTEST_OUTPUT_ON_FAILURE=TRUE make test
   build_with_gcc:
@@ -165,4 +165,5 @@ jobs:
           # mkdir -p build && cd build
           cmake3 . -DTEST=ON
           make -j4
+          make tar
           CTEST_OUTPUT_ON_FAILURE=TRUE make test

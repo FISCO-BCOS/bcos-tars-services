@@ -1,8 +1,8 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/36bd74a8b1af3e5a67de98ac5d302ba93c69e201.tar.gz"
-    SHA1 b019f4bc5e8a2ed5f2a15fe3d22106a41bf3f01e
-    CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON DEBUG=ON
+    URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/0ce681f43098422df47d5371dcd8e29658caf538.tar.gz
+    SHA1 31f98dd44a9bcc08d952edddd89460179edcfbd4
+    CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON #DEBUG=ON
 )
 
 hunter_config(bcos-crypto
@@ -18,8 +18,8 @@ hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
 )
 
 hunter_config(bcos-pbft VERSION 3.0.0-local-a2a9f7d2
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/8438238c94edfbfa3628f53ca0d8f0f5314ef477.tar.gz"
-    SHA1 5bd6802c1d539ee0afb76ad4163fd811c2f90470
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/e424da18dd6bb5fdd54240995e4b22af51b65382.tar.gz"
+    SHA1 3c572ab1e44f511f72596d759ca419bb76f661f5
 )
 
 hunter_config(bcos-sync VERSION 3.0.0-local-50e0e264
@@ -59,9 +59,9 @@ hunter_config(bcos-gateway VERSION 3.0.0-local-1fb592e4
     CMAKE_ARGS URL_BASE=${URL_BASE}
 )
 
-hunter_config(bcos-rpc VERSION 3.0.0-local-c8bc62f
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-rpc/archive/fb3584c41bf21ef72da104b1678ac972194659e5.tar.gz"
-    SHA1 a32fba5d1b2838b38b64c769a63f786611e9aea4
+hunter_config(bcos-rpc VERSION 3.0.0-487ddc79
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-rpc/archive/487ddc79b1e6b21336818426951f48388d689279.tar.gz"
+    SHA1 3f692af16233871d48d19258079f12e2af3c9cb8
     CMAKE_ARGS URL_BASE=${URL_BASE}
 )
 
@@ -96,4 +96,11 @@ hunter_config(ethash VERSION 0.7.0-4576af36 URL https://${URL_BASE}/chfast/ethas
 hunter_config(evmone VERSION 0.4.1-9eb137ea URL https://${URL_BASE}/FISCO-BCOS/evmone/archive/ea98055f1ebd216cdc89679ae64005e06aa620ae.tar.gz
 	SHA1 8d3d499a2db398ca339ece20fd34ed463454b367
 	CMAKE_ARGS CMAKE_CXX_FLAGS=-std=c++17 BUILD_SHARED_LIBS=OFF
+)
+
+hunter_config(
+    Boost
+    VERSION ${HUNTER_Boost_VERSION}
+    CMAKE_ARGS
+    CONFIG_MACRO=BOOST_UUID_RANDOM_PROVIDER_FORCE_POSIX
 )
