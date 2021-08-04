@@ -28,7 +28,7 @@ public:
         m_inner(std::make_shared<bcostars::TransactionSubmitResult>())
     {}
 
-    uint32_t status() const override { return m_inner.status; }
+    uint32_t status() const override { return m_inner->status; }
     bcos::crypto::HashType const& txHash() const override
     {
         if (!m_inner->txHash.empty())
@@ -46,7 +46,7 @@ public:
         return emptyHash;
     }
 
-    int64_t transactionIndex() const override { return m_inner.transactionIndex; }
+    int64_t transactionIndex() const override { return m_inner->transactionIndex; }
     void setNonce(bcos::protocol::NonceType const& _nonce) override
     {
         m_inner->nonce = boost::lexical_cast<std::string>(_nonce);
@@ -97,44 +97,6 @@ public:
         return result;
     }
 
-<<<<<<< HEAD
-    bcos::protocol::TransactionSubmitResult::Ptr createTxSubmitResult(
-        bcos::protocol::TransactionReceipt::Ptr _receipt, bcos::crypto::HashType _txHash,
-        int64_t _txIndex, bcos::crypto::HashType _blockHash, bcos::bytesConstRef _sender,
-        bcos::bytesConstRef _to) override
-    {
-        auto result = std::make_shared<TransactionSubmitResultImpl>(m_cryptoSuite);
-        result->m_inner->receipt =
-            std::dynamic_pointer_cast<bcostars::protocol::TransactionReceiptImpl>(_receipt)
-                ->inner();
-        result->m_inner->txHash.assign(_txHash.data(), _txHash.data() + _txHash.size);
-        result->m_inner->transactionIndex = _txIndex;
-        result->m_inner->blockHash.assign(_blockHash.begin(), _blockHash.end());
-        result->m_inner->from.assign(_sender.begin(), _sender.end());
-        result->m_inner->to.assign(_to.begin(), _to.end());
-
-        return result;
-    }
-
-    bcos::protocol::TransactionSubmitResult::Ptr createTxSubmitResult(
-        bcos::protocol::TransactionReceipt::Ptr _receipt, bcos::protocol::Transaction::Ptr _tx,
-        int64_t _txIndex, bcos::protocol::BlockHeader::Ptr _blockHeader) override
-    {
-        auto result = std::make_shared<TransactionSubmitResultImpl>(m_cryptoSuite);
-        auto txHash = _tx->hash();
-        result->m_inner->txHash.assign(txHash.begin(), txHash.end());
-        auto to = _tx->to();
-        result->m_inner->to.assign(to.begin(), to.end());
-
-        result->m_inner->transactionIndex = _txIndex;
-        auto blockHash = _blockHeader->hash();
-        result->m_inner->blockHash.assign(blockHash.begin(), blockHash.end());
-
-        return result;
-    }
-
-=======
->>>>>>> upstream/release-3.0.0
 private:
     bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
 };

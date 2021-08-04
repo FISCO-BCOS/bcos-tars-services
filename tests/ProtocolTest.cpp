@@ -230,6 +230,11 @@ BOOST_AUTO_TEST_CASE(block)
             auto lhs = block->transaction(i);
             auto rhs = decodedBlock->transaction(i);
 
+            // check if transaction hash re-encode
+            auto reencodeBuffer = rhs->encode(false);
+            auto redecodeBlock = transactionFactory->createTransaction(reencodeBuffer, false);
+            BOOST_CHECK_EQUAL(redecodeBlock->hash().hex(), lhs->hash().hex());
+
             BOOST_CHECK_EQUAL(lhs->hash().hex(), rhs->hash().hex());
             BOOST_CHECK_EQUAL(lhs->version(), rhs->version());
             BOOST_CHECK_EQUAL(lhs->to(), rhs->to());
