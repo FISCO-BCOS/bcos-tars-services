@@ -18,16 +18,9 @@ public:
 
     bcos::protocol::TransactionReceipt::ConstPtr receipt() const noexcept override
     {
-<<<<<<< HEAD
         std::shared_ptr<const bcostars::protocol::TransactionReceiptImpl> receipt =
             std::make_shared<const TransactionReceiptImpl>(
                 m_cryptoSuite, [m_inner = this->m_inner]() { return &m_inner->receipt; });
-=======
-        auto inner = m_inner;
-        std::shared_ptr<const bcostars::protocol::TransactionReceiptImpl> receipt =
-            std::make_shared<const TransactionReceiptImpl>(
-                m_cryptoSuite, [m_inner = std::move(inner)]() { return &m_inner->receipt; });
->>>>>>> upstream/dev
 
         return receipt;
     }

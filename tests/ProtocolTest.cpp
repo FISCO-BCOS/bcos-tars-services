@@ -62,7 +62,7 @@ inline std::vector<bytes> fakeSealerList(
 
 BOOST_AUTO_TEST_CASE(transaction)
 {
-    bcos::bytes to(bcos::asBytes("Target"));
+    std::string to("Target");
     bcos::bytes input(bcos::asBytes("Arguments"));
     bcos::u256 nonce(800);
 
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(transaction)
 
     BOOST_CHECK_EQUAL(tx->hash(), decodedTx->hash());
     BOOST_CHECK_EQUAL(tx->version(), 0);
-    BOOST_CHECK_EQUAL(bcos::asString(tx->to()), bcos::asString(to));
+    BOOST_CHECK_EQUAL(tx->to(), to);
     BOOST_CHECK_EQUAL(bcos::asString(tx->input()), bcos::asString(input));
 
     BOOST_CHECK_EQUAL(tx->nonce(), nonce);
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(transactionReceipt)
 {
     bcos::crypto::HashType stateRoot(bcos::asBytes("root1"));
     bcos::u256 gasUsed(8858);
-    bcos::bytes contractAddress(bcos::asBytes("contract Address!"));
+    std::string contractAddress("contract Address!");
 
     auto logEntries = std::make_shared<std::vector<bcos::protocol::LogEntry>>();
     for (auto i : {1, 2, 3})
@@ -120,12 +120,11 @@ BOOST_AUTO_TEST_CASE(transactionReceipt)
     BOOST_CHECK_EQUAL(receipt->hash().hex(), decodedReceipt->hash().hex());
     BOOST_CHECK_EQUAL(receipt->version(), 0);
     BOOST_CHECK_EQUAL(receipt->gasUsed(), gasUsed);
-    BOOST_CHECK_EQUAL(bcos::asString(receipt->contractAddress()), bcos::asString(contractAddress));
+    BOOST_CHECK_EQUAL(receipt->contractAddress(), contractAddress);
     BOOST_CHECK_EQUAL(receipt->logEntries().size(), logEntries->size());
     for (auto i = 0; i < receipt->logEntries().size(); ++i)
     {
-        BOOST_CHECK_EQUAL(
-            receipt->logEntries()[i].address().toString(), (*logEntries)[i].address().toString());
+        BOOST_CHECK_EQUAL(receipt->logEntries()[i].address(), (*logEntries)[i].address());
         BOOST_CHECK_EQUAL(
             receipt->logEntries()[i].topics().size(), (*logEntries)[i].topics().size());
         for (auto j = 0; j < receipt->logEntries()[i].topics().size(); ++j)
@@ -148,12 +147,12 @@ BOOST_AUTO_TEST_CASE(block)
     block->setVersion(883);
     block->setBlockType(bcos::protocol::WithTransactionsHash);
 
-    bcos::bytes to(bcos::asBytes("Target"));
+    std::string to("Target");
     bcos::bytes input(bcos::asBytes("Arguments"));
     bcos::u256 nonce(100);
 
     bcos::crypto::HashType stateRoot(bcos::asBytes("root1"));
-    bcos::bytes contractAddress(bcos::asBytes("contract Address!"));
+    std::string contractAddress("contract Address!");
 
     // set the blockHeader
     std::vector<KeyPairInterface::Ptr> keyPairVec;
@@ -233,7 +232,7 @@ BOOST_AUTO_TEST_CASE(block)
 
             BOOST_CHECK_EQUAL(lhs->hash().hex(), rhs->hash().hex());
             BOOST_CHECK_EQUAL(lhs->version(), rhs->version());
-            BOOST_CHECK_EQUAL(lhs->to().toString(), rhs->to().toString());
+            BOOST_CHECK_EQUAL(lhs->to(), rhs->to());
             BOOST_CHECK_EQUAL(bcos::asString(lhs->input()), bcos::asString(rhs->input()));
 
             BOOST_CHECK_EQUAL(lhs->nonce(), rhs->nonce());
@@ -249,8 +248,7 @@ BOOST_AUTO_TEST_CASE(block)
                 block->transaction(i)->hash().hex(), decodedBlock->transaction(i)->hash().hex());
             BOOST_CHECK_EQUAL(
                 block->transaction(i)->version(), decodedBlock->transaction(i)->version());
-            BOOST_CHECK_EQUAL(block->transaction(i)->to().toString(),
-                decodedBlock->transaction(i)->to().toString());
+            BOOST_CHECK_EQUAL(block->transaction(i)->to(), decodedBlock->transaction(i)->to());
             BOOST_CHECK_EQUAL(bcos::asString(block->transaction(i)->input()),
                 bcos::asString(decodedBlock->transaction(i)->input()));
 
@@ -277,13 +275,11 @@ BOOST_AUTO_TEST_CASE(block)
             BOOST_CHECK_EQUAL(lhs->hash().hex(), rhs->hash().hex());
             BOOST_CHECK_EQUAL(lhs->version(), rhs->version());
             BOOST_CHECK_EQUAL(lhs->gasUsed(), rhs->gasUsed());
-            BOOST_CHECK_EQUAL(
-                bcos::asString(lhs->contractAddress()), bcos::asString(rhs->contractAddress()));
+            BOOST_CHECK_EQUAL(lhs->contractAddress(), rhs->contractAddress());
             BOOST_CHECK_EQUAL(lhs->logEntries().size(), rhs->logEntries().size());
             for (auto i = 0; i < lhs->logEntries().size(); ++i)
             {
-                BOOST_CHECK_EQUAL(lhs->logEntries()[i].address().toString(),
-                    rhs->logEntries()[i].address().toString());
+                BOOST_CHECK_EQUAL(lhs->logEntries()[i].address(), rhs->logEntries()[i].address());
                 BOOST_CHECK_EQUAL(
                     lhs->logEntries()[i].topics().size(), rhs->logEntries()[i].topics().size());
                 for (auto j = 0; j < lhs->logEntries()[i].topics().size(); ++j)
@@ -306,14 +302,14 @@ BOOST_AUTO_TEST_CASE(block)
                 block->receipt(i)->hash().hex(), decodedBlock->receipt(i)->hash().hex());
             BOOST_CHECK_EQUAL(block->receipt(i)->version(), decodedBlock->receipt(i)->version());
             BOOST_CHECK_EQUAL(block->receipt(i)->gasUsed(), decodedBlock->receipt(i)->gasUsed());
-            BOOST_CHECK_EQUAL(bcos::asString(block->receipt(i)->contractAddress()),
-                bcos::asString(decodedBlock->receipt(i)->contractAddress()));
+            BOOST_CHECK_EQUAL(
+                block->receipt(i)->contractAddress(), decodedBlock->receipt(i)->contractAddress());
             BOOST_CHECK_EQUAL(block->receipt(i)->logEntries().size(),
                 decodedBlock->receipt(i)->logEntries().size());
             for (auto i = 0; i < block->receipt(i)->logEntries().size(); ++i)
             {
-                BOOST_CHECK_EQUAL(block->receipt(i)->logEntries()[i].address().toString(),
-                    decodedBlock->receipt(i)->logEntries()[i].address().toString());
+                BOOST_CHECK_EQUAL(block->receipt(i)->logEntries()[i].address(),
+                    decodedBlock->receipt(i)->logEntries()[i].address());
                 BOOST_CHECK_EQUAL(block->receipt(i)->logEntries()[i].topics().size(),
                     decodedBlock->receipt(i)->logEntries()[i].topics().size());
                 for (auto j = 0; j < block->receipt(i)->logEntries()[i].topics().size(); ++j)

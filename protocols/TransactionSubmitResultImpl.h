@@ -28,14 +28,7 @@ public:
         m_inner(std::make_shared<bcostars::TransactionSubmitResult>())
     {}
 
-    uint32_t status() const override { return m_inner->status; }
-    bcos::protocol::TransactionReceipt::Ptr receipt() const override
-    {
-        auto receipt = std::make_shared<bcostars::protocol::TransactionReceiptImpl>(
-            m_cryptoSuite, [m_inner = this->m_inner]() { return &m_inner->receipt; });
-
-        return receipt;
-    }
+    uint32_t status() const override { return m_inner.status; }
     bcos::crypto::HashType const& txHash() const override
     {
         if (!m_inner->txHash.empty())
@@ -43,11 +36,6 @@ public:
             return *(reinterpret_cast<const bcos::crypto::HashType*>(m_inner->txHash.data()));
         }
         return emptyHash;
-    }
-    bcos::bytesConstRef from() const override
-    {
-        return bcos::bytesConstRef(
-            reinterpret_cast<const bcos::byte*>(m_inner->from.data()), m_inner->from.size());
     }
     bcos::crypto::HashType const& blockHash() const override
     {
@@ -57,12 +45,8 @@ public:
         }
         return emptyHash;
     }
-    bcos::bytesConstRef to() const override
-    {
-        return bcos::bytesConstRef(
-            reinterpret_cast<const bcos::byte*>(m_inner->to.data()), m_inner->to.size());
-    }
-    int64_t transactionIndex() const override { return m_inner->transactionIndex; }
+
+    int64_t transactionIndex() const override { return m_inner.transactionIndex; }
     void setNonce(bcos::protocol::NonceType const& _nonce) override
     {
         m_inner->nonce = boost::lexical_cast<std::string>(_nonce);
@@ -113,6 +97,7 @@ public:
         return result;
     }
 
+<<<<<<< HEAD
     bcos::protocol::TransactionSubmitResult::Ptr createTxSubmitResult(
         bcos::protocol::TransactionReceipt::Ptr _receipt, bcos::crypto::HashType _txHash,
         int64_t _txIndex, bcos::crypto::HashType _blockHash, bcos::bytesConstRef _sender,
@@ -148,6 +133,8 @@ public:
         return result;
     }
 
+=======
+>>>>>>> upstream/release-3.0.0
 private:
     bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
 };
