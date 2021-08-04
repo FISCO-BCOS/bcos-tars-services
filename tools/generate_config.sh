@@ -728,6 +728,8 @@ main() {
     node_count=0
     local count=0
     connected_nodes=""
+    ca_dir="${output_dir}/ca"
+    generate_chain_cert "${sm_mode}" "${ca_dir}"
     # Note: must generate the node account firstly
     for line in ${ip_array[*]};do
         ip=${line%:*}
@@ -740,8 +742,9 @@ main() {
         [ -z "$(get_value ${ip//./}_count)" ] && set_value ${ip//./}_count 0
         
         nodes_dir="${output_dir}/${ip}"
-        ca_cert_dir="${nodes_dir}"/ca
-        generate_chain_cert "${sm_mode}" "${ca_cert_dir}"
+        ca_cert_dir="${nodes_dir}/ca"
+        mkdir -p "${ca_cert_dir}"
+        cp -r ${ca_dir}/* ${ca_cert_dir}
         for ((i=0;i<num;++i));do
             local node_count=$(get_value ${ip//./}_count)
             node_dir="${output_dir}/${ip}/node${node_count}"
@@ -753,9 +756,9 @@ main() {
             connected_nodes=${connected_nodes}"${ip}:${port}, "
 
             if [[ "${sm_mode}" == "false" ]]; then
-                generate_node_account "${account_dir}" "${node_count}"
+                generate_node_account "${account_dir}" "${count}"
             else
-                generate_sm_node_account "${account_dir}" "${node_count}"
+                generate_sm_node_account "${account_dir}" "${count}"
             fi
             set_value ${ip//./}_count $(( $(get_value ${ip//./}_count) + 1 ))
             ((++count))
