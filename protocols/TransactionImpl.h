@@ -41,15 +41,15 @@ public:
 
     bcos::bytesConstRef encode(bool _onlyHashFields = false) const override
     {
+        if (m_dataBuffer.empty())
+        {
+            tars::TarsOutputStream<bcostars::protocol::BufferWriterByteVector> output;
+            m_inner()->data.writeTo(output);
+            output.getByteBuffer().swap(m_dataBuffer);
+        }
+
         if (_onlyHashFields)
         {
-            if (m_dataBuffer.empty())
-            {
-                tars::TarsOutputStream<bcostars::protocol::BufferWriterByteVector> output;
-                m_inner()->data.writeTo(output);
-                output.getByteBuffer().swap(m_dataBuffer);
-            }
-
             return bcos::ref(m_dataBuffer);
         }
         else
@@ -91,10 +91,7 @@ public:
         }
         return m_nonce;
     }
-    std::string_view to() const override
-    {
-        return m_inner()->data.to;
-    }
+    std::string_view to() const override { return m_inner()->data.to; }
     bcos::bytesConstRef input() const override
     {
         return bcos::bytesConstRef(
@@ -137,9 +134,8 @@ public:
     bcos::protocol::Transaction::Ptr createTransaction(
         bcos::bytesConstRef _txData, bool _checkSig = true) override
     {
-        bcostars::Transaction tx;
-        auto transaction = std::make_shared<TransactionImpl>(
-            m_cryptoSuite, [m_transaction = std::move(tx)]() mutable { return &m_transaction; });
+        auto transaction = std::make_shared<TransactionImpl>(m_cryptoSuite,
+            [m_transaction = bcostars::Transaction()]() mutable { return &m_transaction; });
 
         transaction->decode(_txData);
         if (_checkSig)
@@ -160,9 +156,8 @@ public:
         int64_t _blockLimit, std::string const& _chainId, std::string const& _groupId,
         int64_t _importTime) override
     {
-        bcostars::Transaction tx;
-        auto transaction = std::make_shared<bcostars::protocol::TransactionImpl>(
-            m_cryptoSuite, [m_transaction = std::move(tx)]() mutable { return &m_transaction; });
+        auto transaction = std::make_shared<bcostars::protocol::TransactionImpl>(m_cryptoSuite,
+            [m_transaction = bcostars::Transaction()]() mutable { return &m_transaction; });
         transaction->m_inner()->data.version = _version;
         transaction->m_inner()->data.to.assign(_to.begin(), _to.end());
         transaction->m_inner()->data.input.assign(_input.begin(), _input.end());
