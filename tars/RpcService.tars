@@ -3,5 +3,7 @@
 module bcostars {
     interface RpcService {
         Error asyncNotifyBlockNumber(long blockNumber);
+        Error asyncNotifyAmopMessage(vector<byte> _nodeID, string _uuid, vector<byte> _data);
+        Error asyncNotifyAmopNodeIDs(vector<vector<byte>> _nodeIDs);
     };
 };
