@@ -156,8 +156,8 @@ public:
             [current, t1](const bcos::Error::Ptr _error, std::string const& peers) {
                 auto t2 = std::chrono::high_resolution_clock::now();
                 auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-                GATEWAYSERVICE_LOG(DEBUG)
-                    << LOG_DESC("asyncGetPeers") << LOG_DESC("response") << LOG_KV("cost", cost);
+                GATEWAYSERVICE_LOG(DEBUG) << LOG_DESC("asyncGetPeers") << LOG_KV("response", peers)
+                                          << LOG_KV("cost", cost.count());
                 async_response_asyncGetPeers(current, toTarsError(_error), peers);
             });
         return bcostars::Error();
