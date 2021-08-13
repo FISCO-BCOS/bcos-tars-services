@@ -18,8 +18,8 @@ hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
 )
 
 hunter_config(bcos-pbft VERSION 3.0.0-local-a2a9f7d2
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/28d2882a11830518c79a601a7c505568c6ed4540.tar.gz"
-    SHA1 953edb7aa8c544ff95b4715e0170b7a23dcddb28
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/496c676c455b7ac567cc101ae9ff4ffa868fde8d.tar.gz"
+    SHA1 fb022cfbb6f82e01e32226c97c1f35106d7fddbc
 )
 
 hunter_config(bcos-sync VERSION 3.0.0-local-50e0e264
