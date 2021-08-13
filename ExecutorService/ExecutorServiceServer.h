@@ -117,22 +117,6 @@ public:
                 protocolInitializer->blockFactory(), storageServiceClient);
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init ledger success");
 
-            // init the rpc
-            EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init rpc client");
-            auto rpcServicePrx =
-                Application::getCommunicator()->stringToProxy<bcostars::RpcServicePrx>(
-                    getProxyDesc(RPC_SERVICE_NAME));
-            auto rpcServiceClient = std::make_shared<bcostars::RpcServiceClient>(rpcServicePrx);
-            EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init rpc client success");
-            // register blockNumber notify
-            ledger->registerCommittedBlockNotifier(
-                [rpcServiceClient](bcos::protocol::BlockNumber _blockNumber,
-                    std::function<void(bcos::Error::Ptr)> _callback) {
-                    rpcServiceClient->asyncNotifyBlockNumber(_blockNumber, _callback);
-                });
-
-            EXECUTORSERVICE_LOG(INFO) << LOG_DESC("registerCommittedBlockNotifier success");
-
             // init the dispatcher
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init dispatcher client");
             auto dispatcherProxy =
