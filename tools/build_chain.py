@@ -527,6 +527,12 @@ def restart_all(config):
     return True
 
 
+def upload_all_tars_package(config):
+    ret, app_list, config_base_dir_info = generate_app_service_list(config)
+    service_path_list = generate_pkg_path_list(config)
+    for app in app_list:
+        app.upload_and_publish_package_list(service_list, service_path_list)
+
 def stop_all(config):
     ret, app_list, config_base_dir_info = generate_app_service_list(config)
     if ret is False:
@@ -563,7 +569,7 @@ def parse_config_file(toml_file_path):
 def parse_command():
     parser = argparse.ArgumentParser(description='build_chain')
     parser.add_argument(
-        '--command', help="[Required]the command, current only support: generate_config/create_service/build_chain/restart_all/stop_all/undeploy_all")
+        '--command', help="[Required]the command, current only support: generate_config/create_service/build_chain/restart_all/stop_all/undeploy_all/upload_all")
     args = parser.parse_args()
     return args
 
@@ -572,7 +578,7 @@ def main():
     config = parse_config_file("config.toml")
     args = parse_command()
     if args.command is None or args.command == "":
-        log_error("Must set command, current supported_commands are: generate_config/create_service/build_chain/restart_all/stop_all/undeploy_all")
+        log_error("Must set command, current supported_commands are: generate_config/create_service/build_chain/restart_all/stop_all/undeploy_all/upload_all")
         return
     if args.command == "generate_config":
         ret = generate_block_chain_config(config)
@@ -610,6 +616,13 @@ def main():
         else:
             log_error("stop the blockchain failed")
         return
+    if args.command == "upload_all":
+        ret = upload_all_tars_package(config)
+        if ret is True:
+            log_info("Upload the tars package success")
+        else:
+            log_info("Upload the tars package failed")
+        return
     if args.command == "undeploy_all":
         ret = undeploy_all(config)
         if ret is True:
@@ -617,7 +630,7 @@ def main():
         else:
             log_error("undeploy the blockchain failed")
         return
-    log_error("Unsupported command %s, current supported commands are generate_config/create_service/build_chain/restart_all/stop_all/undeploy_all" % args.command)
+    log_error("Unsupported command %s, current supported commands are generate_config/create_service/build_chain/restart_all/stop_all/undeploy_all/upload_all" % args.command)
 
 
 if __name__ == "__main__":
