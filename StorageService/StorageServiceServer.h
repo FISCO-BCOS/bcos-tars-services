@@ -78,14 +78,14 @@ public:
                 << LOG_KV("storagePath", storagePath);
             bcos::storage::RocksDBAdapterFactory rocksdbAdapterFactory(storagePath);
             auto ret = rocksdbAdapterFactory.createRocksDB(
-                nodeConfig->storageDBName(), bcos::storage::RocksDBAdapter::TABLE_PERFIX_LENGTH);
+                nodeConfig->storageDBName(), bcos::storage::RocksDBAdapter::TABLE_PREFIX_LENGTH);
             if (!ret.first)
             {
                 throw std::runtime_error("createRocksDB failed!");
             }
             auto kvDB = std::make_shared<bcos::storage::KVDBImpl>(ret.first);
             auto adapter = rocksdbAdapterFactory.createAdapter(
-                nodeConfig->stateDBName(), bcos::storage::RocksDBAdapter::TABLE_PERFIX_LENGTH);
+                nodeConfig->stateDBName(), bcos::storage::RocksDBAdapter::TABLE_PREFIX_LENGTH);
             auto storageImpl = std::make_shared<bcos::storage::StorageImpl>(adapter, kvDB);
             storageImpl->disableCache();
             m_storage = storageImpl;
