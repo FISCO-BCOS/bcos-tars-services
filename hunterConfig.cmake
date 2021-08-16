@@ -1,8 +1,8 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-	URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/d4697aa6b984a18e2cab7f91c098480bf5e61ebd.tar.gz
-	SHA1 ab2fa84f449aa90b108731734bfd28dc5e78da22
-    CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON #DEBUG=ON
+	URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/12702bed18f36a32586b93feee8152e8a4e62ddc.tar.gz
+	SHA1 7876f6fad1e3f0a2e6f46552063ea8a407150812
+	CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON #DEBUG=ON
 )
 
 hunter_config(bcos-crypto
@@ -31,13 +31,13 @@ hunter_config(rocksdb VERSION 6.20.3
 	URL https://${URL_BASE}/facebook/rocksdb/archive/refs/tags/v6.20.3.tar.gz
     SHA1 64e4e6031820026c051d6e2072c0197e3bce1643
     CMAKE_ARGS WITH_TESTS=OFF WITH_GFLAGS=OFF WITH_BENCHMARK_TOOLS=OFF WITH_CORE_TOOLS=OFF
-    WITH_TOOLS=OFF PORTABLE=ON FAIL_ON_WARNINGS=OFF WITH_ZSTD=ON
+    WITH_TOOLS=OFF PORTABLE=ON FAIL_ON_WARNINGS=OFF WITH_ZSTD=ON BUILD_SHARED_LIBS=OFF
 )
 
-hunter_config(bcos-storage VERSION 3.0.0-local-c4dfb130
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-storage/archive/7584b308b4ffd3d712d8a1bb0578052c379e4bc6.tar.gz"
-    SHA1 6b75e684d135a7a11317eef72126be43c6a7ec72
-    CMAKE_ARGS URL_BASE=${URL_BASE}
+hunter_config(bcos-storage VERSION 3.0.0-local-d5e4d11d
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-storage/archive/d5e4d11db037ed713a204ba5c11e2d1ad2f906f9.tar.gz"
+    SHA1 3dd37fe5a211b5684298da89fe4df71aca97eb76
+    CMAKE_ARGS URL_BASE=${URL_BASE} #CMAKE_BUILD_TYPE=Debug
 )
 
 hunter_config(bcos-ledger
