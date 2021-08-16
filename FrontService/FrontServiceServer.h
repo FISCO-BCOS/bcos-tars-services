@@ -4,6 +4,7 @@
 #include "../Common/TarsUtils.h"
 #include "../GatewayService/GatewayServiceClient.h"
 #include "../PBFTService/PBFTServiceClient.h"
+#include "../RpcService/RpcServiceClient.h"
 #include "../TxPoolService/TxPoolServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include "FrontService.h"
@@ -140,7 +141,6 @@ public:
                 });
             FRONTSERVICE_LOG(INFO)
                 << LOG_DESC("registerModuleMessageDispatcher for the BlockSync module success");
-
             // register the GetNodeIDsDispatcher to the frontService
             front->registerModuleNodeIDsDispatcher(bcos::protocol::ModuleID::TxsSync,
                 [txpoolClient](std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs,
@@ -150,8 +150,45 @@ public:
                     FRONTSERVICE_LOG(DEBUG) << LOG_DESC("notifyConnectedNodes")
                                             << LOG_KV("connectedNodeSize", nodeIdSet.size());
                 });
+
             FRONTSERVICE_LOG(INFO)
                 << LOG_DESC("registerModuleNodeIDsDispatcher for the TxsSync module success");
+
+            auto rpcServicePrx = Application::getCommunicator()->stringToProxy<RpcServicePrx>(
+                getProxyDesc(RPC_SERVICE_NAME));
+            auto rpcServiceClient = std::make_shared<RpcServiceClient>(rpcServicePrx);
+            // register the message dispatcher for the amop module
+            front->registerModuleMessageDispatcher(bcos::protocol::ModuleID::AMOP,
+                [rpcServiceClient](bcos::crypto::NodeIDPtr _nodeID, std::string const& _id,
+                    bcos::bytesConstRef _data) {
+                    rpcServiceClient->asyncNotifyAmopMessage(
+                        _nodeID, _id, _data, [_id, _nodeID](bcos::Error::Ptr _error) {
+                            if (_error)
+                            {
+                                FRONTSERVICE_LOG(WARNING)
+                                    << LOG_DESC("asyncNotifyAmopMessage failed")
+                                    << LOG_KV("peer", _nodeID->shortHex()) << LOG_KV("id", _id)
+                                    << LOG_KV("code", _error->errorCode())
+                                    << LOG_KV("msg", _error->errorMessage());
+                            }
+                        });
+                });
+            FRONTSERVICE_LOG(INFO)
+                << LOG_DESC("registerModuleMessageDispatcher for the AMOP module success");
+
+            // register the GetNodeIDsDispatcher to the frontService
+            front->registerModuleNodeIDsDispatcher(bcos::protocol::ModuleID::AMOP,
+                [rpcServiceClient](std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs,
+                    bcos::front::ReceiveMsgFunc _receiveMsgCallback) {
+                    rpcServiceClient->asyncNotifyAmopNodeIDs(_nodeIDs, _receiveMsgCallback);
+                    FRONTSERVICE_LOG(DEBUG)
+                        << LOG_DESC("asyncNotifyAmopNodeIDs")
+                        << LOG_KV("connectedNodeSize", _nodeIDs ? _nodeIDs->size() : 0);
+                });
+
+            FRONTSERVICE_LOG(INFO)
+                << LOG_DESC("registerModuleNodeIDsDispatcher for the AMOP module success");
+
             m_front = front;
             // start the front service
             FRONTSERVICE_LOG(INFO) << LOG_DESC("start the frontService");

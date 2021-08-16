@@ -24,6 +24,7 @@
 #include "../Common/TarsUtils.h"
 #include "../DispatcherService/DispatcherServiceClient.h"
 #include "../FrontService/FrontServiceClient.h"
+#include "../RpcService/RpcServiceClient.h"
 #include "../StorageService/StorageServiceClient.h"
 #include "../TxPoolService/TxPoolServiceClient.h"
 #include "../protocols/BlockImpl.h"
@@ -156,6 +157,7 @@ void PBFTServiceServer::init()
     // Note: the executor module init the genesis block
     auto ledger =
         std::make_shared<bcos::ledger::Ledger>(m_protocolInitializer->blockFactory(), m_storage);
+
     m_ledger = ledger;
     // create the txpool client only
     createTxPool(nodeConfig);
@@ -201,6 +203,20 @@ void PBFTServiceServer::registerHandlers()
                                          std::function<void(bcos::Error::Ptr)> _onRecv) {
         blockSync->asyncNotifyNewBlock(_ledgerConfig, _onRecv);
     });
+
+    // register block number notify
+    PBFTSERVICE_LOG(INFO) << LOG_DESC("init rpc client");
+    auto rpcServicePrx = Application::getCommunicator()->stringToProxy<bcostars::RpcServicePrx>(
+        getProxyDesc(RPC_SERVICE_NAME));
+    auto rpcServiceClient = std::make_shared<bcostars::RpcServiceClient>(rpcServicePrx);
+    PBFTSERVICE_LOG(INFO) << LOG_DESC("init rpc client success");
+    // register blockNumber notify
+    m_ledger->registerCommittedBlockNotifier(
+        [rpcServiceClient](bcos::protocol::BlockNumber _blockNumber,
+            std::function<void(bcos::Error::Ptr)> _callback) {
+            rpcServiceClient->asyncNotifyBlockNumber(_blockNumber, _callback);
+        });
+    PBFTSERVICE_LOG(INFO) << LOG_DESC("registerCommittedBlockNotifier success");
 }
 
 void PBFTServiceServer::createTxPool(bcos::tool::NodeConfig::Ptr _nodeConfig)

@@ -3,7 +3,11 @@
 #include "../Common/ErrorConverter.h"
 #include "GatewayService.h"
 #include "bcos-framework/interfaces/gateway/GatewayInterface.h"
+#include "servant/RemoteLogger.h"
+#include <string>
 
+#define GATEWAYCLIENT_LOG(LEVEL) BCOS_LOG(LEVEL) << "[GATEWAYCLIENT][INITIALIZER]"
+#define GATEWAYCLIENT_BADGE "[GATEWAYCLIENT]"
 namespace bcostars
 {
 class GatewayServiceClient : public bcos::gateway::GatewayInterface
@@ -61,7 +65,16 @@ public:
         private:
             bcos::gateway::PeerRespFunc m_callback;
         };
-        m_proxy->async_asyncGetPeers(new Callback(_peerRespFunc));
+
+        auto t1 = std::chrono::high_resolution_clock::now();
+        GATEWAYCLIENT_LOG(DEBUG) << LOG_BADGE("asyncGetPeers") << LOG_DESC("request");
+        m_proxy->async_asyncGetPeers(
+            new Callback([_peerRespFunc, t1](bcos::Error::Ptr _error, const std::string& _peers) {
+                auto t2 = std::chrono::high_resolution_clock::now();
+                GATEWAYCLIENT_LOG(DEBUG) << LOG_BADGE("asyncGetPeers") << LOG_KV("response", _peers)
+                                         << LOG_KV("cost", (t2 - t1).count());
+                _peerRespFunc(_error, _peers);
+            }));
     }
 
     void asyncSendMessageByNodeIDs(const std::string& _groupID, bcos::crypto::NodeIDPtr _srcNodeID,

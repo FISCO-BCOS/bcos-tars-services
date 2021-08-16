@@ -3,6 +3,7 @@
 #include "../Common/ErrorConverter.h"
 #include "../Common/TarsUtils.h"
 #include "../DispatcherService/DispatcherServiceClient.h"
+#include "../RpcService/RpcServiceClient.h"
 #include "../StorageService/StorageServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include "../protocols/BlockImpl.h"
