@@ -531,7 +531,10 @@ def upload_all_tars_package(config):
     ret, app_list, config_base_dir_info = generate_app_service_list(config)
     service_path_list = generate_pkg_path_list(config)
     for app in app_list:
-        app.upload_and_publish_package_list(service_list, service_path_list)
+        if app.upload_and_publish_package_list(service_list, service_path_list) is False:
+            return False
+    return True
+
 
 def stop_all(config):
     ret, app_list, config_base_dir_info = generate_app_service_list(config)
@@ -621,7 +624,7 @@ def main():
         if ret is True:
             log_info("Upload the tars package success")
         else:
-            log_info("Upload the tars package failed")
+            log_error("Upload the tars package failed")
         return
     if args.command == "undeploy_all":
         ret = undeploy_all(config)
