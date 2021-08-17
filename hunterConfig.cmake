@@ -1,7 +1,7 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-	URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/12702bed18f36a32586b93feee8152e8a4e62ddc.tar.gz
-	SHA1 7876f6fad1e3f0a2e6f46552063ea8a407150812
+    URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/6d15a7c25049fbd36134affe9f307f48d17474e9.tar.gz
+    SHA1 ca3003ae4b9459cd5c59b8e2e7c5d1a14a24d8b5
 	CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON #DEBUG=ON
 )
 
@@ -34,9 +34,9 @@ hunter_config(rocksdb VERSION 6.20.3
     WITH_TOOLS=OFF PORTABLE=ON FAIL_ON_WARNINGS=OFF WITH_ZSTD=ON BUILD_SHARED_LIBS=OFF
 )
 
-hunter_config(bcos-storage VERSION 3.0.0-local-d5e4d11d
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-storage/archive/d5e4d11db037ed713a204ba5c11e2d1ad2f906f9.tar.gz"
-    SHA1 3dd37fe5a211b5684298da89fe4df71aca97eb76
+hunter_config(bcos-storage VERSION 3.0.0-local-a2e13356
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-storage/archive/a2e1335697f8feaf61f03ea24c807f86edc023a0.tar.gz"
+    SHA1 cc610d386afcaa60297b1f4f7bcaca0bc2892f96
     CMAKE_ARGS URL_BASE=${URL_BASE} #CMAKE_BUILD_TYPE=Debug
 )
 
