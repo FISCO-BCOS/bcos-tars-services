@@ -124,6 +124,9 @@ public:
                     getProxyDesc(DISPATCHER_SERVICE_NAME));
             auto dispatcher = std::make_shared<bcostars::DispatcherServiceClient>(
                 dispatcherProxy, protocolInitializer->blockFactory());
+            // add timeout here in case of frequently timeout when calling asyncGetLatestBlock
+            dispatcherProxy->tars_timeout(600000);
+            dispatcherProxy->tars_async_timeout(600000);
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init dispatcher client success");
 
             // create the executor
