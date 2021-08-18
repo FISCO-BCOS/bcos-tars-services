@@ -22,6 +22,7 @@
 #pragma once
 
 
+#include "../Common/ErrorConverter.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include "PBFTService.h"
 #include "servant/Application.h"
@@ -80,6 +81,26 @@ public:
     bcostars::Error asyncSubmitProposal(const vector<tars::Char>& _proposalData,
         tars::Int64 _proposalIndex, const vector<tars::Char>& _proposalHash,
         tars::TarsCurrentPtr _current) override;
+
+    bcostars::Error asyncNotifyConnectedNodes(
+        const vector<vector<tars::Char>>& connectedNodes, tars::TarsCurrentPtr current) override
+    {
+        current->setResponse(false);
+
+        bcos::crypto::NodeIDSet bcosNodeIDSet;
+        for (auto const& it : connectedNodes)
+        {
+            bcosNodeIDSet.insert(m_protocolInitializer->cryptoSuite()->keyFactory()->createKey(
+                bcos::bytesConstRef((const bcos::byte*)it.data(), it.size())));
+        }
+
+        m_blockSync->config()->notifyConnectedNodes(
+            bcosNodeIDSet, [current](bcos::Error::Ptr error) {
+                async_response_asyncNotifyConnectedNodes(current, bcostars::toTarsError(error));
+            });
+
+        return bcostars::Error();
+    }
 
 protected:
     virtual void registerHandlers();

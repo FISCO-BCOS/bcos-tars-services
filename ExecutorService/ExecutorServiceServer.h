@@ -61,10 +61,6 @@ public:
         {
             m_executor->stop();
         }
-        if (m_logInitializer)
-        {
-            m_logInitializer->stopLogging();
-        }
         TLOGINFO(LOG_DESC("[ExecutorService] stop the ExecutoreSerivce success") << std::endl);
     }
 
@@ -192,10 +188,10 @@ public:
     }
 
 private:
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static std::once_flag m_initFlag;
     static std::shared_ptr<bcos::executor::ExecutorInterface> m_executor;
     static bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     std::atomic_bool m_stopped = {false};
 };
 }  // namespace bcostars

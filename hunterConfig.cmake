@@ -1,7 +1,7 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-    URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/6d15a7c25049fbd36134affe9f307f48d17474e9.tar.gz
-    SHA1 ca3003ae4b9459cd5c59b8e2e7c5d1a14a24d8b5
+    URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/a539aa22dfe58e429f5731c9a4b863ff74ab1777.tar.gz
+    SHA1 768604ad88b0422de456262c95cd1a5efa2e9b44
 	CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON #DEBUG=ON
 )
 
@@ -13,18 +13,18 @@ hunter_config(bcos-crypto
 )
 
 hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/a89c02d387b251a2d5397fbbc7d5b7f1791392a3.tar.gz"
-    SHA1 cf1ba0dfe449d427d71e2cb60b125589cb1c42dd
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/09e8d258f91e8ba6cad9fa63b7d8bd6ef1700f76.tar.gz"
+    SHA1 e5b052900a0ccb50e31abc839982da06640cdb81
 )
 
 hunter_config(bcos-pbft VERSION 3.0.0-local-a2a9f7d2
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/411bc156f2d1e4a8d2dc5ae1c3e52e2670345196.tar.gz"
-    SHA1 23ba047c30db331c7d965850ddfba14d7448865a
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/996871e97fffb06e8dd16e55c0cdc539a6f341a5.tar.gz"
+    SHA1 1a6546d213fcb27efbe16e02e2b690e1198c638f
 )
 
 hunter_config(bcos-sync VERSION 3.0.0-local-50e0e264
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/46068ba69a1e7d351ec58b8ce0e183ee47b8927b.tar.gz"
-    SHA1 d8286fe93ac35fb51b753fd878b6cad40c8635a2
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/9ae4fc3f65096deedb064f9fbf7a0ff6b5d1e599.tar.gz"
+    SHA1 d1add6f4f4f718a277a9188f97fa98e30537d4ab
 )
 
 hunter_config(rocksdb VERSION 6.20.3
@@ -42,8 +42,8 @@ hunter_config(bcos-storage VERSION 3.0.0-local-a2e13356
 
 hunter_config(bcos-ledger
     VERSION 3.0.0-local-1956c515f
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-ledger/archive/2e243b920eb0bd74225acc450aefba05a53cfd7b.tar.gz"
-    SHA1 91c557e6036f7034906020aa8b66a05102e4dbf4
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-ledger/archive/f5f92e4fb48f75fd808d40366629996a7d37fa19.tar.gz"
+    SHA1 3aea1cf27c585cb7cc58e4c2e2c9fe75d7d44fb6
     CMAKE_ARGS URL_BASE=${URL_BASE}
 )
 

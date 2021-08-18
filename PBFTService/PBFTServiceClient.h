@@ -185,6 +185,9 @@ public:
             std::vector<char>(_data.begin(), _data.end()));
     }
 
+    void notifyConnectedNodes(bcos::crypto::NodeIDSet const& _connectedNodes,
+        std::function<void(bcos::Error::Ptr)> _onRecvResponse);
+
 protected:
     void start() override {}
     void stop() override {}

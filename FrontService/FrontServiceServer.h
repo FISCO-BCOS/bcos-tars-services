@@ -147,12 +147,23 @@ public:
                     bcos::front::ReceiveMsgFunc _receiveMsgCallback) {
                     auto nodeIdSet = bcos::crypto::NodeIDSet(_nodeIDs->begin(), _nodeIDs->end());
                     txpoolClient->notifyConnectedNodes(nodeIdSet, _receiveMsgCallback);
-                    FRONTSERVICE_LOG(DEBUG) << LOG_DESC("notifyConnectedNodes")
+                    FRONTSERVICE_LOG(DEBUG) << LOG_DESC("TxPool: notifyConnectedNodes")
                                             << LOG_KV("connectedNodeSize", nodeIdSet.size());
                 });
 
             FRONTSERVICE_LOG(INFO)
                 << LOG_DESC("registerModuleNodeIDsDispatcher for the TxsSync module success");
+
+            front->registerModuleNodeIDsDispatcher(bcos::protocol::ModuleID::BlockSync,
+                [blockSync](std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs,
+                    bcos::front::ReceiveMsgFunc _receiveMsgCallback) {
+                    auto nodeIdSet = bcos::crypto::NodeIDSet(_nodeIDs->begin(), _nodeIDs->end());
+                    blockSync->notifyConnectedNodes(nodeIdSet, _receiveMsgCallback);
+                    FRONTSERVICE_LOG(DEBUG) << LOG_DESC("BlockSync: notifyConnectedNodes")
+                                            << LOG_KV("connectedNodeSize", nodeIdSet.size());
+                });
+            FRONTSERVICE_LOG(INFO)
+                << LOG_DESC("registerModuleNodeIDsDispatcher for the BlockSync module success");
 
             auto rpcServicePrx = Application::getCommunicator()->stringToProxy<RpcServicePrx>(
                 getProxyDesc(RPC_SERVICE_NAME));
@@ -209,10 +220,6 @@ public:
         if (m_front)
         {
             m_front->stop();
-        }
-        if (m_logInitializer)
-        {
-            m_logInitializer->stopLogging();
         }
     }
 
@@ -354,9 +361,9 @@ public:
     }
 
 private:
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static std::once_flag m_onceFlag;
     static bcos::front::FrontServiceInterface::Ptr m_front;
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     std::atomic_bool m_running = {false};
     static bcos::crypto::KeyFactory::Ptr m_keyFactory;
 };
