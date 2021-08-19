@@ -21,7 +21,7 @@ include(HunterGate)
 HunterGate(
     URL "https://${URL_BASE}/FISCO-BCOS/hunter/archive/f88ce89a9fcd557b7fb2aa0f7abaa3c541dc6903.tar.gz"
     SHA1 "b7792231bf64539602e696e32bfc163c9bc1812a"
-    FILEPATH "${CMAKE_SOURCE_DIR}/hunterConfig.cmake"
+    FILEPATH "${BCOS_TARS_CMAKE_DIR}/config.cmake"
 )
 
 project(Bcos-Tars-Service)
