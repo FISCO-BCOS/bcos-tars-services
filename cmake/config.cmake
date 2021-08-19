@@ -60,8 +60,8 @@ hunter_config(bcos-gateway VERSION 3.0.0-local-1fb592e4
 )
 
 hunter_config(bcos-dispatcher VERSION 3.0.0-local-2903b298
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-dispatcher/archive/637b83d4977ec9490cfbaf90795aa8b100041a36.tar.gz"
-    SHA1 a8e18380f300092403f6139bf9c6703a1ece3333
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-dispatcher/archive/570936bd4dad3cdddec1cb2a00177c7fe4b40c24.tar.gz"
+    SHA1 87ff5eecb3c752a07adebddaa3be03a3f96b94f6
     CMAKE_ARGS URL_BASE=${URL_BASE}
 )
 
