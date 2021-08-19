@@ -159,10 +159,6 @@ public:
         {
             m_ledger->stop();
         }
-        if (m_logInitializer)
-        {
-            m_logInitializer->stopLogging();
-        }
         TLOGINFO(LOG_DESC("[TXPOOLSERVICE] Stop the txpoolService success") << std::endl);
     }
 
@@ -345,9 +341,10 @@ public:
                 bcos::bytesConstRef((const bcos::byte*)it.data(), it.size())));
         }
 
-        m_txpool->notifyConnectedNodes(bcosNodeIDSet, [current](bcos::Error::Ptr error) {
-            async_response_notifyConnectedNodes(current, toTarsError(error));
-        });
+        m_txpool->transactionSync()->config()->notifyConnectedNodes(
+            bcosNodeIDSet, [current](bcos::Error::Ptr error) {
+                async_response_notifyConnectedNodes(current, toTarsError(error));
+            });
 
         return bcostars::Error();
     }
@@ -416,11 +413,11 @@ public:
     }
 
 private:
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static std::once_flag m_initFlag;
     static bcos::txpool::TxPool::Ptr m_txpool;
     static std::shared_ptr<bcos::ledger::Ledger> m_ledger;
     static bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static std::atomic_bool m_running;
 };
 }  // namespace bcostars

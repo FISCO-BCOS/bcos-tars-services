@@ -71,10 +71,6 @@ public:
         {
             m_dispatcher->stop();
         }
-        if (m_logInitializer)
-        {
-            m_logInitializer->stopLogging();
-        }
     }
 
     bcostars::Error asyncExecuteBlock(const bcostars::Block& block, tars::Bool verify,
@@ -154,10 +150,10 @@ public:
     }
 
 private:
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static std::once_flag m_initFlag;
     static bcos::dispatcher::DispatcherImpl::Ptr m_dispatcher;
     static bcostars::protocol::BlockFactoryImpl::Ptr m_blockFactory;
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static std::atomic_bool m_running;
 };
 

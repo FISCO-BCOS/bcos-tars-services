@@ -131,10 +131,6 @@ public:
         {
             m_storage->stop();
         }
-        if (m_logInitializer)
-        {
-            m_logInitializer->stopLogging();
-        }
     }
 
     bcostars::Error addStateCache(tars::Int64 blockNumber,
@@ -338,9 +334,9 @@ public:
     }
 
 private:
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static std::once_flag m_storageFlag;
     static bcos::storage::StorageInterface::Ptr m_storage;
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
     static std::atomic_bool m_stopped;
 };
