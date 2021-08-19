@@ -9,6 +9,7 @@
 #include "../libinitializer/ProtocolInitializer.h"
 #include "FrontService.h"
 #include "libutilities/Common.h"
+#include "libutilities/Log.h"
 #include "servant/Communicator.h"
 #include "servant/Global.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
@@ -20,6 +21,7 @@
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <bcos-front/FrontService.h>
 #include <bcos-front/FrontServiceFactory.h>
+#include <boost/core/ignore_unused.hpp>
 
 #define FRONTSERVICE_LOG(LEVEL) BCOS_LOG(LEVEL) << "[FRONTSERVICE]"
 
@@ -269,11 +271,13 @@ public:
             [current](bcos::Error::Ptr _error, bcos::crypto::NodeIDPtr _nodeID,
                 bcos::bytesConstRef _data, const std::string& _id,
                 bcos::front::ResponseFunc _respFunc) {
-                auto encodedNodeID = *_nodeID->encode();
-                async_response_asyncSendMessageByNodeID(current, toTarsError(_error),
-                    std::vector<char>(encodedNodeID.begin(), encodedNodeID.end()),
-                    std::vector<char>(_data.begin(), _data.end()), _id);
+                boost::ignore_unused(_error, _nodeID, _data, _id, _respFunc);
             });
+
+        bcos::bytesConstRef respData;
+        async_response_asyncSendMessageByNodeID(current, toTarsError(nullptr),
+            std::vector<char>(nodeID.begin(), nodeID.end()),
+            std::vector<char>(respData.begin(), respData.end()), seq);
 
         return bcostars::Error();
     }
