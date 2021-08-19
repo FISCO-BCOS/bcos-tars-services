@@ -183,8 +183,8 @@ int main(int argc, char* argv[])
 
     // deploy first
     bcos::u256 nonce = bcos::utcTimeUs();
-    auto tx = blockFactory->transactionFactory()->createTransaction(0, "",
-        fakeHelloWorldDeployInput(), nonce, blockLimit, chainID, groupID, 0, keyPair);
+    auto tx = blockFactory->transactionFactory()->createTransaction(
+        0, "", fakeHelloWorldDeployInput(), nonce, blockLimit, chainID, groupID, 0, keyPair);
 
     auto encodedTxData = tx->encode();
     auto txData = std::make_shared<bcos::bytes>(encodedTxData.begin(), encodedTxData.end());

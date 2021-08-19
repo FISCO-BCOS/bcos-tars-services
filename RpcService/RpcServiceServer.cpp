@@ -41,12 +41,6 @@ void RpcServiceServer::destroy()
     {
         m_rpc->stop();
     }
-
-    if (m_logInitializer)
-    {
-        m_logInitializer->stopLogging();
-    }
-
     TLOGINFO(LOG_DESC("[RpcService] Stop the RpcService success") << std::endl);
 }
 

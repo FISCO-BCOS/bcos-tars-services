@@ -9,7 +9,6 @@
 #include "bcos-framework/libutilities/DataConvertUtility.h"
 #include "bcos-framework/testutils/crypto/HashImpl.h"
 #include "bcos-framework/testutils/crypto/SignatureImpl.h"
-#include "Transaction.h"
 #include "interfaces/protocol/ProtocolTypeDef.h"
 #include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
@@ -394,7 +393,8 @@ BOOST_AUTO_TEST_CASE(emptyBlockHeader)
     BOOST_CHECK_NO_THROW(block->setBlockHeader(nullptr));
 }
 
-BOOST_AUTO_TEST_CASE(tarsMovable) {
+BOOST_AUTO_TEST_CASE(tarsMovable)
+{
     bcostars::Transaction tx1;
     tx1.data.chainID = "chainID";
     std::string input("input data for test");
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(tarsMovable) {
 
     BOOST_CHECK_EQUAL((intptr_t)addressTx1, (intptr_t)tx2.data.input.data());
 
-    BOOST_CHECK_EQUAL((intptr_t)tx1.data.input.data(), (intptr_t)nullptr);
+    BOOST_CHECK_EQUAL((intptr_t)tx1.data.input.data(), (intptr_t) nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

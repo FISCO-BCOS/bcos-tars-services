@@ -20,7 +20,6 @@
  */
 
 #include "PBFTServiceServer.h"
-#include "../Common/ErrorConverter.h"
 #include "../Common/TarsUtils.h"
 #include "../DispatcherService/DispatcherServiceClient.h"
 #include "../FrontService/FrontServiceClient.h"
@@ -93,10 +92,6 @@ void PBFTServiceServer::destroy()
     {
         PBFTSERVICE_LOG(INFO) << LOG_DESC("stop the ledger");
         m_ledger->stop();
-    }
-    if (m_logInitializer)
-    {
-        m_logInitializer->stopLogging();
     }
     TLOGINFO(LOG_DESC("Stop the PBFTService success") << std::endl);
 }

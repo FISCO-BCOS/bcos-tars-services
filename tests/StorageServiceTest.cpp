@@ -21,11 +21,13 @@ struct Fixture
 
 BOOST_FIXTURE_TEST_SUITE(TestStorageService, Fixture)
 
-BOOST_AUTO_TEST_CASE(TableInfo) {
+BOOST_AUTO_TEST_CASE(TableInfo)
+{
     bcostars::TableInfo tarsTableInfo;
     tarsTableInfo._key = "a";
     tarsTableInfo.name = "b";
-    for(int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 100; ++i)
+    {
         tarsTableInfo.fields.push_back(boost::lexical_cast<std::string>(i));
     }
 
@@ -34,7 +36,8 @@ BOOST_AUTO_TEST_CASE(TableInfo) {
     BOOST_CHECK_EQUAL(bcosTableInfo->key, tarsTableInfo._key);
     BOOST_CHECK_EQUAL(bcosTableInfo->name, tarsTableInfo.name);
     BOOST_CHECK_EQUAL(bcosTableInfo->fields.size(), tarsTableInfo.fields.size());
-    for(size_t i=0; i<100; ++i) {
+    for (size_t i = 0; i < 100; ++i)
+    {
         BOOST_CHECK_EQUAL(bcosTableInfo->fields[i], tarsTableInfo.fields[i]);
     }
 }

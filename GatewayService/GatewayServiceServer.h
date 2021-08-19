@@ -126,10 +126,6 @@ public:
         {
             m_gateway->stop();
         }
-        if (m_logInitializer)
-        {
-            m_logInitializer->stopLogging();
-        }
         TLOGINFO(LOG_DESC("[GATEWAYSERVICE] Stop the GatewayService success") << std::endl);
     }
 
@@ -206,9 +202,9 @@ public:
     }
 
 private:
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static std::once_flag m_initFlag;
     static bcos::gateway::Gateway::Ptr m_gateway;
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static bcos::crypto::KeyFactory::Ptr m_keyFactory;
     std::atomic_bool m_running = {false};
 };
