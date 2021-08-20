@@ -42,8 +42,8 @@ hunter_config(bcos-storage VERSION 3.0.0-local-900836da
 
 hunter_config(bcos-ledger
     VERSION 3.0.0-local-1956c515f
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-ledger/archive/f5f92e4fb48f75fd808d40366629996a7d37fa19.tar.gz"
-    SHA1 3aea1cf27c585cb7cc58e4c2e2c9fe75d7d44fb6
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-ledger/archive/4dd13dbdb299d226dbc965bcf7c989f14ed59749.tar.gz"
+    SHA1 1a8df8fdaebb8dd14688aa3411615a6171e3c219
     CMAKE_ARGS URL_BASE=${URL_BASE}
 )
 
@@ -60,8 +60,8 @@ hunter_config(bcos-gateway VERSION 3.0.0-local-1fb592e4
 )
 
 hunter_config(bcos-dispatcher VERSION 3.0.0-local-2903b298
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-dispatcher/archive/570936bd4dad3cdddec1cb2a00177c7fe4b40c24.tar.gz"
-    SHA1 87ff5eecb3c752a07adebddaa3be03a3f96b94f6
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-dispatcher/archive/257bd6787198599d5410596c7ed0c98964c44653.tar.gz"
+    SHA1 b93ff9d34b732e5910e4a88655d0b0806c52b3c9
     CMAKE_ARGS URL_BASE=${URL_BASE}
 )
 

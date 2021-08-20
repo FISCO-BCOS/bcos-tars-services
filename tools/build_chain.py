@@ -356,8 +356,8 @@ class TarsTool:
         response = requests.post(
             self.add_task_url, params=self.token_param, json=request_data)
         if TarsTool.parse_response("patch tars ", response) is False:
-            log_error("patch tars failed for error response, server name: %s, msg: %s" % (
-                service_name, response.content))
+            log_error("patch tars failed for error response, server id: %s, msg: %s" % (
+                service_id, response.content))
             return False
         return True
 

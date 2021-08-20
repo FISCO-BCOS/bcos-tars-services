@@ -41,7 +41,10 @@ void ProtocolInitializer::init(NodeConfig::Ptr _nodeConfig)
     {
         createSMCryptoSuite();
     }
-    createCryptoSuite();
+    else
+    {
+        createCryptoSuite();
+    }
     INITIALIZER_LOG(INFO) << LOG_DESC("init crypto suite success");
 
     // create the block factory
@@ -81,5 +84,6 @@ void ProtocolInitializer::loadKeyPair(std::string const& _privateKeyPath)
     m_keyPair = m_cryptoSuite->signatureImpl()->createKeyPair(privateKey);
 
     INITIALIZER_LOG(INFO) << LOG_DESC("loadKeyPair success")
-                          << LOG_KV("privateKeyPath", _privateKeyPath);
+                          << LOG_KV("privateKeyPath", _privateKeyPath)
+                          << LOG_KV("publicKey", m_keyPair->publicKey()->shortHex());
 }
