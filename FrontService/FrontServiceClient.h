@@ -212,7 +212,7 @@ public:
         auto nodeIDData = _nodeID->data();
         m_proxy->async_asyncSendMessageByNodeID(new Callback(_callback, this), _moduleID,
             std::vector<char>(nodeIDData.begin(), nodeIDData.end()),
-            std::vector<char>(_data.begin(), _data.end()), _timeout);
+            std::vector<char>(_data.begin(), _data.end()), _timeout, (_callback ? true : false));
     }
 
     void asyncSendResponse(const std::string& _id, int _moduleID, bcos::crypto::NodeIDPtr _nodeID,

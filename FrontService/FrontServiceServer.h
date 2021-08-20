@@ -259,25 +259,44 @@ public:
     }
 
     bcostars::Error asyncSendMessageByNodeID(tars::Int32 moduleID, const vector<tars::Char>& nodeID,
-        const vector<tars::Char>& data, tars::UInt32 timeout, vector<tars::Char>& responseNodeID,
-        vector<tars::Char>& responseData, std::string& seq, tars::TarsCurrentPtr current) override
+        const vector<tars::Char>& data, tars::UInt32 timeout, tars::Bool requireRespCallback,
+        vector<tars::Char>& responseNodeID, vector<tars::Char>& responseData, std::string& seq,
+        tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
         auto bcosNodeID =
             m_keyFactory->createKey(bcos::bytesConstRef((bcos::byte*)nodeID.data(), nodeID.size()));
-        m_front->asyncSendMessageByNodeID(moduleID, bcosNodeID,
-            bcos::bytesConstRef((bcos::byte*)data.data(), data.size()), timeout,
-            [current](bcos::Error::Ptr _error, bcos::crypto::NodeIDPtr _nodeID,
-                bcos::bytesConstRef _data, const std::string& _id,
-                bcos::front::ResponseFunc _respFunc) {
-                boost::ignore_unused(_error, _nodeID, _data, _id, _respFunc);
-            });
+        if (requireRespCallback)
+        {
+            m_front->asyncSendMessageByNodeID(moduleID, bcosNodeID,
+                bcos::bytesConstRef((bcos::byte*)data.data(), data.size()), timeout,
+                [current](bcos::Error::Ptr _error, bcos::crypto::NodeIDPtr _nodeID,
+                    bcos::bytesConstRef _data, const std::string& _id,
+                    bcos::front::ResponseFunc _respFunc) {
+                    boost::ignore_unused(_respFunc);
+                    auto encodedNodeID = *_nodeID->encode();
+                    async_response_asyncSendMessageByNodeID(current, toTarsError(_error),
+                        std::vector<char>(encodedNodeID.begin(), encodedNodeID.end()),
+                        std::vector<char>(_data.begin(), _data.end()), _id);
+                });
+        }
+        else
+        {
+            m_front->asyncSendMessageByNodeID(moduleID, bcosNodeID,
+                bcos::bytesConstRef((bcos::byte*)data.data(), data.size()), timeout,
+                [current](bcos::Error::Ptr _error, bcos::crypto::NodeIDPtr _nodeID,
+                    bcos::bytesConstRef _data, const std::string& _id,
+                    bcos::front::ResponseFunc _respFunc) {
+                    boost::ignore_unused(_error, _nodeID, _data, _id, _respFunc);
+                });
 
-        bcos::bytesConstRef respData;
-        async_response_asyncSendMessageByNodeID(current, toTarsError(nullptr),
-            std::vector<char>(nodeID.begin(), nodeID.end()),
-            std::vector<char>(respData.begin(), respData.end()), seq);
+            // response directly
+            bcos::bytesConstRef respData;
+            async_response_asyncSendMessageByNodeID(current, toTarsError(nullptr),
+                std::vector<char>(nodeID.begin(), nodeID.end()),
+                std::vector<char>(respData.begin(), respData.end()), seq);
+        }
 
         return bcostars::Error();
     }
