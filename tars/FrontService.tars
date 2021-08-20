@@ -10,7 +10,7 @@ module bcostars {
 
         Error onReceiveBroadcastMessage(string groupID, vector<byte> nodeID, vector<byte> data);
 
-        Error asyncSendMessageByNodeID(int moduleID, vector<byte> nodeID, vector<byte> data, unsigned int timeout, 
+        Error asyncSendMessageByNodeID(int moduleID, vector<byte> nodeID, vector<byte> data, unsigned int timeout, bool requireRespCallback, 
             out vector<byte> responseNodeID, out vector<byte> responseData, out string seq);
 
         Error asyncSendResponse(string id, int moduleID, vector<byte> nodeID, vector<byte> data);

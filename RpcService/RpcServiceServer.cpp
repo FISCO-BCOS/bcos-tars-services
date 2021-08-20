@@ -78,7 +78,26 @@ void RpcServiceServer::init()
     nodeInfo->groupID = nodeConfig->groupId();
     nodeInfo->isWasm = nodeConfig->isWasm();
     nodeInfo->isSM = nodeConfig->smCryptoType();
-    // TODO: init node info
+
+    RPCSERVICE_LOG(INFO) << LOG_DESC("init node id");
+    auto protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
+    protocolInitializer->init(nodeConfig);
+    auto privateKeyPath = ServerConfig::BasePath + "node.pem";
+    protocolInitializer->loadKeyPair(privateKeyPath);
+
+    std::string nodeID = protocolInitializer->keyPair()->publicKey()->hex();
+    nodeInfo->nodeID = nodeID;
+    RPCSERVICE_LOG(INFO) << LOG_DESC("init node id success") << LOG_KV("nodeID", nodeID);
+
+#ifdef FISCO_BCOS_PROJECT_VERSION
+    nodeInfo->version = FISCO_BCOS_PROJECT_VERSION;
+#endif
+#ifdef FISCO_BCOS_BUILD_TIME
+    nodeInfo->buildTime = FISCO_BCOS_BUILD_TIME;
+#endif
+#ifdef FISCO_BCOS_COMMIT_HASH
+    nodeInfo->gitCommitHash = FISCO_BCOS_COMMIT_HASH;
+#endif
 
     RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc factory");
     auto factory = initRpcFactory(nodeConfig);
