@@ -1,8 +1,8 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-    URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/a539aa22dfe58e429f5731c9a4b863ff74ab1777.tar.gz
-    SHA1 768604ad88b0422de456262c95cd1a5efa2e9b44
-	CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON #DEBUG=ON
+    URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/6432f5cfe6095221f0fd53bef333574c142e31f1.tar.gz
+    SHA1 76b30e217ff86d5c206c7617a79b8f3a224aae5d
+    CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON #DEBUG=ON
 )
 
 hunter_config(bcos-crypto
@@ -42,8 +42,8 @@ hunter_config(bcos-storage VERSION 3.0.0-local-900836da
 
 hunter_config(bcos-ledger
     VERSION 3.0.0-local-1956c515f
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-ledger/archive/4dd13dbdb299d226dbc965bcf7c989f14ed59749.tar.gz"
-    SHA1 1a8df8fdaebb8dd14688aa3411615a6171e3c219
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-ledger/archive/91db705280f22a623aec0b301d009a7a04c0af6b.tar.gz"
+    SHA1 409007bdd6bac75743b475402970ff38a1108007
     CMAKE_ARGS URL_BASE=${URL_BASE}
 )
 
