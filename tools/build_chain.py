@@ -168,7 +168,7 @@ class TarsTool:
         adapters = [{"obj_name": service_name + "Obj", "port": port, "bind_ip": self.deploy_ip, "port_type": "tcp",
                      "thread_num": 5, "max_connections": 100000, "queuecap": 50000, "queuetimeout": 20000}]
         request_data = {"application": self.app_name, "server_name": service_name, "node_name": self.deploy_ip,
-                        "server_type": "tars_cpp", "template_name": "DCache.Cache", 'adapters': adapters}
+                        "server_type": "tars_cpp", "template_name": "tars.cpp.default", 'adapters': adapters}
         response = requests.post(
             self.deploy_service_url, params=self.token_param, json=request_data)
         if TarsTool.parse_response("deploy service " + service_name, response) is False:
