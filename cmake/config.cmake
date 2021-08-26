@@ -13,14 +13,14 @@ hunter_config(wedpr-crypto VERSION 1.1.0-10f314de
 
 hunter_config(bcos-crypto
     VERSION 3.0.0-local-43df7523
-    URL https://${URL_BASE}/FISCO-BCOS/bcos-crypto/archive/25c8edb7d5cbadb514bbce9733573c8ffdb3600d.tar.gz
-    SHA1 4a1649e7095f5db58a5ae0671b2278bcccc25f1d
+    URL https://${URL_BASE}/FISCO-BCOS/bcos-crypto/archive/255002b047b359a45c953d1dab29efd2ff6eb080.tar.gz
+    SHA1 4d02de20be1f9bf79d762c5b8686368286504e07
     CMAKE_ARGS URL_BASE=${URL_BASE}
 )
 
 hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/d85617cdfdcfcc951209fdc253d32ce70988ba7f.tar.gz"
-    SHA1 ae490eba606eee4b815274bbe7fb94d85563fa93
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/cdc2de2c18f6d11d5c7eda2985db6dabcccb3a6e.tar.gz"
+    SHA1 6933ecf5e067b284fbda3481395f40c5d8333b02
 )
 
 hunter_config(bcos-pbft VERSION 3.0.0-local-a2a9f7d2
@@ -29,8 +29,8 @@ hunter_config(bcos-pbft VERSION 3.0.0-local-a2a9f7d2
 )
 
 hunter_config(bcos-sync VERSION 3.0.0-local-50e0e264
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/9ae4fc3f65096deedb064f9fbf7a0ff6b5d1e599.tar.gz"
-    SHA1 d1add6f4f4f718a277a9188f97fa98e30537d4ab
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/fd594604ac16f6da4025496efced904bc17345bc.tar.gz"
+    SHA1 797c3f9fe1f44f8b5860c9aaacc41d291715d686
 )
 
 hunter_config(rocksdb VERSION 6.20.3
@@ -43,19 +43,19 @@ hunter_config(rocksdb VERSION 6.20.3
 hunter_config(bcos-storage VERSION 3.0.0-local-900836da
     URL "https://${URL_BASE}/FISCO-BCOS/bcos-storage/archive/900836da481856ca13a1184943bb0d18d2124a88.tar.gz"
     SHA1 7053cf63e832367d561693e9d438e9048c087091
-    CMAKE_ARGS URL_BASE=${URL_BASE} #CMAKE_BUILD_TYPE=Debug
+    CMAKE_ARGS URL_BASE=${URL_BASE} CMAKE_BUILD_TYPE=Debug
 )
 
 hunter_config(bcos-ledger
     VERSION 3.0.0-local-1956c515f
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-ledger/archive/91db705280f22a623aec0b301d009a7a04c0af6b.tar.gz"
-    SHA1 409007bdd6bac75743b475402970ff38a1108007
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-ledger/archive/e18c81e1613c142c1efb8e55439e20cc953ed345.tar.gz"
+    SHA1 432cdd9b3f8f4517006cee19175258adc259a33d
     CMAKE_ARGS URL_BASE=${URL_BASE}
 )
 
 hunter_config(bcos-front VERSION 3.0.0-local-2ed687bb
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-front/archive/15e18804aab90def4c2ba7d811024df921f935de.tar.gz"
-    SHA1 1485c64a31b106f912aa1d1878da5d91dc0a2975
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-front/archive/d034456fd2ad703c03e57e7c44e8a47721078190.tar.gz"
+    SHA1 d3dfc69242fb6b8bc651bb27edd06a5353d4a046
     CMAKE_ARGS URL_BASE=${URL_BASE}
 )
 
@@ -89,7 +89,7 @@ hunter_config(evmc VERSION 7.3.0-c7feb13f
     CMAKE_ARGS URL_BASE=${URL_BASE}
 )
 
-hunter_config(intx VERSION 0.4.1 URL https://github.com/chfast/intx/archive/v0.4.0.tar.gz
+hunter_config(intx VERSION 0.4.1 URL https://${URL_BASE}/chfast/intx/archive/v0.4.0.tar.gz
     SHA1 8a2a0b0efa64899db972166a9b3568a6984c61bc
 	CMAKE_ARGS CMAKE_CXX_FLAGS=-std=c++17
 )
