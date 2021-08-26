@@ -1,8 +1,14 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-    URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/0935a1d3dc3667c9389c153fc5316fa71522c1b5.tar.gz
-    SHA1 8c7726bc664f9160f84f2e827474b16c67ab6c78
+    URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/2965f51d17f91b8d5f64c864e7dcc53a6218b086.tar.gz
+    SHA1 33e011d8015170317b535cb42d15c5f18665e1bc
     CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON #DEBUG=ON
+)
+
+hunter_config(wedpr-crypto VERSION 1.1.0-10f314de
+	URL https://${URL_BASE}/WeBankBlockchain/WeDPR-Lab-Crypto/archive/10f314de45ec31ce9e330922b522ce173662ed33.tar.gz
+	SHA1 626df59f87ea2c6bb5128f7d104588179809910b
+	CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=OFF HUNTER_PACKAGE_LOG_INSTALL=ON
 )
 
 hunter_config(bcos-crypto
@@ -77,9 +83,9 @@ hunter_config(bcos-rpc VERSION 3.0.0-local
 #     CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON DEBUG=ON
 # )
 
-hunter_config(evmc VERSION 7.3.0-d951b1ef
-    URL https://${URL_BASE}/FISCO-BCOS/evmc/archive/d951b1ef088be6922d80f41c3c83c0cbd69d2bfa.tar.gz
-    SHA1 0b39b36cd8533c89ee0b15b6e94cff1111383ac7
+hunter_config(evmc VERSION 7.3.0-c7feb13f
+	URL https://${URL_BASE}/FISCO-BCOS/evmc/archive/c7feb13f582919242da9f4f898ed4578785c9ecc.tar.gz
+	SHA1 28ab1c74dd3340efe101418fd5faf19d34c9f7a9
     CMAKE_ARGS URL_BASE=${URL_BASE}
 )
 
@@ -93,8 +99,9 @@ hunter_config(ethash VERSION 0.7.0-4576af36 URL https://${URL_BASE}/chfast/ethas
 	CMAKE_ARGS CMAKE_CXX_FLAGS=-std=c++17
 )
 
-hunter_config(evmone VERSION 0.4.1-9eb137ea URL https://${URL_BASE}/FISCO-BCOS/evmone/archive/ea98055f1ebd216cdc89679ae64005e06aa620ae.tar.gz
-	SHA1 8d3d499a2db398ca339ece20fd34ed463454b367
+hunter_config(evmone VERSION 0.4.1-b726a1e1
+	URL https://${URL_BASE}/FISCO-BCOS/evmone/archive/b726a1e1722109291ac18bc7c5fad5aac9d2e8c5.tar.gz
+	SHA1 e41fe0514a7a49a9a5e7eeb1b42cf2c3ced67f5d
 	CMAKE_ARGS CMAKE_CXX_FLAGS=-std=c++17 BUILD_SHARED_LIBS=OFF
 )
 
