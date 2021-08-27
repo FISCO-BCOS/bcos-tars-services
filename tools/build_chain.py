@@ -11,8 +11,11 @@ import toml
 
 service_list = ["StorageService", "DispatcherService", "ExecutorService",
                 "FrontService", "GatewayService", "TxPoolService", "PBFTService", "RpcService"]
-config_list = ["config.ini", "config.genesis", "nodes.json",
+non_sm_config_list = ["config.ini", "config.genesis", "nodes.json",
                "node.nodeid", "node.pem", "ca.crt", "ssl.key", "ssl.crt"]
+
+sm_config_list = ["config.ini", "config.genesis", "nodes.json",
+               "node.nodeid", "node.pem", "sm_ca.crt", "sm_ssl.key", "sm_ssl.crt", "sm_enssl.key", "sm_enssl.crt"]
 tars_pkg_post_fix = ".tgz"
 
 
@@ -76,6 +79,10 @@ class BuildChainConfig:
         for item in deploy_info_list:
             deploy_info = DeployInfo(item)
             self.deploy_info_list.append(deploy_info)
+        if(self.sm_mode):
+            self.config_list = sm_config_list
+        else:
+            self.config_list = non_sm_config_list
 
     def get_value(config, section, key, default_value, throw_exception):
         if section not in config or key not in config[section]:
@@ -437,7 +444,7 @@ def generate_pkg_path_list(config):
     return service_path_list
 
 
-def generate_config_file_list(config_base_dir):
+def generate_config_file_list(config_base_dir, config_list):
     config_info = []
     for config_file in config_list:
         config_info.append(config_base_dir + "/" + config_file)
@@ -505,8 +512,8 @@ def generate_tars_servers(config):
             return False
         # add configuration file
         config_info = generate_config_file_list(
-            config_base_dir_info[app_service.app_name])
-        ret = app_service.add_app_config_list(config_list, config_info)
+            config_base_dir_info[app_service.app_name], config.config_list)
+        ret = app_service.add_app_config_list(config.config_list, config_info)
         if ret is False:
             return False
         service_path_list = generate_pkg_path_list(config)

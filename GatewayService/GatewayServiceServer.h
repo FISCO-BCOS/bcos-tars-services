@@ -202,10 +202,10 @@ public:
     }
 
 private:
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static std::once_flag m_initFlag;
     static bcos::gateway::Gateway::Ptr m_gateway;
     static bcos::crypto::KeyFactory::Ptr m_keyFactory;
     std::atomic_bool m_running = {false};
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
 };
 }  // namespace bcostars

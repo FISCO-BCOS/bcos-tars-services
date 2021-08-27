@@ -188,10 +188,10 @@ public:
     }
 
 private:
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static std::once_flag m_initFlag;
     static std::shared_ptr<bcos::executor::ExecutorInterface> m_executor;
     static bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
     std::atomic_bool m_stopped = {false};
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
 };
 }  // namespace bcostars

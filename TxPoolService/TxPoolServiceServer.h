@@ -413,11 +413,11 @@ public:
     }
 
 private:
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static std::once_flag m_initFlag;
     static bcos::txpool::TxPool::Ptr m_txpool;
     static std::shared_ptr<bcos::ledger::Ledger> m_ledger;
     static bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
     static std::atomic_bool m_running;
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
 };
 }  // namespace bcostars

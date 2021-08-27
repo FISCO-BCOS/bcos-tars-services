@@ -129,10 +129,10 @@ private:
 
     static std::shared_ptr<bcos::ledger::Ledger> m_ledger;
     static bcos::crypto::KeyFactory::Ptr m_keyFactory;
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
 
     std::atomic_bool m_running = {false};
     static std::once_flag m_initFlag;
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
 };
 
 }  // namespace bcostars
