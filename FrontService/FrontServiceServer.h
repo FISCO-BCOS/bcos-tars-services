@@ -73,7 +73,7 @@ public:
             // set the gateway interface
             auto gateWayProxy = Application::getCommunicator()->stringToProxy<GatewayServicePrx>(
                 getProxyDesc(GATEWAY_SERVICE_NAME));
-            auto gateWay = std::make_shared<GatewayServiceClient>(gateWayProxy);
+            auto gateWay = std::make_shared<GatewayServiceClient>(gateWayProxy, m_keyFactory);
             frontServiceFactory.setGatewayInterface(gateWay);
             FRONTSERVICE_LOG(INFO) << LOG_DESC("init the gateway client success");
 

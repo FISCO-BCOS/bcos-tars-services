@@ -4,6 +4,7 @@
 #include "GatewayService.h"
 #include "bcos-framework/interfaces/gateway/GatewayInterface.h"
 #include "servant/RemoteLogger.h"
+#include <bcos-framework/interfaces/crypto/KeyFactory.h>
 #include <string>
 
 #define GATEWAYCLIENT_LOG(LEVEL) BCOS_LOG(LEVEL) << "[GATEWAYCLIENT][INITIALIZER]"
@@ -13,7 +14,10 @@ namespace bcostars
 class GatewayServiceClient : public bcos::gateway::GatewayInterface
 {
 public:
-    GatewayServiceClient(bcostars::GatewayServicePrx _proxy) : m_proxy(_proxy) {}
+    GatewayServiceClient(
+        bcostars::GatewayServicePrx _proxy, bcos::crypto::KeyFactory::Ptr keyFactory)
+      : m_proxy(_proxy), m_keyFactory(keyFactory)
+    {}
     virtual ~GatewayServiceClient() {}
     void asyncSendMessageByNodeID(const std::string& _groupID, bcos::crypto::NodeIDPtr _srcNodeID,
         bcos::crypto::NodeIDPtr _dstNodeID, bcos::bytesConstRef _payload,
@@ -102,11 +106,46 @@ public:
             std::vector<char>(_payload.begin(), _payload.end()));
     }
 
+    void asyncGetNodeIDs(
+        const std::string& _groupID, bcos::gateway::GetNodeIDsFunc _getNodeIDsFunc) override
+    {
+        class Callback : public GatewayServicePrxCallback
+        {
+        public:
+            Callback(
+                bcos::gateway::GetNodeIDsFunc callback, bcos::crypto::KeyFactory::Ptr keyFactory)
+              : m_callback(callback), m_keyFactory(keyFactory)
+            {}
+            void callback_asyncGetNodeIDs(
+                const bcostars::Error& ret, const vector<vector<tars::Char>>& nodeIDs) override
+            {
+                auto bcosNodeIDs = std::make_shared<std::vector<bcos::crypto::NodeIDPtr>>();
+                bcosNodeIDs->reserve(nodeIDs.size());
+                for (auto const& it : nodeIDs)
+                {
+                    bcosNodeIDs->push_back(m_keyFactory->createKey(
+                        bcos::bytesConstRef((bcos::byte*)it.data(), it.size())));
+                }
+                m_callback(toBcosError(ret), bcosNodeIDs);
+            }
+            void callback_asyncGetNodeIDs_exception(tars::Int32 ret) override
+            {
+                m_callback(toBcosError(ret), nullptr);
+            }
+
+        private:
+            bcos::gateway::GetNodeIDsFunc m_callback;
+            bcos::crypto::KeyFactory::Ptr m_keyFactory;
+        };
+        m_proxy->async_asyncGetNodeIDs(new Callback(_getNodeIDsFunc, m_keyFactory), _groupID);
+    }
+
 protected:
     void start() override {}
     void stop() override {}
 
 private:
     bcostars::GatewayServicePrx m_proxy;
+    bcos::crypto::KeyFactory::Ptr m_keyFactory;
 };
 }  // namespace bcostars

@@ -201,6 +201,33 @@ public:
         return bcostars::Error();
     }
 
+    bcostars::Error asyncGetNodeIDs(const std::string& groupID, vector<vector<tars::Char>>& nodeIDs,
+        tars::TarsCurrentPtr current) override
+    {
+        current->setResponse(false);
+
+        m_gateway->asyncGetNodeIDs(
+            groupID, [current](bcos::Error::Ptr _error,
+                         std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs) {
+                // Note: the nodeIDs maybe null if no connections
+                std::vector<std::vector<char>> tarsNodeIDs;
+                if (!_nodeIDs)
+                {
+                    async_response_asyncGetNodeIDs(current, toTarsError(_error), tarsNodeIDs);
+                    return;
+                }
+                tarsNodeIDs.reserve(_nodeIDs->size());
+                for (auto const& it : *_nodeIDs)
+                {
+                    auto nodeIDData = it->data();
+                    tarsNodeIDs.emplace_back(nodeIDData.begin(), nodeIDData.end());
+                }
+                async_response_asyncGetNodeIDs(current, toTarsError(_error), tarsNodeIDs);
+            });
+
+        return bcostars::Error();
+    }
+
 private:
     static std::once_flag m_initFlag;
     static bcos::gateway::Gateway::Ptr m_gateway;
