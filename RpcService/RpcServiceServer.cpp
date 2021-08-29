@@ -150,7 +150,8 @@ bcos::rpc::RpcFactory::Ptr RpcServiceServer::initRpcFactory(bcos::tool::NodeConf
     // set the gateway interface
     auto gatewayProxy = Application::getCommunicator()->stringToProxy<GatewayServicePrx>(
         getProxyDesc(GATEWAY_SERVICE_NAME));
-    auto gateway = std::make_shared<GatewayServiceClient>(gatewayProxy);
+    auto gateway =
+        std::make_shared<GatewayServiceClient>(gatewayProxy, protocolInitializer->keyFactory());
 
     auto frontServiceProxy =
         Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(

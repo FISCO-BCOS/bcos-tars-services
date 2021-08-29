@@ -73,7 +73,7 @@ public:
             // set the gateway interface
             auto gateWayProxy = Application::getCommunicator()->stringToProxy<GatewayServicePrx>(
                 getProxyDesc(GATEWAY_SERVICE_NAME));
-            auto gateWay = std::make_shared<GatewayServiceClient>(gateWayProxy);
+            auto gateWay = std::make_shared<GatewayServiceClient>(gateWayProxy, m_keyFactory);
             frontServiceFactory.setGatewayInterface(gateWay);
             FRONTSERVICE_LOG(INFO) << LOG_DESC("init the gateway client success");
 
@@ -384,10 +384,10 @@ public:
     }
 
 private:
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static std::once_flag m_onceFlag;
     static bcos::front::FrontServiceInterface::Ptr m_front;
     std::atomic_bool m_running = {false};
     static bcos::crypto::KeyFactory::Ptr m_keyFactory;
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
 };
 }  // namespace bcostars

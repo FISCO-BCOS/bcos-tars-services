@@ -55,7 +55,7 @@ private:
     static std::once_flag m_initFlag;
     static bcos::rpc::Rpc::Ptr m_rpc;
     static bcos::crypto::KeyFactory::Ptr m_keyFactory;
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static std::atomic_bool m_running;
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
 };
 }  // namespace bcostars
