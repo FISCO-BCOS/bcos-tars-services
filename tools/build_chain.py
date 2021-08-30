@@ -10,7 +10,7 @@ import os
 import toml
 
 service_list = ["StorageService", "DispatcherService", "ExecutorService",
-                "FrontService", "GatewayService", "TxPoolService", "PBFTService", "RpcService"]
+                "GatewayService", "FrontService", "TxPoolService", "PBFTService", "RpcService"]
 non_sm_config_list = ["config.ini", "config.genesis", "nodes.json",
                "node.nodeid", "node.pem", "ca.crt", "ssl.key", "ssl.crt"]
 
