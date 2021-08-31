@@ -25,13 +25,13 @@
 
 using namespace bcostars;
 
-void PBFTServiceClient::asyncSubmitProposal(bcos::bytesConstRef _proposalData,
+void PBFTServiceClient::asyncSubmitProposal(bool _containSysTxs, bcos::bytesConstRef _proposalData,
     bcos::protocol::BlockNumber _proposalIndex, bcos::crypto::HashType const& _proposalHash,
     std::function<void(bcos::Error::Ptr)> _onProposalSubmitted)
 {
     m_proxy->async_asyncSubmitProposal(new PBFTServiceCommonCallback(_onProposalSubmitted),
-        std::vector<char>(_proposalData.begin(), _proposalData.end()), _proposalIndex,
-        std::vector<char>(_proposalHash.begin(), _proposalHash.end()));
+        _containSysTxs, std::vector<char>(_proposalData.begin(), _proposalData.end()),
+        _proposalIndex, std::vector<char>(_proposalHash.begin(), _proposalHash.end()));
 }
 
 void PBFTServiceClient::asyncGetPBFTView(

@@ -337,9 +337,9 @@ Error PBFTServiceServer::asyncNotifyNewBlock(
     return bcostars::Error();
 }
 
-Error PBFTServiceServer::asyncSubmitProposal(const vector<tars::Char>& _proposalData,
-    tars::Int64 _proposalIndex, const vector<tars::Char>& _proposalHash,
-    tars::TarsCurrentPtr _current)
+Error PBFTServiceServer::asyncSubmitProposal(bool _containSysTxs,
+    const vector<tars::Char>& _proposalData, tars::Int64 _proposalIndex,
+    const vector<tars::Char>& _proposalHash, tars::TarsCurrentPtr _current)
 {
     _current->setResponse(false);
     auto proposalHash = bcos::crypto::HashType();
@@ -348,7 +348,7 @@ Error PBFTServiceServer::asyncSubmitProposal(const vector<tars::Char>& _proposal
         proposalHash = bcos::crypto::HashType(
             (const bcos::byte*)_proposalHash.data(), bcos::crypto::HashType::size);
     }
-    m_pbft->asyncSubmitProposal(
+    m_pbft->asyncSubmitProposal(_containSysTxs,
         bcos::bytesConstRef((const bcos::byte*)_proposalData.data(), _proposalData.size()),
         _proposalIndex, proposalHash, [_current](bcos::Error::Ptr _error) {
             async_response_asyncSubmitProposal(_current, toTarsError(_error));
