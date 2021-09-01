@@ -123,10 +123,15 @@ public:
                 async_response_asyncGetLatestBlock(current, toTarsError(error), bcostars::Block());
                 return;
             }
-            BCOS_LOG(INFO) << LOG_DESC("async_response_asyncGetLatestBlock")
-                           << LOG_KV("number", block->blockHeader()->number());
-            async_response_asyncGetLatestBlock(current, toTarsError(error),
-                std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(block)->inner());
+            if (block)
+            {
+                BCOS_LOG(INFO) << LOG_DESC("async_response_asyncGetLatestBlock")
+                               << LOG_KV("number", block->blockHeader()->number());
+                async_response_asyncGetLatestBlock(current, toTarsError(error),
+                    std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(block)->inner());
+                return;
+            }
+            async_response_asyncGetLatestBlock(current, toTarsError(error), bcostars::Block());
         });
 
         return bcostars::Error();
