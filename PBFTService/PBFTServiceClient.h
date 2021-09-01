@@ -109,7 +109,7 @@ public:
     // the sealer submit proposal to the consensus module
     // Note: if the sealer module integrates with the PBFT module, no need to implement this
     // interface
-    void asyncSubmitProposal(bcos::bytesConstRef _proposalData,
+    void asyncSubmitProposal(bool _containSysTxs, bcos::bytesConstRef _proposalData,
         bcos::protocol::BlockNumber _proposalIndex, bcos::crypto::HashType const& _proposalHash,
         std::function<void(bcos::Error::Ptr)> _onProposalSubmitted) override;
 
