@@ -93,8 +93,7 @@ public:
                 m_callback;
             bcos::protocol::BlockFactory::Ptr m_blockFactory;
         };
-        m_proxy->tars_set_timeout(1000)->async_asyncGetLatestBlock(
-            new Callback(_callback, m_blockFactory));
+        m_proxy->async_asyncGetLatestBlock(new Callback(_callback, m_blockFactory));
     }
 
     void asyncNotifyExecutionResult(const bcos::Error::Ptr& _error,

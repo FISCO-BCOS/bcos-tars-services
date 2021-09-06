@@ -25,12 +25,13 @@
 
 using namespace bcostars;
 
-void PBFTServiceClient::asyncSubmitProposal(bcos::bytesConstRef _proposalData,
+void PBFTServiceClient::asyncSubmitProposal(bool _containSysTxs, bcos::bytesConstRef _proposalData,
     bcos::protocol::BlockNumber _proposalIndex, bcos::crypto::HashType const& _proposalHash,
     std::function<void(bcos::Error::Ptr)> _onProposalSubmitted)
 {
     m_proxy->async_asyncSubmitProposal(new PBFTServiceCommonCallback(_onProposalSubmitted),
-        std::vector<char>(_proposalData.begin(), _proposalData.end()), _proposalIndex, std::vector<char>(_proposalHash.begin(), _proposalHash.end()));
+        _containSysTxs, std::vector<char>(_proposalData.begin(), _proposalData.end()),
+        _proposalIndex, std::vector<char>(_proposalHash.begin(), _proposalHash.end()));
 }
 
 void PBFTServiceClient::asyncGetPBFTView(
@@ -103,8 +104,9 @@ void PBFTServiceClient::asyncNotifyConsensusMessage(bcos::Error::Ptr _error,
     std::function<void(bcos::Error::Ptr _error)> _onRecv)
 {
     auto nodeIDData = _nodeID->data();
-    m_proxy->async_asyncNotifyConsensusMessage(
-        new PBFTServiceCommonCallback(_onRecv), _uuid, std::vector<char>(nodeIDData.begin(), nodeIDData.end()), std::vector<char>(_data.begin(), _data.end()));
+    m_proxy->async_asyncNotifyConsensusMessage(new PBFTServiceCommonCallback(_onRecv), _uuid,
+        std::vector<char>(nodeIDData.begin(), nodeIDData.end()),
+        std::vector<char>(_data.begin(), _data.end()));
 }
 
 // Note: used for the txpool notify the unsealed txsSize
@@ -140,4 +142,35 @@ void BlockSyncServiceClient::asyncGetSyncInfo(
         std::function<void(bcos::Error::Ptr, std::string)> m_callback;
     };
     m_proxy->async_asyncGetSyncInfo(new Callback(_onGetSyncInfo));
+}
+
+void BlockSyncServiceClient::notifyConnectedNodes(bcos::crypto::NodeIDSet const& _connectedNodes,
+    std::function<void(bcos::Error::Ptr)> _onRecvResponse)
+{
+    class Callback : public bcostars::PBFTServicePrxCallback
+    {
+    public:
+        Callback(std::function<void(bcos::Error::Ptr _error)> callback) : m_callback(callback) {}
+
+        void callback_asyncNotifyConnectedNodes(const bcostars::Error& ret) override
+        {
+            m_callback(toBcosError(ret));
+        }
+
+        void callback_asyncNotifyConnectedNodes_exception(tars::Int32 ret) override
+        {
+            m_callback(toBcosError(ret));
+        }
+
+    private:
+        std::function<void(bcos::Error::Ptr _error)> m_callback;
+    };
+
+    std::vector<vector<tars::Char>> tarsConnectedNodes;
+    for (auto const& it : _connectedNodes)
+    {
+        auto nodeID = it->data();
+        tarsConnectedNodes.emplace_back(nodeID.begin(), nodeID.end());
+    }
+    m_proxy->async_asyncNotifyConnectedNodes(new Callback(_onRecvResponse), tarsConnectedNodes);
 }

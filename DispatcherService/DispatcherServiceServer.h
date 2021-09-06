@@ -71,10 +71,6 @@ public:
         {
             m_dispatcher->stop();
         }
-        if (m_logInitializer)
-        {
-            m_logInitializer->stopLogging();
-        }
     }
 
     bcostars::Error asyncExecuteBlock(const bcostars::Block& block, tars::Bool verify,
@@ -83,19 +79,28 @@ public:
         current->setResponse(false);
 
         auto bcosBlock = m_blockFactory->createBlock();
-        std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(bcosBlock)->setInner(std::move(*const_cast<bcostars::Block*>(&block)));
+        std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(bcosBlock)->setInner(
+            std::move(*const_cast<bcostars::Block*>(&block)));
         m_dispatcher->asyncExecuteBlock(bcosBlock, verify,
-            [current](const bcos::Error::Ptr& error,
+            [bcosBlock, current](const bcos::Error::Ptr& error,
                 const bcos::protocol::BlockHeader::Ptr& blockHeader) {
+                auto header = bcosBlock->blockHeader();
                 if (error)
                 {
                     DISPATCHERSERVICE_LOG(WARNING) << LOG_DESC("asyncExecuteBlock failed")
                                                    << LOG_KV("code", error->errorCode())
-                                                   << LOG_KV("msg", error->errorMessage());
+                                                   << LOG_KV("msg", error->errorMessage())
+                                                   << LOG_KV("number", header->number())
+                                                   << LOG_KV("hash", header->hash().abridged());
                     async_response_asyncExecuteBlock(
                         current, toTarsError(error), bcostars::BlockHeader());
                     return;
                 }
+                DISPATCHERSERVICE_LOG(WARNING)
+                    << LOG_DESC("asyncExecuteBlock: response result")
+                    << LOG_KV("number", header->number())
+                    << LOG_KV("hash", header->hash().abridged())
+                    << LOG_KV("hashAfterExec", blockHeader->hash().abridged());
                 async_response_asyncExecuteBlock(current, toTarsError(error),
                     std::dynamic_pointer_cast<bcostars::protocol::BlockHeaderImpl>(blockHeader)
                         ->inner());
@@ -118,10 +123,15 @@ public:
                 async_response_asyncGetLatestBlock(current, toTarsError(error), bcostars::Block());
                 return;
             }
-            BCOS_LOG(INFO) << LOG_DESC("async_response_asyncGetLatestBlock")
-                           << LOG_KV("number", block->blockHeader()->number());
-            async_response_asyncGetLatestBlock(current, toTarsError(error),
-                std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(block)->inner());
+            if (block)
+            {
+                BCOS_LOG(INFO) << LOG_DESC("async_response_asyncGetLatestBlock")
+                               << LOG_KV("number", block->blockHeader()->number());
+                async_response_asyncGetLatestBlock(current, toTarsError(error),
+                    std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(block)->inner());
+                return;
+            }
+            async_response_asyncGetLatestBlock(current, toTarsError(error), bcostars::Block());
         });
 
         return bcostars::Error();
@@ -148,8 +158,8 @@ private:
     static std::once_flag m_initFlag;
     static bcos::dispatcher::DispatcherImpl::Ptr m_dispatcher;
     static bcostars::protocol::BlockFactoryImpl::Ptr m_blockFactory;
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static std::atomic_bool m_running;
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
 };
 
 }  // namespace bcostars

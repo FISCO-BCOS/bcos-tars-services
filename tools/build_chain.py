@@ -10,9 +10,12 @@ import os
 import toml
 
 service_list = ["StorageService", "DispatcherService", "ExecutorService",
-                "FrontService", "GatewayService", "TxPoolService", "PBFTService", "RpcService"]
-config_list = ["config.ini", "config.genesis", "nodes.json",
+                "GatewayService", "FrontService", "TxPoolService", "PBFTService", "RpcService"]
+non_sm_config_list = ["config.ini", "config.genesis", "nodes.json",
                "node.nodeid", "node.pem", "ca.crt", "ssl.key", "ssl.crt"]
+
+sm_config_list = ["config.ini", "config.genesis", "nodes.json",
+               "node.nodeid", "node.pem", "sm_ca.crt", "sm_ssl.key", "sm_ssl.crt", "sm_enssl.key", "sm_enssl.crt"]
 tars_pkg_post_fix = ".tgz"
 
 
@@ -76,6 +79,10 @@ class BuildChainConfig:
         for item in deploy_info_list:
             deploy_info = DeployInfo(item)
             self.deploy_info_list.append(deploy_info)
+        if(self.sm_mode):
+            self.config_list = sm_config_list
+        else:
+            self.config_list = non_sm_config_list
 
     def get_value(config, section, key, default_value, throw_exception):
         if section not in config or key not in config[section]:
@@ -168,7 +175,7 @@ class TarsTool:
         adapters = [{"obj_name": service_name + "Obj", "port": port, "bind_ip": self.deploy_ip, "port_type": "tcp",
                      "thread_num": 5, "max_connections": 100000, "queuecap": 50000, "queuetimeout": 20000}]
         request_data = {"application": self.app_name, "server_name": service_name, "node_name": self.deploy_ip,
-                        "server_type": "tars_cpp", "template_name": "DCache.Cache", 'adapters': adapters}
+                        "server_type": "tars_cpp", "template_name": "tars.cpp.default", 'adapters': adapters}
         response = requests.post(
             self.deploy_service_url, params=self.token_param, json=request_data)
         if TarsTool.parse_response("deploy service " + service_name, response) is False:
@@ -356,8 +363,8 @@ class TarsTool:
         response = requests.post(
             self.add_task_url, params=self.token_param, json=request_data)
         if TarsTool.parse_response("patch tars ", response) is False:
-            log_error("patch tars failed for error response, server name: %s, msg: %s" % (
-                service_name, response.content))
+            log_error("patch tars failed for error response, server id: %s, msg: %s" % (
+                service_id, response.content))
             return False
         return True
 
@@ -437,7 +444,7 @@ def generate_pkg_path_list(config):
     return service_path_list
 
 
-def generate_config_file_list(config_base_dir):
+def generate_config_file_list(config_base_dir, config_list):
     config_info = []
     for config_file in config_list:
         config_info.append(config_base_dir + "/" + config_file)
@@ -505,8 +512,8 @@ def generate_tars_servers(config):
             return False
         # add configuration file
         config_info = generate_config_file_list(
-            config_base_dir_info[app_service.app_name])
-        ret = app_service.add_app_config_list(config_list, config_info)
+            config_base_dir_info[app_service.app_name], config.config_list)
+        ret = app_service.add_app_config_list(config.config_list, config_info)
         if ret is False:
             return False
         service_path_list = generate_pkg_path_list(config)
@@ -524,6 +531,15 @@ def restart_all(config):
     for app_service in app_list:
         app_service.restart_server_list(service_list)
         time.sleep(5)
+    return True
+
+
+def upload_all_tars_package(config):
+    ret, app_list, config_base_dir_info = generate_app_service_list(config)
+    service_path_list = generate_pkg_path_list(config)
+    for app in app_list:
+        if app.upload_and_publish_package_list(service_list, service_path_list) is False:
+            return False
     return True
 
 
@@ -563,7 +579,7 @@ def parse_config_file(toml_file_path):
 def parse_command():
     parser = argparse.ArgumentParser(description='build_chain')
     parser.add_argument(
-        '--command', help="[Required]the command, current only support: generate_config/create_service/build_chain/restart_all/stop_all/undeploy_all")
+        '--command', help="[Required]the command, current only support: generate_config/create_service/build_chain/restart_all/stop_all/undeploy_all/upload_all")
     args = parser.parse_args()
     return args
 
@@ -572,7 +588,7 @@ def main():
     config = parse_config_file("config.toml")
     args = parse_command()
     if args.command is None or args.command == "":
-        log_error("Must set command, current supported_commands are: generate_config/create_service/build_chain/restart_all/stop_all/undeploy_all")
+        log_error("Must set command, current supported_commands are: generate_config/create_service/build_chain/restart_all/stop_all/undeploy_all/upload_all")
         return
     if args.command == "generate_config":
         ret = generate_block_chain_config(config)
@@ -610,6 +626,13 @@ def main():
         else:
             log_error("stop the blockchain failed")
         return
+    if args.command == "upload_all":
+        ret = upload_all_tars_package(config)
+        if ret is True:
+            log_info("Upload the tars package success")
+        else:
+            log_error("Upload the tars package failed")
+        return
     if args.command == "undeploy_all":
         ret = undeploy_all(config)
         if ret is True:
@@ -617,7 +640,7 @@ def main():
         else:
             log_error("undeploy the blockchain failed")
         return
-    log_error("Unsupported command %s, current supported commands are generate_config/create_service/build_chain/restart_all/stop_all/undeploy_all" % args.command)
+    log_error("Unsupported command %s, current supported commands are generate_config/create_service/build_chain/restart_all/stop_all/undeploy_all/upload_all" % args.command)
 
 
 if __name__ == "__main__":

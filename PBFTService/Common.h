@@ -31,7 +31,8 @@ inline bcos::ledger::LedgerConfig::Ptr toLedgerConfig(
     bcos::consensus::ConsensusNodeList consensusNodeList;
     for (auto const& node : _ledgerConfig.consensusNodeList)
     {
-        auto nodeID = _keyFactory->createKey(bcos::bytesConstRef((bcos::byte*)node.nodeID.data(), node.nodeID.size()));
+        auto nodeID = _keyFactory->createKey(
+            bcos::bytesConstRef((bcos::byte*)node.nodeID.data(), node.nodeID.size()));
         consensusNodeList.push_back(
             std::make_shared<bcos::consensus::ConsensusNode>(nodeID, node.weight));
     }
@@ -40,7 +41,8 @@ inline bcos::ledger::LedgerConfig::Ptr toLedgerConfig(
     bcos::consensus::ConsensusNodeList observerNodeList;
     for (auto const& node : _ledgerConfig.observerNodeList)
     {
-        auto nodeID = _keyFactory->createKey(bcos::bytesConstRef((bcos::byte*)node.nodeID.data(), node.nodeID.size()));
+        auto nodeID = _keyFactory->createKey(
+            bcos::bytesConstRef((bcos::byte*)node.nodeID.data(), node.nodeID.size()));
         observerNodeList.push_back(
             std::make_shared<bcos::consensus::ConsensusNode>(nodeID, node.weight));
     }
@@ -48,7 +50,8 @@ inline bcos::ledger::LedgerConfig::Ptr toLedgerConfig(
     auto hash = bcos::crypto::HashType();
     if (_ledgerConfig.hash.size() >= bcos::crypto::HashType::size)
     {
-        hash = bcos::crypto::HashType((const bcos::byte*)_ledgerConfig.hash.data(), bcos::crypto::HashType::size);
+        hash = bcos::crypto::HashType(
+            (const bcos::byte*)_ledgerConfig.hash.data(), bcos::crypto::HashType::size);
     }
     ledgerConfig->setHash(hash);
     ledgerConfig->setBlockNumber(_ledgerConfig.blockNumber);

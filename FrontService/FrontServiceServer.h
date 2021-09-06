@@ -4,10 +4,12 @@
 #include "../Common/TarsUtils.h"
 #include "../GatewayService/GatewayServiceClient.h"
 #include "../PBFTService/PBFTServiceClient.h"
+#include "../RpcService/RpcServiceClient.h"
 #include "../TxPoolService/TxPoolServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include "FrontService.h"
 #include "libutilities/Common.h"
+#include "libutilities/Log.h"
 #include "servant/Communicator.h"
 #include "servant/Global.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
@@ -19,6 +21,7 @@
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <bcos-front/FrontService.h>
 #include <bcos-front/FrontServiceFactory.h>
+#include <boost/core/ignore_unused.hpp>
 
 #define FRONTSERVICE_LOG(LEVEL) BCOS_LOG(LEVEL) << "[FRONTSERVICE]"
 
@@ -70,7 +73,7 @@ public:
             // set the gateway interface
             auto gateWayProxy = Application::getCommunicator()->stringToProxy<GatewayServicePrx>(
                 getProxyDesc(GATEWAY_SERVICE_NAME));
-            auto gateWay = std::make_shared<GatewayServiceClient>(gateWayProxy);
+            auto gateWay = std::make_shared<GatewayServiceClient>(gateWayProxy, m_keyFactory);
             frontServiceFactory.setGatewayInterface(gateWay);
             FRONTSERVICE_LOG(INFO) << LOG_DESC("init the gateway client success");
 
@@ -140,18 +143,65 @@ public:
                 });
             FRONTSERVICE_LOG(INFO)
                 << LOG_DESC("registerModuleMessageDispatcher for the BlockSync module success");
-
             // register the GetNodeIDsDispatcher to the frontService
             front->registerModuleNodeIDsDispatcher(bcos::protocol::ModuleID::TxsSync,
                 [txpoolClient](std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs,
                     bcos::front::ReceiveMsgFunc _receiveMsgCallback) {
                     auto nodeIdSet = bcos::crypto::NodeIDSet(_nodeIDs->begin(), _nodeIDs->end());
                     txpoolClient->notifyConnectedNodes(nodeIdSet, _receiveMsgCallback);
-                    FRONTSERVICE_LOG(DEBUG) << LOG_DESC("notifyConnectedNodes")
+                    FRONTSERVICE_LOG(DEBUG) << LOG_DESC("TxPool: notifyConnectedNodes")
+                                            << LOG_KV("connectedNodeSize", nodeIdSet.size());
+                });
+
+            FRONTSERVICE_LOG(INFO)
+                << LOG_DESC("registerModuleNodeIDsDispatcher for the TxsSync module success");
+
+            front->registerModuleNodeIDsDispatcher(bcos::protocol::ModuleID::BlockSync,
+                [blockSync](std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs,
+                    bcos::front::ReceiveMsgFunc _receiveMsgCallback) {
+                    auto nodeIdSet = bcos::crypto::NodeIDSet(_nodeIDs->begin(), _nodeIDs->end());
+                    blockSync->notifyConnectedNodes(nodeIdSet, _receiveMsgCallback);
+                    FRONTSERVICE_LOG(DEBUG) << LOG_DESC("BlockSync: notifyConnectedNodes")
                                             << LOG_KV("connectedNodeSize", nodeIdSet.size());
                 });
             FRONTSERVICE_LOG(INFO)
-                << LOG_DESC("registerModuleNodeIDsDispatcher for the TxsSync module success");
+                << LOG_DESC("registerModuleNodeIDsDispatcher for the BlockSync module success");
+
+            auto rpcServicePrx = Application::getCommunicator()->stringToProxy<RpcServicePrx>(
+                getProxyDesc(RPC_SERVICE_NAME));
+            auto rpcServiceClient = std::make_shared<RpcServiceClient>(rpcServicePrx);
+            // register the message dispatcher for the amop module
+            front->registerModuleMessageDispatcher(bcos::protocol::ModuleID::AMOP,
+                [rpcServiceClient](bcos::crypto::NodeIDPtr _nodeID, std::string const& _id,
+                    bcos::bytesConstRef _data) {
+                    rpcServiceClient->asyncNotifyAmopMessage(
+                        _nodeID, _id, _data, [_id, _nodeID](bcos::Error::Ptr _error) {
+                            if (_error)
+                            {
+                                FRONTSERVICE_LOG(WARNING)
+                                    << LOG_DESC("asyncNotifyAmopMessage failed")
+                                    << LOG_KV("peer", _nodeID->shortHex()) << LOG_KV("id", _id)
+                                    << LOG_KV("code", _error->errorCode())
+                                    << LOG_KV("msg", _error->errorMessage());
+                            }
+                        });
+                });
+            FRONTSERVICE_LOG(INFO)
+                << LOG_DESC("registerModuleMessageDispatcher for the AMOP module success");
+
+            // register the GetNodeIDsDispatcher to the frontService
+            front->registerModuleNodeIDsDispatcher(bcos::protocol::ModuleID::AMOP,
+                [rpcServiceClient](std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs,
+                    bcos::front::ReceiveMsgFunc _receiveMsgCallback) {
+                    rpcServiceClient->asyncNotifyAmopNodeIDs(_nodeIDs, _receiveMsgCallback);
+                    FRONTSERVICE_LOG(DEBUG)
+                        << LOG_DESC("asyncNotifyAmopNodeIDs")
+                        << LOG_KV("connectedNodeSize", _nodeIDs ? _nodeIDs->size() : 0);
+                });
+
+            FRONTSERVICE_LOG(INFO)
+                << LOG_DESC("registerModuleNodeIDsDispatcher for the AMOP module success");
+
             m_front = front;
             // start the front service
             FRONTSERVICE_LOG(INFO) << LOG_DESC("start the frontService");
@@ -172,10 +222,6 @@ public:
         if (m_front)
         {
             m_front->stop();
-        }
-        if (m_logInitializer)
-        {
-            m_logInitializer->stopLogging();
         }
     }
 
@@ -213,23 +259,44 @@ public:
     }
 
     bcostars::Error asyncSendMessageByNodeID(tars::Int32 moduleID, const vector<tars::Char>& nodeID,
-        const vector<tars::Char>& data, tars::UInt32 timeout, vector<tars::Char>& responseNodeID,
-        vector<tars::Char>& responseData, std::string& seq, tars::TarsCurrentPtr current) override
+        const vector<tars::Char>& data, tars::UInt32 timeout, tars::Bool requireRespCallback,
+        vector<tars::Char>& responseNodeID, vector<tars::Char>& responseData, std::string& seq,
+        tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
 
         auto bcosNodeID =
             m_keyFactory->createKey(bcos::bytesConstRef((bcos::byte*)nodeID.data(), nodeID.size()));
-        m_front->asyncSendMessageByNodeID(moduleID, bcosNodeID,
-            bcos::bytesConstRef((bcos::byte*)data.data(), data.size()), timeout,
-            [current](bcos::Error::Ptr _error, bcos::crypto::NodeIDPtr _nodeID,
-                bcos::bytesConstRef _data, const std::string& _id,
-                bcos::front::ResponseFunc _respFunc) {
-                auto encodedNodeID = *_nodeID->encode();
-                async_response_asyncSendMessageByNodeID(current, toTarsError(_error),
-                    std::vector<char>(encodedNodeID.begin(), encodedNodeID.end()),
-                    std::vector<char>(_data.begin(), _data.end()), _id);
-            });
+        if (requireRespCallback)
+        {
+            m_front->asyncSendMessageByNodeID(moduleID, bcosNodeID,
+                bcos::bytesConstRef((bcos::byte*)data.data(), data.size()), timeout,
+                [current](bcos::Error::Ptr _error, bcos::crypto::NodeIDPtr _nodeID,
+                    bcos::bytesConstRef _data, const std::string& _id,
+                    bcos::front::ResponseFunc _respFunc) {
+                    boost::ignore_unused(_respFunc);
+                    auto encodedNodeID = *_nodeID->encode();
+                    async_response_asyncSendMessageByNodeID(current, toTarsError(_error),
+                        std::vector<char>(encodedNodeID.begin(), encodedNodeID.end()),
+                        std::vector<char>(_data.begin(), _data.end()), _id);
+                });
+        }
+        else
+        {
+            m_front->asyncSendMessageByNodeID(moduleID, bcosNodeID,
+                bcos::bytesConstRef((bcos::byte*)data.data(), data.size()), timeout,
+                [current](bcos::Error::Ptr _error, bcos::crypto::NodeIDPtr _nodeID,
+                    bcos::bytesConstRef _data, const std::string& _id,
+                    bcos::front::ResponseFunc _respFunc) {
+                    boost::ignore_unused(_error, _nodeID, _data, _id, _respFunc);
+                });
+
+            // response directly
+            bcos::bytesConstRef respData;
+            async_response_asyncSendMessageByNodeID(current, toTarsError(nullptr),
+                std::vector<char>(nodeID.begin(), nodeID.end()),
+                std::vector<char>(respData.begin(), respData.end()), seq);
+        }
 
         return bcostars::Error();
     }
@@ -319,8 +386,8 @@ public:
 private:
     static std::once_flag m_onceFlag;
     static bcos::front::FrontServiceInterface::Ptr m_front;
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     std::atomic_bool m_running = {false};
     static bcos::crypto::KeyFactory::Ptr m_keyFactory;
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
 };
 }  // namespace bcostars

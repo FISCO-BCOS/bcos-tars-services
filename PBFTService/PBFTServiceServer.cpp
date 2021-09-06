@@ -20,10 +20,10 @@
  */
 
 #include "PBFTServiceServer.h"
-#include "../Common/ErrorConverter.h"
 #include "../Common/TarsUtils.h"
 #include "../DispatcherService/DispatcherServiceClient.h"
 #include "../FrontService/FrontServiceClient.h"
+#include "../RpcService/RpcServiceClient.h"
 #include "../StorageService/StorageServiceClient.h"
 #include "../TxPoolService/TxPoolServiceClient.h"
 #include "../protocols/BlockImpl.h"
@@ -93,10 +93,6 @@ void PBFTServiceServer::destroy()
         PBFTSERVICE_LOG(INFO) << LOG_DESC("stop the ledger");
         m_ledger->stop();
     }
-    if (m_logInitializer)
-    {
-        m_logInitializer->stopLogging();
-    }
     TLOGINFO(LOG_DESC("Stop the PBFTService success") << std::endl);
 }
 
@@ -156,6 +152,7 @@ void PBFTServiceServer::init()
     // Note: the executor module init the genesis block
     auto ledger =
         std::make_shared<bcos::ledger::Ledger>(m_protocolInitializer->blockFactory(), m_storage);
+
     m_ledger = ledger;
     // create the txpool client only
     createTxPool(nodeConfig);
@@ -201,6 +198,20 @@ void PBFTServiceServer::registerHandlers()
                                          std::function<void(bcos::Error::Ptr)> _onRecv) {
         blockSync->asyncNotifyNewBlock(_ledgerConfig, _onRecv);
     });
+
+    // register block number notify
+    PBFTSERVICE_LOG(INFO) << LOG_DESC("init rpc client");
+    auto rpcServicePrx = Application::getCommunicator()->stringToProxy<bcostars::RpcServicePrx>(
+        getProxyDesc(RPC_SERVICE_NAME));
+    auto rpcServiceClient = std::make_shared<bcostars::RpcServiceClient>(rpcServicePrx);
+    PBFTSERVICE_LOG(INFO) << LOG_DESC("init rpc client success");
+    // register blockNumber notify
+    m_ledger->registerCommittedBlockNotifier(
+        [rpcServiceClient](bcos::protocol::BlockNumber _blockNumber,
+            std::function<void(bcos::Error::Ptr)> _callback) {
+            rpcServiceClient->asyncNotifyBlockNumber(_blockNumber, _callback);
+        });
+    PBFTSERVICE_LOG(INFO) << LOG_DESC("registerCommittedBlockNotifier success");
 }
 
 void PBFTServiceServer::createTxPool(bcos::tool::NodeConfig::Ptr _nodeConfig)
@@ -326,9 +337,9 @@ Error PBFTServiceServer::asyncNotifyNewBlock(
     return bcostars::Error();
 }
 
-Error PBFTServiceServer::asyncSubmitProposal(const vector<tars::Char>& _proposalData,
-    tars::Int64 _proposalIndex, const vector<tars::Char>& _proposalHash,
-    tars::TarsCurrentPtr _current)
+Error PBFTServiceServer::asyncSubmitProposal(bool _containSysTxs,
+    const vector<tars::Char>& _proposalData, tars::Int64 _proposalIndex,
+    const vector<tars::Char>& _proposalHash, tars::TarsCurrentPtr _current)
 {
     _current->setResponse(false);
     auto proposalHash = bcos::crypto::HashType();
@@ -337,7 +348,7 @@ Error PBFTServiceServer::asyncSubmitProposal(const vector<tars::Char>& _proposal
         proposalHash = bcos::crypto::HashType(
             (const bcos::byte*)_proposalHash.data(), bcos::crypto::HashType::size);
     }
-    m_pbft->asyncSubmitProposal(
+    m_pbft->asyncSubmitProposal(_containSysTxs,
         bcos::bytesConstRef((const bcos::byte*)_proposalData.data(), _proposalData.size()),
         _proposalIndex, proposalHash, [_current](bcos::Error::Ptr _error) {
             async_response_asyncSubmitProposal(_current, toTarsError(_error));

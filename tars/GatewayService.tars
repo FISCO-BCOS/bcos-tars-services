@@ -8,5 +8,6 @@ module bcostars {
 
         Error asyncSendBroadcastMessage(string groupID, vector<byte> srcNodeID, vector<byte> payload);
         Error asyncGetPeers(out string peers);
+        Error asyncGetNodeIDs(string groupID, out vector<vector<byte>> nodeIDs);
     };
 };

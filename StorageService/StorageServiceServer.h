@@ -71,21 +71,22 @@ public:
             STORAGESERVICE_LOG(INFO) << LOG_DESC("init protocol success");
 
 
-            auto storagePath = ServerConfig::BasePath + nodeConfig->storagePath();
+            auto storagePath = ServerConfig::BasePath + "../" + nodeConfig->groupId() + "/" +
+                               nodeConfig->storagePath();
             STORAGESERVICE_LOG(INFO)
                 << LOG_DESC("open DB") << LOG_KV("storageDBName", nodeConfig->storageDBName())
                 << LOG_KV("stateDBName", nodeConfig->stateDBName())
-                << LOG_KV("storagePath", storagePath);
+                << LOG_KV("storagePath", storagePath) << LOG_KV("group", nodeConfig->groupId());
             bcos::storage::RocksDBAdapterFactory rocksdbAdapterFactory(storagePath);
             auto ret = rocksdbAdapterFactory.createRocksDB(
-                nodeConfig->storageDBName(), bcos::storage::RocksDBAdapter::TABLE_PERFIX_LENGTH);
+                nodeConfig->storageDBName(), bcos::storage::RocksDBAdapter::TABLE_PREFIX_LENGTH);
             if (!ret.first)
             {
                 throw std::runtime_error("createRocksDB failed!");
             }
             auto kvDB = std::make_shared<bcos::storage::KVDBImpl>(ret.first);
             auto adapter = rocksdbAdapterFactory.createAdapter(
-                nodeConfig->stateDBName(), bcos::storage::RocksDBAdapter::TABLE_PERFIX_LENGTH);
+                nodeConfig->stateDBName(), bcos::storage::RocksDBAdapter::TABLE_PREFIX_LENGTH);
             auto storageImpl = std::make_shared<bcos::storage::StorageImpl>(adapter, kvDB);
             storageImpl->disableCache();
             m_storage = storageImpl;
@@ -129,10 +130,6 @@ public:
         if (m_storage)
         {
             m_storage->stop();
-        }
-        if (m_logInitializer)
-        {
-            m_logInitializer->stopLogging();
         }
     }
 
@@ -339,9 +336,9 @@ public:
 private:
     static std::once_flag m_storageFlag;
     static bcos::storage::StorageInterface::Ptr m_storage;
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     static bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
     static std::atomic_bool m_stopped;
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
 };
 
 }  // namespace bcostars

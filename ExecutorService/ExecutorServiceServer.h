@@ -3,6 +3,7 @@
 #include "../Common/ErrorConverter.h"
 #include "../Common/TarsUtils.h"
 #include "../DispatcherService/DispatcherServiceClient.h"
+#include "../RpcService/RpcServiceClient.h"
 #include "../StorageService/StorageServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include "../protocols/BlockImpl.h"
@@ -59,10 +60,6 @@ public:
         if (m_executor)
         {
             m_executor->stop();
-        }
-        if (m_logInitializer)
-        {
-            m_logInitializer->stopLogging();
         }
         TLOGINFO(LOG_DESC("[ExecutorService] stop the ExecutoreSerivce success") << std::endl);
     }
@@ -121,6 +118,9 @@ public:
             auto dispatcherProxy =
                 Application::getCommunicator()->stringToProxy<bcostars::DispatcherServicePrx>(
                     getProxyDesc(DISPATCHER_SERVICE_NAME));
+            // add timeout here in case of frequently timeout when calling asyncGetLatestBlock
+            dispatcherProxy->tars_timeout(600000);
+            dispatcherProxy->tars_async_timeout(600000);
             auto dispatcher = std::make_shared<bcostars::DispatcherServiceClient>(
                 dispatcherProxy, protocolInitializer->blockFactory());
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init dispatcher client success");
@@ -191,7 +191,7 @@ private:
     static std::once_flag m_initFlag;
     static std::shared_ptr<bcos::executor::ExecutorInterface> m_executor;
     static bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
     std::atomic_bool m_stopped = {false};
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
 };
 }  // namespace bcostars

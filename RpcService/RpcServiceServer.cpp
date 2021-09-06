@@ -1,9 +1,13 @@
 #include "RpcServiceServer.h"
+#include "../FrontService/FrontServiceClient.h"
+#include <bcos-framework/libutilities/Log.h>
+#include <memory>
 using namespace bcostars;
 
 std::once_flag RpcServiceServer::m_initFlag;
+bcos::rpc::Rpc::Ptr RpcServiceServer::m_rpc;
 bcos::BoostLogInitializer::Ptr RpcServiceServer::m_logInitializer;
-bcos::rpc::RPCInterface::Ptr RpcServiceServer::m_rpcInterface;
+bcos::crypto::KeyFactory::Ptr RpcServiceServer::m_keyFactory;
 std::atomic_bool RpcServiceServer::m_running = {false};
 
 void RpcServiceServer::initialize()
@@ -33,16 +37,10 @@ void RpcServiceServer::destroy()
     m_running = false;
     RPCSERVICE_LOG(INFO) << LOG_DESC("Stop the RpcService");
 
-    if (m_rpcInterface)
+    if (m_rpc)
     {
-        m_rpcInterface->stop();
+        m_rpc->stop();
     }
-
-    if (m_logInitializer)
-    {
-        m_logInitializer->stopLogging();
-    }
-
     TLOGINFO(LOG_DESC("[RpcService] Stop the RpcService success") << std::endl);
 }
 
@@ -80,15 +78,38 @@ void RpcServiceServer::init()
     nodeInfo->groupID = nodeConfig->groupId();
     nodeInfo->isWasm = nodeConfig->isWasm();
     nodeInfo->isSM = nodeConfig->smCryptoType();
-    // TODO: init node info
+
+    RPCSERVICE_LOG(INFO) << LOG_DESC("init node id");
+    auto protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
+    protocolInitializer->init(nodeConfig);
+    auto privateKeyPath = ServerConfig::BasePath + "node.pem";
+    protocolInitializer->loadKeyPair(privateKeyPath);
+
+    std::string nodeID = protocolInitializer->keyPair()->publicKey()->hex();
+    nodeInfo->nodeID = nodeID;
+    RPCSERVICE_LOG(INFO) << LOG_DESC("init node id success") << LOG_KV("nodeID", nodeID);
+
+#ifdef FISCO_BCOS_PROJECT_VERSION
+    nodeInfo->version = FISCO_BCOS_PROJECT_VERSION;
+#endif
+#ifdef FISCO_BCOS_BUILD_TIME
+    nodeInfo->buildTime = FISCO_BCOS_BUILD_TIME;
+#endif
+#ifdef FISCO_BCOS_COMMIT_HASH
+    nodeInfo->gitCommitHash = FISCO_BCOS_COMMIT_HASH;
+#endif
 
     RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc factory");
     auto factory = initRpcFactory(nodeConfig);
     RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc factory success");
 
+    RPCSERVICE_LOG(INFO) << LOG_DESC("init keyFactory");
+    m_keyFactory = factory->keyFactory();
+
     RPCSERVICE_LOG(INFO) << LOG_DESC("start rpc");
-    m_rpcInterface = factory->buildRpc(*config, *nodeInfo);
-    m_rpcInterface->start();
+    auto rpc = factory->buildRpc(*config, *nodeInfo);
+    m_rpc = rpc;
+    m_rpc->start();
     RPCSERVICE_LOG(INFO) << LOG_DESC("start rpc success");
 
     TLOGINFO(RPCSERVICE_BADGE << LOG_DESC("the rpc service success") << std::endl);
@@ -126,11 +147,17 @@ bcos::rpc::RpcFactory::Ptr RpcServiceServer::initRpcFactory(bcos::tool::NodeConf
     protocolInitializer->init(nodeConfig);
     RPCSERVICE_LOG(INFO) << LOG_DESC("init protocol success");
 
-    // gateway
-    auto gateWayProxy = Application::getCommunicator()->stringToProxy<GatewayServicePrx>(
+    // set the gateway interface
+    auto gatewayProxy = Application::getCommunicator()->stringToProxy<GatewayServicePrx>(
         getProxyDesc(GATEWAY_SERVICE_NAME));
-    bcos::gateway::GatewayInterface::Ptr gateway =
-        std::make_shared<GatewayServiceClient>(gateWayProxy);
+    auto gateway =
+        std::make_shared<GatewayServiceClient>(gatewayProxy, protocolInitializer->keyFactory());
+
+    auto frontServiceProxy =
+        Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
+            getProxyDesc(FRONT_SERVICE_NAME));
+    auto frontService = std::make_shared<bcostars::FrontServiceClient>(
+        frontServiceProxy, protocolInitializer->keyFactory());
 
     // pbft
     auto pbftProxy = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
@@ -164,8 +191,11 @@ bcos::rpc::RpcFactory::Ptr RpcServiceServer::initRpcFactory(bcos::tool::NodeConf
     factory->setConsensusInterface(pbft);
     factory->setTxPoolInterface(txpool);
     factory->setExecutorInterface(executor);
+    factory->setFrontServiceInterface(frontService);
     factory->setLedger(ledger);
     factory->setTransactionFactory(protocolInitializer->blockFactory()->transactionFactory());
+    factory->setKeyFactory(protocolInitializer->keyFactory());
+    factory->checkParams();
 
     RPCSERVICE_LOG(INFO) << LOG_DESC("create rpc factory success");
     return factory;
@@ -176,12 +206,55 @@ bcostars::Error RpcServiceServer::asyncNotifyBlockNumber(
 {
     current->setResponse(false);
 
-    m_rpcInterface->asyncNotifyBlockNumber(
-        blockNumber, [current, blockNumber](bcos::Error::Ptr _error) {
-            RPCSERVICE_LOG(DEBUG) << LOG_DESC("asyncNotifyBlockNumber")
-                                  << LOG_KV("blockNumber", blockNumber)
+    m_rpc->asyncNotifyBlockNumber(blockNumber, [current, blockNumber](bcos::Error::Ptr _error) {
+        RPCSERVICE_LOG(DEBUG) << LOG_BADGE("asyncNotifyBlockNumber")
+                              << LOG_KV("blockNumber", blockNumber)
+                              << LOG_KV("errorCode", _error ? _error->errorCode() : 0)
+                              << LOG_KV("errorMessage", _error ? _error->errorMessage() : "");
+        async_response_asyncNotifyBlockNumber(current, toTarsError(_error));
+    });
+
+    return bcostars::Error();
+}
+
+bcostars::Error RpcServiceServer::asyncNotifyAmopNodeIDs(
+    const vector<vector<tars::Char> >& _nodeIDs, tars::TarsCurrentPtr current)
+{
+    current->setResponse(false);
+    std::shared_ptr<bcos::crypto::NodeIDs> nodeIDs = std::make_shared<bcos::crypto::NodeIDs>();
+    for (const auto& nodeID : _nodeIDs)
+    {
+        auto nodeIDPtr = m_keyFactory->createKey(
+            bcos::bytesConstRef((const bcos::byte*)nodeID.data(), nodeID.size()));
+        nodeIDs->push_back(nodeIDPtr);
+    }
+
+    m_rpc->asyncNotifyAmopNodeIDs(nodeIDs, [current, nodeIDs](bcos::Error::Ptr _error) {
+        RPCSERVICE_LOG(DEBUG) << LOG_BADGE("asyncNotifyAmopNodeIDs")
+                              << LOG_KV("nodeIDs size", nodeIDs->size())
+                              << LOG_KV("errorCode", _error ? _error->errorCode() : 0)
+                              << LOG_KV("errorMessage", _error ? _error->errorMessage() : "");
+        async_response_asyncNotifyAmopNodeIDs(current, toTarsError(_error));
+    });
+
+    return bcostars::Error();
+}
+
+bcostars::Error RpcServiceServer::asyncNotifyAmopMessage(const vector<tars::Char>& _nodeID,
+    const std::string& _uuid, const vector<tars::Char>& _data, tars::TarsCurrentPtr current)
+{
+    current->setResponse(false);
+    auto nodeIDPtr = m_keyFactory->createKey(
+        bcos::bytesConstRef((const bcos::byte*)_nodeID.data(), _nodeID.size()));
+    m_rpc->asyncNotifyAmopMessage(nodeIDPtr, _uuid,
+        bcos::bytesConstRef((bcos::byte*)_data.data(), _data.size()),
+        [current, nodeIDPtr](bcos::Error::Ptr _error) {
+            RPCSERVICE_LOG(TRACE) << LOG_BADGE("asyncNotifyAmopMessage")
+                                  << LOG_KV("nodeID", nodeIDPtr->hex())
                                   << LOG_KV("errorCode", _error ? _error->errorCode() : 0)
                                   << LOG_KV("errorMessage", _error ? _error->errorMessage() : "");
-            async_response_asyncNotifyBlockNumber(current, toTarsError(_error));
+            async_response_asyncNotifyAmopMessage(current, toTarsError(_error));
         });
+
+    return bcostars::Error();
 }

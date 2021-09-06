@@ -22,6 +22,7 @@
 #pragma once
 
 
+#include "../Common/ErrorConverter.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include "PBFTService.h"
 #include "servant/Application.h"
@@ -77,9 +78,29 @@ public:
         const bcostars::LedgerConfig& _ledgerConfig, tars::TarsCurrentPtr _current) override;
 
     // Note: since the sealer module is intergrated with the PBFT, the interface is useless now
-    bcostars::Error asyncSubmitProposal(const vector<tars::Char>& _proposalData,
-        tars::Int64 _proposalIndex, const vector<tars::Char>& _proposalHash,
-        tars::TarsCurrentPtr _current) override;
+    bcostars::Error asyncSubmitProposal(bool _containSysTxs,
+        const vector<tars::Char>& _proposalData, tars::Int64 _proposalIndex,
+        const vector<tars::Char>& _proposalHash, tars::TarsCurrentPtr _current) override;
+
+    bcostars::Error asyncNotifyConnectedNodes(
+        const vector<vector<tars::Char>>& connectedNodes, tars::TarsCurrentPtr current) override
+    {
+        current->setResponse(false);
+
+        bcos::crypto::NodeIDSet bcosNodeIDSet;
+        for (auto const& it : connectedNodes)
+        {
+            bcosNodeIDSet.insert(m_protocolInitializer->cryptoSuite()->keyFactory()->createKey(
+                bcos::bytesConstRef((const bcos::byte*)it.data(), it.size())));
+        }
+
+        m_blockSync->config()->notifyConnectedNodes(
+            bcosNodeIDSet, [current](bcos::Error::Ptr error) {
+                async_response_asyncNotifyConnectedNodes(current, bcostars::toTarsError(error));
+            });
+
+        return bcostars::Error();
+    }
 
 protected:
     virtual void registerHandlers();
@@ -108,10 +129,10 @@ private:
 
     static std::shared_ptr<bcos::ledger::Ledger> m_ledger;
     static bcos::crypto::KeyFactory::Ptr m_keyFactory;
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
 
     std::atomic_bool m_running = {false};
     static std::once_flag m_initFlag;
+    static bcos::BoostLogInitializer::Ptr m_logInitializer;
 };
 
 }  // namespace bcostars
