@@ -20,7 +20,8 @@ public:
 
     void asyncExecuteBlock(const bcos::protocol::Block::Ptr& _block, bool _verify,
         std::function<void(const bcos::Error::Ptr&, const bcos::protocol::BlockHeader::Ptr&)>
-            _callback) override
+            _callback,
+        ssize_t _timeout = -1) override
     {
         class Callback : public bcostars::DispatcherServicePrxCallback
         {
@@ -52,7 +53,13 @@ public:
             bcos::protocol::BlockHeaderFactory::Ptr m_blockHeaderFactory;
         };
 
-        m_proxy->async_asyncExecuteBlock(
+        // without  large timeout
+        ssize_t timeout = 600000;
+        if (_timeout != -1)
+        {
+            timeout = _timeout;
+        }
+        m_proxy->tars_set_timeout(timeout)->async_asyncExecuteBlock(
             new Callback(_callback, m_blockFactory->blockHeaderFactory()),
             std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(_block)->inner(), _verify);
     }
