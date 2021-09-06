@@ -141,9 +141,6 @@ void PBFTServiceServer::init()
     auto dispatcherProxy =
         Application::getCommunicator()->stringToProxy<bcostars::DispatcherServicePrx>(
             getProxyDesc(DISPATCHER_SERVICE_NAME));
-    // TODO: make this configuable
-    dispatcherProxy->tars_timeout(600000);
-    dispatcherProxy->tars_async_timeout(600000);
 
     m_dispatcher = std::make_shared<bcostars::DispatcherServiceClient>(
         dispatcherProxy, m_protocolInitializer->blockFactory());

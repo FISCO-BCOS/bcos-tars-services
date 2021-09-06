@@ -358,10 +358,11 @@ public:
         bcos::consensus::ConsensusNodeList bcosNodeList;
         for (auto const& it : consensusNodeList)
         {
-            bcos::consensus::ConsensusNode node(
+            auto node = std::make_shared<bcos::consensus::ConsensusNode>(
                 m_cryptoSuite->keyFactory()->createKey(
                     bcos::bytesConstRef((const bcos::byte*)it.nodeID.data(), it.nodeID.size())),
                 it.weight);
+            bcosNodeList.emplace_back(node);
         }
 
         m_txpool->notifyConsensusNodeList(bcosNodeList, [current](bcos::Error::Ptr error) {
@@ -379,10 +380,11 @@ public:
         bcos::consensus::ConsensusNodeList bcosObserverNodeList;
         for (auto const& it : observerNodeList)
         {
-            bcos::consensus::ConsensusNode node(
+            auto node = std::make_shared<bcos::consensus::ConsensusNode>(
                 m_cryptoSuite->keyFactory()->createKey(
                     bcos::bytesConstRef((const bcos::byte*)it.nodeID.data(), it.nodeID.size())),
                 it.weight);
+            bcosObserverNodeList.emplace_back(node);
         }
 
         m_txpool->notifyObserverNodeList(bcosObserverNodeList, [current](bcos::Error::Ptr error) {
