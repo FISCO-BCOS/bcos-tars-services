@@ -1,7 +1,7 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-    URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/273df9e03d6484c013bd96c1d25eb1a12458f452.tar.gz
-    SHA1 e8e001408b185695a2de2724cb6bb2779efb3211
+    URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/7daefa6c031a80b70557e8a6bf04fc05d6a9828a.tar.gz
+    SHA1 b4f93eb69ee43a168e444749c6b65d101e8ed31d
     CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON #DEBUG=ON
 )
 
@@ -24,13 +24,13 @@ hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
 )
 
 hunter_config(bcos-pbft VERSION 3.0.0-local-a2a9f7d2
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/1cdf40d1a8bd8179ed286b2ba4fa685fd45c1f51.tar.gz"
-    SHA1 b82f0b0b99348ff4e06d6d4bee83122cd9733397
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/00af3c2c7a08421ecea061d55d8e8ab7d237f4d6.tar.gz"
+    SHA1 36963a4ddfd3d5f0acabc8489ea71d32c89b774b
 )
 
 hunter_config(bcos-sync VERSION 3.0.0-local-50e0e264
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/5d0467533bd3aa8fb277167fb89f58d2c8f109fe.tar.gz"
-    SHA1 336c7bfc65fed46c78d08d392201594d56413548
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/b42400f16e82d2d64d52ca58b92db85990c42ebc.tar.gz"
+    SHA1 638747029884582590bf3c7ab7e9af0015ad109b
 )
 
 hunter_config(rocksdb VERSION 6.20.3
