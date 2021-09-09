@@ -284,12 +284,7 @@ public:
         else
         {
             m_front->asyncSendMessageByNodeID(moduleID, bcosNodeID,
-                bcos::bytesConstRef((bcos::byte*)data.data(), data.size()), timeout,
-                [current](bcos::Error::Ptr _error, bcos::crypto::NodeIDPtr _nodeID,
-                    bcos::bytesConstRef _data, const std::string& _id,
-                    bcos::front::ResponseFunc _respFunc) {
-                    boost::ignore_unused(_error, _nodeID, _data, _id, _respFunc);
-                });
+                bcos::bytesConstRef((bcos::byte*)data.data(), data.size()), timeout, nullptr);
 
             // response directly
             bcos::bytesConstRef respData;
