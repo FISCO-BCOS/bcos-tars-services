@@ -1,8 +1,8 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-    URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/7daefa6c031a80b70557e8a6bf04fc05d6a9828a.tar.gz
-    SHA1 b4f93eb69ee43a168e444749c6b65d101e8ed31d
-    CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON HUNTER_KEEP_PACKAGE_SOURCES=ON #DEBUG=ON
+    URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/b0d97068b7b4169b02dc9fa2870b3190b3dd3ae1.tar.gz
+    SHA1 02acb50644bdc3f16bd55d599d44ce794e4535ac
+    CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON HUNTER_KEEP_PACKAGE_SOURCES=ON  #DEBUG=ON
 )
 
 hunter_config(wedpr-crypto VERSION 1.1.0-10f314de
@@ -19,21 +19,21 @@ hunter_config(bcos-crypto
 )
 
 hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/0831b89f4e64c5a11ca0ece3f14d4fa11a8a15b4.tar.gz"
-    SHA1 578b76a1fd5625eaf5ae1f30e0fb4fa5cbbd61d4
-    CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/7485470c370b2bf58013453db8169e2f725c5c0c.tar.gz"
+    SHA1 cb595b14e0ccdec70e9a9fde0887e55a74b295d4
+    CMAKE_ARGS URL_BASE=${URL_BASE}  HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
 hunter_config(bcos-pbft VERSION 3.0.0-local-a2a9f7d2
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/e08b53f3ca1a9dc66a69e63a3e43ff89646ded2e.tar.gz"
-    SHA1 4b9e1b4f1e24e3edf4a78520f76fe18261e9803e
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/19e45a5325c792ac49ce7e90c74117485b6d6273.tar.gz"
+    SHA1 c13badcf61ee71d001bae2afd76c2453bd97680b
     CMAKE_ARGS URL_BASE=${URL_BASE}  HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
 hunter_config(bcos-sync VERSION 3.0.0-local-50e0e264
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/b42400f16e82d2d64d52ca58b92db85990c42ebc.tar.gz"
-    SHA1 638747029884582590bf3c7ab7e9af0015ad109b
-    CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/67c136768c14b235749815fbb0617bf2702c41d2.tar.gz"
+    SHA1 8e3f3071ebc52e2aae6782cb1ea27f342a1f970b
+    CMAKE_ARGS URL_BASE=${URL_BASE}  HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
 hunter_config(rocksdb VERSION 6.20.3
