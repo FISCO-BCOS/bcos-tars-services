@@ -52,15 +52,29 @@ public:
                 m_callback;
             bcos::protocol::BlockHeaderFactory::Ptr m_blockHeaderFactory;
         };
-
-        // without  large timeout
-        ssize_t timeout = 600000;
+        // default timeout is 3s
+        ssize_t timeout = 3000;
         if (_timeout != -1)
         {
             timeout = _timeout;
         }
+        auto wrapperCallback = [this, timeout, _block, _verify, _callback](
+                                   const bcos::Error::Ptr& _ret,
+                                   const bcos::protocol::BlockHeader::Ptr& _blockHeader) {
+            // timeout and retry
+            if (_ret && (_ret->errorCode() == tars::TARSASYNCCALLTIMEOUT ||
+                            _ret->errorCode() == tars::TARSINVOKETIMEOUT))
+            {
+                BCOS_LOG(WARNING) << LOG_DESC("call asyncExecuteBlock timeout, retry")
+                                  << LOG_KV("consNum", _block->blockHeader()->number())
+                                  << LOG_KV("hash", _block->blockHeader()->hash().abridged());
+                asyncExecuteBlock(_block, _verify, _callback, timeout);
+                return;
+            }
+            _callback(_ret, _blockHeader);
+        };
         m_proxy->tars_set_timeout(timeout)->async_asyncExecuteBlock(
-            new Callback(_callback, m_blockFactory->blockHeaderFactory()),
+            new Callback(wrapperCallback, m_blockFactory->blockHeaderFactory()),
             std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(_block)->inner(), _verify);
     }
 
@@ -83,9 +97,12 @@ public:
                 auto bcosBlock = m_blockFactory->createBlock();
                 std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(bcosBlock)->setInner(
                     std::move(*const_cast<bcostars::Block*>(&block)));
-                BCOS_LOG(INFO) << LOG_DESC("callback_asyncGetLatestBlock")
-                               << LOG_KV("number", bcosBlock->blockHeader()->number())
-                               << LOG_KV("hash", bcosBlock->blockHeader()->hash().abridged());
+                if (bcosBlock->blockHeader()->number() > 0)
+                {
+                    BCOS_LOG(INFO) << LOG_DESC("callback_asyncGetLatestBlock")
+                                   << LOG_KV("number", bcosBlock->blockHeader()->number())
+                                   << LOG_KV("hash", bcosBlock->blockHeader()->hash().abridged());
+                }
                 m_callback(toBcosError(ret), bcosBlock);
             }
 
@@ -100,7 +117,8 @@ public:
                 m_callback;
             bcos::protocol::BlockFactory::Ptr m_blockFactory;
         };
-        m_proxy->async_asyncGetLatestBlock(new Callback(_callback, m_blockFactory));
+        m_proxy->tars_set_timeout(600000)->async_asyncGetLatestBlock(
+            new Callback(_callback, m_blockFactory));
     }
 
     void asyncNotifyExecutionResult(const bcos::Error::Ptr& _error,
