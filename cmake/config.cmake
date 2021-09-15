@@ -1,8 +1,8 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-    URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/b0d97068b7b4169b02dc9fa2870b3190b3dd3ae1.tar.gz
-    SHA1 02acb50644bdc3f16bd55d599d44ce794e4535ac
-    CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON HUNTER_KEEP_PACKAGE_SOURCES=ON  #DEBUG=ON
+    URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/4b55beb9b1673576f567b30701175ef0703b338f.tar.gz
+    SHA1 32ca619e2ecb572f6a44739eeeb03bb635bfa356
+    CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON HUNTER_KEEP_PACKAGE_SOURCES=ON #DEBUG=ON
 )
 
 hunter_config(wedpr-crypto VERSION 1.1.0-10f314de
@@ -19,14 +19,14 @@ hunter_config(bcos-crypto
 )
 
 hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/7485470c370b2bf58013453db8169e2f725c5c0c.tar.gz"
-    SHA1 cb595b14e0ccdec70e9a9fde0887e55a74b295d4
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/442483312ec8d4b81201b4f3ba63d313e403fd8e.tar.gz"
+    SHA1 aba56283dc75d0c213fd6d1260cfa9d98448592d
     CMAKE_ARGS URL_BASE=${URL_BASE}  HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
 hunter_config(bcos-pbft VERSION 3.0.0-local-a2a9f7d2
-    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/19e45a5325c792ac49ce7e90c74117485b6d6273.tar.gz"
-    SHA1 c13badcf61ee71d001bae2afd76c2453bd97680b
+    URL "https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/a65549b8fbe4109a421e902c68dfc8edcac177a5.tar.gz"
+    SHA1 0ce75fb831a9a0b54f2dd991909121617f7e3829
     CMAKE_ARGS URL_BASE=${URL_BASE}  HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
