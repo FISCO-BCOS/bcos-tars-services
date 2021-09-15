@@ -6,7 +6,6 @@
 #include "../PBFTService/PBFTServiceClient.h"
 #include "../StorageService/StorageServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
-#include "servant/Servant.h"
 #include <bcos-framework/interfaces/consensus/ConsensusNode.h>
 #include <bcos-framework/interfaces/crypto/CommonType.h>
 #include <bcos-framework/interfaces/crypto/Hash.h>
@@ -22,6 +21,7 @@
 #include <bcos-tars-protocol/TxPoolService.h>
 #include <bcos-txpool/TxPool.h>
 #include <bcos-txpool/TxPoolFactory.h>
+#include <tarscpp/servant/Servant.h>
 #include <memory>
 
 #define TXPOOLSERVICE_LOG(LEVEL) BCOS_LOG(LEVEL) << "[TXPOOLSERVICE]"

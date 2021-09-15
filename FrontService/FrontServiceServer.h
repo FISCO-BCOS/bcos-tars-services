@@ -9,8 +9,6 @@
 #include "../libinitializer/ProtocolInitializer.h"
 #include "libutilities/Common.h"
 #include "libutilities/Log.h"
-#include "servant/Communicator.h"
-#include "servant/Global.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 #include <bcos-framework/interfaces/crypto/KeyFactory.h>
 #include <bcos-framework/interfaces/crypto/KeyInterface.h>
@@ -21,6 +19,8 @@
 #include <bcos-front/FrontService.h>
 #include <bcos-front/FrontServiceFactory.h>
 #include <bcos-tars-protocol/FrontService.h>
+#include <tarscpp/servant/Communicator.h>
+#include <tarscpp/servant/Global.h>
 #include <boost/core/ignore_unused.hpp>
 
 #define FRONTSERVICE_LOG(LEVEL) BCOS_LOG(LEVEL) << "[FRONTSERVICE]"

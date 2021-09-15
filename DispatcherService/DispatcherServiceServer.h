@@ -3,12 +3,12 @@
 #include "../Common/TarsUtils.h"
 #include "../TxPoolService/TxPoolServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
-#include "servant/Application.h"
 #include <bcos-dispatcher/DispatcherImpl.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <bcos-tars-protocol/BlockFactoryImpl.h>
 #include <bcos-tars-protocol/DispatcherService.h>
+#include <tarscpp/servant/Application.h>
 #include <memory>
 
 

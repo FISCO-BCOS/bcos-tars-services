@@ -8,7 +8,6 @@
 #include "../StorageService/StorageServiceClient.h"
 #include "../TxPoolService/TxPoolServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
-#include "servant/Servant.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 #include <bcos-framework/interfaces/amop/AMOPInterface.h>
 #include <bcos-framework/interfaces/rpc/RPCInterface.h>
@@ -23,6 +22,7 @@
 #include <bcos-tars-protocol/PBFTService.h>
 #include <bcos-tars-protocol/RpcService.h>
 #include <bcos-tars-protocol/StorageService.h>
+#include <tarscpp/servant/Servant.h>
 #include <memory>
 #include <utility>
 

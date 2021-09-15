@@ -24,8 +24,6 @@
 
 #include "../Common/ErrorConverter.h"
 #include "../libinitializer/ProtocolInitializer.h"
-#include "servant/Application.h"
-#include "servant/Communicator.h"
 #include <bcos-framework/interfaces/crypto/KeyFactory.h>
 #include <bcos-framework/libsealer/SealerFactory.h>
 #include <bcos-framework/libtool/NodeConfig.h>
@@ -35,6 +33,8 @@
 #include <bcos-sync/BlockSyncFactory.h>
 #include <bcos-tars-protocol/PBFTService.h>
 #include <bcos-txpool/TxPoolFactory.h>
+#include <tarscpp/servant/Application.h>
+#include <tarscpp/servant/Communicator.h>
 #include <mutex>
 
 #define PBFTSERVICE_LOG(LEVEL) BCOS_LOG(LEVEL) << "[PBFTSERVICE]"

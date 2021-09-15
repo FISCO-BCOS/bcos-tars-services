@@ -2,9 +2,9 @@
 
 #include "../Common/ErrorConverter.h"
 #include "bcos-framework/interfaces/gateway/GatewayInterface.h"
-#include "servant/RemoteLogger.h"
 #include <bcos-framework/interfaces/crypto/KeyFactory.h>
 #include <bcos-tars-protocol/GatewayService.h>
+#include <tarscpp/servant/RemoteLogger.h>
 #include <string>
 
 #define GATEWAYCLIENT_LOG(LEVEL) BCOS_LOG(LEVEL) << "[GATEWAYCLIENT][INITIALIZER]"
