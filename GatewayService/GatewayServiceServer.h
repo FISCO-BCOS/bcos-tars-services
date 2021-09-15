@@ -4,7 +4,6 @@
 #include "../Common/TarsUtils.h"
 #include "../FrontService/FrontServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
-#include "GatewayService.h"
 #include "libutilities/Common.h"
 #include "libutilities/Log.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
@@ -14,6 +13,7 @@
 #include <bcos-gateway/Gateway.h>
 #include <bcos-gateway/GatewayConfig.h>
 #include <bcos-gateway/GatewayFactory.h>
+#include <bcos-tars-protocol/GatewayService.h>
 #include <chrono>
 #include <mutex>
 
@@ -48,7 +48,7 @@ public:
 
     void init()
     {
-        std::call_once(m_initFlag, [this]() {
+        std::call_once(m_initFlag, []() {
             bcos::gateway::GatewayFactory factory;
             auto configPath = ServerConfig::BasePath + "config.ini";
 

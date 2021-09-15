@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Common.h"
 #include <bcos-framework/libutilities/Error.h>
+#include <bcos-tars-protocol/CommonProtocol.h>
 
 namespace bcostars
 {

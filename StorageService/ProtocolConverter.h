@@ -1,11 +1,11 @@
 #pragma once
 
 #include "../Common/ErrorConverter.h"
-#include "StorageService.h"
 #include "bcos-framework/interfaces/crypto/CryptoSuite.h"
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/interfaces/storage/TableInterface.h>
 #include <bcos-framework/libtable/TableFactory.h>
+#include <bcos-tars-protocol/StorageService.h>
 
 namespace bcostars
 {

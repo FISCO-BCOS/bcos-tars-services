@@ -19,14 +19,17 @@
  * @date 2021-06-10
  */
 #include "ProtocolInitializer.h"
-#include "../protocols/BlockImpl.h"
-#include "../protocols/TransactionSubmitResultImpl.h"
 #include <bcos-crypto/encrypt/AESCrypto.h>
 #include <bcos-crypto/encrypt/SM4Crypto.h>
 #include <bcos-crypto/hash/Keccak256.h>
 #include <bcos-crypto/hash/SM3.h>
 #include <bcos-crypto/signature/secp256k1/Secp256k1Crypto.h>
 #include <bcos-crypto/signature/sm2/SM2Crypto.h>
+#include <bcos-tars-protocol/BlockFactoryImpl.h>
+#include <bcos-tars-protocol/BlockHeaderFactoryImpl.h>
+#include <bcos-tars-protocol/TransactionFactoryImpl.h>
+#include <bcos-tars-protocol/TransactionReceiptFactoryImpl.h>
+#include <bcos-tars-protocol/TransactionSubmitResultFactoryImpl.h>
 
 using namespace bcos;
 using namespace bcostars::protocol;

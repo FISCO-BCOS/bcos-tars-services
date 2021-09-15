@@ -1,10 +1,10 @@
 #pragma once
 
 #include "ProtocolConverter.h"
-#include "StorageService.h"
 #include "bcos-framework/interfaces/storage/Common.h"
 #include "servant/Application.h"
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
+#include <bcos-tars-protocol/StorageService.h>
 #include <emmintrin.h>
 #include <exception>
 
@@ -165,9 +165,8 @@ public:
         {
         public:
             Callback(std::function<void(const bcos::Error::Ptr&, const bcos::storage::Entry::Ptr&)>
-                         callback,
-                StorageServiceClient* self)
-              : m_callback(callback), m_self(self){};
+                    callback)
+              : m_callback(callback){};
 
             void callback_getRow(const bcostars::Error& ret, const bcostars::Entry& row) override
             {
@@ -181,11 +180,10 @@ public:
         private:
             std::function<void(const bcos::Error::Ptr&, const bcos::storage::Entry::Ptr&)>
                 m_callback;
-            StorageServiceClient* m_self;
         };
 
         m_proxy->async_getRow(
-            new Callback(_callback, this), toTarsTableInfo(_tableInfo), std::string(_key));
+            new Callback(_callback), toTarsTableInfo(_tableInfo), std::string(_key));
     }
     virtual void asyncGetRows(const bcos::storage::TableInfo::Ptr& _tableInfo,
         const std::shared_ptr<std::vector<std::string>>& _keys,
