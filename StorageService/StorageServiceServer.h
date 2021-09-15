@@ -3,7 +3,6 @@
 #include "../Common/TarsUtils.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include "ProtocolConverter.h"
-#include "servant/Application.h"
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/interfaces/storage/TableInterface.h>
 #include <bcos-framework/libtable/TableFactory.h>
@@ -15,6 +14,7 @@
 #include <bcos-storage/RocksDBAdapterFactory.h>
 #include <bcos-storage/Storage.h>
 #include <bcos-tars-protocol/StorageService.h>
+#include <tarscpp/servant/Application.h>
 #include <memory>
 #include <mutex>
 #define STORAGESERVICE_LOG(LEVEL) BCOS_LOG(LEVEL) << "[StorageService][Initialize]"

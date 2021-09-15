@@ -4,9 +4,9 @@
 #include "../StorageService/StorageServiceServer.h"
 #include "bcos-framework/interfaces/storage/StorageInterface.h"
 #include "bcos-storage/Storage.h"
-#include "servant/Communicator.h"
 #include <bcos-tars-protocol/StorageService.h>
 #include <sys/stat.h>
+#include <tarscpp/servant/Communicator.h>
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
 #include <tbb/partitioner.h>

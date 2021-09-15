@@ -1,5 +1,5 @@
 #pragma once
-#include "servant/Application.h"
+#include <tarscpp/servant/Application.h>
 #include <string>
 
 namespace bcostars

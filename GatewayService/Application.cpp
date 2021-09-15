@@ -1,6 +1,6 @@
-#include "servant/Application.h"
 #include "../Common/TarsUtils.h"
 #include "GatewayServiceServer.h"
+#include <tarscpp/servant/Application.h>
 
 using namespace bcostars;
 
