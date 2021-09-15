@@ -19,15 +19,27 @@ list(APPEND CMAKE_MODULE_PATH ${BCOS_TARS_CMAKE_DIR})
 
 include(HunterGate)
 HunterGate(
-    URL "https://${URL_BASE}/FISCO-BCOS/hunter/archive/f88ce89a9fcd557b7fb2aa0f7abaa3c541dc6903.tar.gz"
-    SHA1 "b7792231bf64539602e696e32bfc163c9bc1812a"
+    URL "https://${URL_BASE}/FISCO-BCOS/hunter/archive/e427ab73280d9488bca736c53b8a52284896c759.tar.gz"
+    SHA1 "cd5b639d31eb775a5adda5f4d4a19b027d97d174"
     FILEPATH "${BCOS_TARS_CMAKE_DIR}/config.cmake"
 )
 
 project(Bcos-Tars-Service)
 
 # import dependencies
-include (Dependencies.cmake)
+include(InstallBcosFrameworkDependencies)
+include(InstallBcosCryptoDependencies)
+include(InstallBcosTxPoolDependencies)
+include(InstallBcosPBFTDependencies)
+include(InstallBcosStorageDependencies)
+include(InstallBcosLedgerDependencies)
+include(InstallBcosSyncDependencies)
+include(InstallBcosFrontDependencies)
+include(InstallBcosGateWayDependencies)
+include(InstallBcosRpcDependencies)
+include(InstallBcosDispatcherDependencies)
+include(InstallBcosTarsProtocolDependencies)
+include(ProjectBCOSExecutor)
 
 # copy .clang-format into the project path
 include(CopyClangFormat)
@@ -36,17 +48,8 @@ include_directories(${CMAKE_INSTALL_INCLUDEDIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-set(TARS_GENERATE_DIR ${CMAKE_CURRENT_BINARY_DIR})
-include_directories(${TARS_GENERATE_DIR}/tarscpp-install/thirdparty/include)
-link_directories(${TARS_GENERATE_DIR}/tarscpp-install/thirdparty/lib)
-
-set(TARS_HEADER_DIR ${CMAKE_CURRENT_BINARY_DIR}/tars-generated)
-include_directories(${TARS_HEADER_DIR})
-
 include(CompilerSettings)
 # import tars project
-add_subdirectory(tars)
-add_subdirectory(protocols)
 add_subdirectory(libinitializer)
 
 include(BuildInfoGenerator)

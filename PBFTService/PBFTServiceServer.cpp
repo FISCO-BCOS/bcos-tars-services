@@ -14,7 +14,7 @@
  *  limitations under the License.
  *
  * @brief server for the PBFTService
- * @file PBFTService.h
+ * @file PBFTServiceServer.h
  * @author: yujiechen
  * @date 2021-06-29
  */
@@ -26,10 +26,10 @@
 #include "../RpcService/RpcServiceClient.h"
 #include "../StorageService/StorageServiceClient.h"
 #include "../TxPoolService/TxPoolServiceClient.h"
-#include "../protocols/BlockImpl.h"
-#include "Common.h"
-#include "libutilities/Common.h"
+#include "PBFTService/Common.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
+#include <bcos-framework/libutilities/Common.h>
+#include <bcos-tars-protocol/BlockFactoryImpl.h>
 
 using namespace bcostars;
 using namespace bcos::crypto;

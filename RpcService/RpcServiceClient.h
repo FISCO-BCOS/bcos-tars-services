@@ -1,10 +1,10 @@
 #pragma once
 
 #include "../Common/ErrorConverter.h"
-#include "RpcService.h"
 #include <bcos-framework/interfaces/amop/AMOPInterface.h>
 #include <bcos-framework/interfaces/rpc/RPCInterface.h>
 #include <bcos-framework/libutilities/Common.h>
+#include <bcos-tars-protocol/RpcService.h>
 
 namespace bcostars
 {

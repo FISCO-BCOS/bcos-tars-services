@@ -7,7 +7,6 @@
 #include "../RpcService/RpcServiceClient.h"
 #include "../TxPoolService/TxPoolServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
-#include "FrontService.h"
 #include "libutilities/Common.h"
 #include "libutilities/Log.h"
 #include "servant/Communicator.h"
@@ -21,6 +20,7 @@
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <bcos-front/FrontService.h>
 #include <bcos-front/FrontServiceFactory.h>
+#include <bcos-tars-protocol/FrontService.h>
 #include <boost/core/ignore_unused.hpp>
 
 #define FRONTSERVICE_LOG(LEVEL) BCOS_LOG(LEVEL) << "[FRONTSERVICE]"
@@ -48,7 +48,7 @@ public:
 
     void init()
     {
-        std::call_once(m_onceFlag, [this]() {
+        std::call_once(m_onceFlag, []() {
             bcos::front::FrontServiceFactory frontServiceFactory;
             // load the config
             auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();

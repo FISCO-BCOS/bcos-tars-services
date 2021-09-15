@@ -20,8 +20,8 @@
  */
 
 #include "PBFTServiceClient.h"
-#include "../protocols/BlockImpl.h"
-#include "Common.h"
+#include "PBFTService/Common.h"
+#include <bcos-tars-protocol/BlockFactoryImpl.h>
 
 using namespace bcostars;
 

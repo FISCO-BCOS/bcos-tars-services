@@ -3,14 +3,12 @@
 #include "../Common/TarsUtils.h"
 #include "../TxPoolService/TxPoolServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
-#include "../protocols/BlockImpl.h"
-#include "DispatcherService.h"
-#include "bcos-crypto/hash/SM3.h"
-#include "bcos-crypto/signature/sm2/SM2Crypto.h"
-#include "bcos-dispatcher/DispatcherImpl.h"
 #include "servant/Application.h"
+#include <bcos-dispatcher/DispatcherImpl.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
+#include <bcos-tars-protocol/BlockFactoryImpl.h>
+#include <bcos-tars-protocol/DispatcherService.h>
 #include <memory>
 
 

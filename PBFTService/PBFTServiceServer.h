@@ -14,7 +14,7 @@
  *  limitations under the License.
  *
  * @brief server for the PBFTService
- * @file PBFTService.h
+ * @file PBFTServiceServers.h
  * @author: yujiechen
  * @date 2021-06-29
  */
@@ -24,7 +24,6 @@
 
 #include "../Common/ErrorConverter.h"
 #include "../libinitializer/ProtocolInitializer.h"
-#include "PBFTService.h"
 #include "servant/Application.h"
 #include "servant/Communicator.h"
 #include <bcos-framework/interfaces/crypto/KeyFactory.h>
@@ -34,6 +33,7 @@
 #include <bcos-ledger/libledger/Ledger.h>
 #include <bcos-pbft/pbft/PBFTFactory.h>
 #include <bcos-sync/BlockSyncFactory.h>
+#include <bcos-tars-protocol/PBFTService.h>
 #include <bcos-txpool/TxPoolFactory.h>
 #include <mutex>
 

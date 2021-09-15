@@ -7,10 +7,8 @@ find_package(Boost CONFIG QUIET REQUIRED program_options)
 
 add_executable(StorageServiceTestClient StorageServiceTestClient.cpp)
 target_compile_options(StorageServiceTestClient PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
-add_dependencies(StorageServiceTestClient StorageServiceClient bcostars)
-target_link_libraries(StorageServiceTestClient bcos-storage::bcos-storage bcos-framework::table Threads::Threads tarsservant tarsutil Boost::program_options)
+target_link_libraries(StorageServiceTestClient bcos-storage::bcos-storage bcos-framework::table Threads::Threads tarscpp::tarsservant tarscpp::tarsutil Boost::program_options)
 
 add_executable(TransactionTestClient TransactionTestClient.cpp)
 target_compile_options(TransactionTestClient PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
-add_dependencies(TransactionTestClient StorageServiceClient bcostars)
-target_link_libraries(TransactionTestClient bcos-ledger::bcos-ledger bcos-framework::table bcos-framework::tool bcos-framework::codec bcos-framework::protocol bcos-crypto::bcos-crypto tarsservant tarsutil Boost::program_options)
+target_link_libraries(TransactionTestClient bcos-ledger::bcos-ledger bcos-framework::table bcos-framework::tool bcos-framework::codec bcos-framework::protocol bcos-crypto::bcos-crypto tarscpp::tarsservant tarscpp::tarsutil bcos-tars-protocol::protocol-tars Boost::program_options)

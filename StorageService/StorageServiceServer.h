@@ -3,7 +3,6 @@
 #include "../Common/TarsUtils.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include "ProtocolConverter.h"
-#include "StorageService.h"
 #include "servant/Application.h"
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/interfaces/storage/TableInterface.h>
@@ -15,6 +14,7 @@
 #include <bcos-storage/RocksDBAdapter.h>
 #include <bcos-storage/RocksDBAdapterFactory.h>
 #include <bcos-storage/Storage.h>
+#include <bcos-tars-protocol/StorageService.h>
 #include <memory>
 #include <mutex>
 #define STORAGESERVICE_LOG(LEVEL) BCOS_LOG(LEVEL) << "[StorageService][Initialize]"
@@ -231,8 +231,7 @@ public:
         current->setResponse(false);
 
         m_storage->asyncGetBatch(columnFamily, std::make_shared<vector<std::string>>(keys),
-            [current, this](
-                bcos::Error::Ptr error, std::shared_ptr<std::vector<std::string>> values) {
+            [current](bcos::Error::Ptr error, std::shared_ptr<std::vector<std::string>> values) {
                 async_response_getBatch(current, toTarsError(error), *values);
             });
         return bcostars::Error();

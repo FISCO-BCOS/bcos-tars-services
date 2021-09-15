@@ -19,7 +19,7 @@
  * @date 2021-06-10
  */
 #pragma once
-#include "Common.h"
+#include "libinitializer/Common.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 #include <bcos-framework/interfaces/crypto/CryptoSuite.h>
 #include <bcos-framework/interfaces/protocol/BlockFactory.h>

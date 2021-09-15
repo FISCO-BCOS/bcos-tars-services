@@ -1,10 +1,10 @@
 #pragma once
 
 #include "../Common/ErrorConverter.h"
-#include "../protocols/TransactionImpl.h"
-#include "../protocols/TransactionReceiptImpl.h"
-#include "ExecutorService.h"
-#include "bcos-framework/interfaces/executor/ExecutorInterface.h"
+#include <bcos-framework/interfaces/executor/ExecutorInterface.h>
+#include <bcos-tars-protocol/ExecutorService.h>
+#include <bcos-tars-protocol/TransactionImpl.h>
+#include <bcos-tars-protocol/TransactionReceiptImpl.h>
 
 namespace bcostars
 {

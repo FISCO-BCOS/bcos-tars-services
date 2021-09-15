@@ -2,10 +2,10 @@
 #include "../Common/TarsUtils.h"
 #include "../StorageService/StorageServiceClient.h"
 #include "../StorageService/StorageServiceServer.h"
-#include "StorageService.h"
 #include "bcos-framework/interfaces/storage/StorageInterface.h"
 #include "bcos-storage/Storage.h"
 #include "servant/Communicator.h"
+#include <bcos-tars-protocol/StorageService.h>
 #include <sys/stat.h>
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>

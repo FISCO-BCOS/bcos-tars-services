@@ -1,11 +1,11 @@
 #pragma once
 
 #include "../Common/ErrorConverter.h"
-#include "FrontService.h"
-#include "bcos-framework/interfaces/crypto/KeyFactory.h"
-#include "bcos-framework/interfaces/front/FrontServiceInterface.h"
-#include "bcos-framework/libutilities/RefDataContainer.h"
 #include "libutilities/Common.h"
+#include <bcos-framework/interfaces/crypto/KeyFactory.h>
+#include <bcos-framework/interfaces/front/FrontServiceInterface.h>
+#include <bcos-framework/libutilities/RefDataContainer.h>
+#include <bcos-tars-protocol/FrontService.h>
 
 namespace bcostars
 {

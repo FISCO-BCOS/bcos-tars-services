@@ -8,11 +8,6 @@
 #include "../StorageService/StorageServiceClient.h"
 #include "../TxPoolService/TxPoolServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
-#include "Common.h"
-#include "ExecutorService.h"
-#include "PBFTService.h"
-#include "RpcService.h"
-#include "StorageService.h"
 #include "servant/Servant.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 #include <bcos-framework/interfaces/amop/AMOPInterface.h>
@@ -23,6 +18,11 @@
 #include <bcos-ledger/libledger/Ledger.h>
 #include <bcos-rpc/Rpc.h>
 #include <bcos-rpc/RpcFactory.h>
+#include <bcos-tars-protocol/CommonProtocol.h>
+#include <bcos-tars-protocol/ExecutorService.h>
+#include <bcos-tars-protocol/PBFTService.h>
+#include <bcos-tars-protocol/RpcService.h>
+#include <bcos-tars-protocol/StorageService.h>
 #include <memory>
 #include <utility>
 
