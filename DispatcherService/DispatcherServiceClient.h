@@ -53,14 +53,19 @@ public:
             bcos::protocol::BlockHeaderFactory::Ptr m_blockHeaderFactory;
         };
         // default timeout is 3s
-        ssize_t timeout = 3000;
+        ssize_t factor = m_executingBlockNum.load() > 0 ? (m_executingBlockNum.load() + 1) : 1;
+        ssize_t timeout = 3000 * factor;
         if (_timeout != -1)
         {
-            timeout = _timeout;
+            timeout = _timeout * factor;
         }
         auto wrapperCallback = [this, timeout, _block, _verify, _callback](
                                    const bcos::Error::Ptr& _ret,
                                    const bcos::protocol::BlockHeader::Ptr& _blockHeader) {
+            if (m_executingBlockNum.load() > 0)
+            {
+                m_executingBlockNum.store(m_executingBlockNum.load() - 1);
+            }
             // timeout and retry
             if (_ret && (_ret->errorCode() == tars::TARSASYNCCALLTIMEOUT ||
                             _ret->errorCode() == tars::TARSINVOKETIMEOUT))
@@ -73,6 +78,7 @@ public:
             }
             _callback(_ret, _blockHeader);
         };
+        m_executingBlockNum.store(m_executingBlockNum.load() + 1);
         m_proxy->tars_set_timeout(timeout)->async_asyncExecuteBlock(
             new Callback(wrapperCallback, m_blockFactory->blockHeaderFactory()),
             std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(_block)->inner(), _verify);
@@ -156,5 +162,6 @@ public:
 private:
     bcostars::DispatcherServicePrx m_proxy;
     bcos::protocol::BlockFactory::Ptr m_blockFactory;
+    std::atomic<ssize_t> m_executingBlockNum = {0};
 };
 }  // namespace bcostars
