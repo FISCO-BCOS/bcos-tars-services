@@ -40,7 +40,7 @@ public:
     virtual void init(bcos::tool::NodeConfig::Ptr _nodeConfig,
         ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
         bcos::ledger::LedgerInterface::Ptr _ledger,
-        bcos::dispatcher::DispatcherInterface::Ptr _dispatcher,
+        bcos::scheduler::SchedulerInterface::Ptr scheduler,
         bcos::storage::StorageInterface::Ptr _storage);
 
     virtual void start();
@@ -63,12 +63,12 @@ protected:
     virtual void createPBFT(bcos::tool::NodeConfig::Ptr _nodeConfig,
         ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
         bcos::storage::StorageInterface::Ptr _storage, bcos::ledger::LedgerInterface::Ptr _ledger,
-        bcos::dispatcher::DispatcherInterface::Ptr _dispatcher);
+        bcos::scheduler::SchedulerInterface::Ptr _dispatcher);
 
     virtual void createSync(bcos::tool::NodeConfig::Ptr _nodeConfig,
         ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
         bcos::ledger::LedgerInterface::Ptr _ledger,
-        bcos::dispatcher::DispatcherInterface::Ptr _dispatcher);
+        bcos::scheduler::SchedulerInterface::Ptr _dispatcher);
 
     virtual void registerHandlers();
 

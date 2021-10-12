@@ -22,6 +22,7 @@
 #include "Common.h"
 #include "ProtocolInitializer.h"
 #include "interfaces/dispatcher/SchedulerInterface.h"
+#include "interfaces/executor/ExecutionMessage.h"
 #include <bcos-framework/interfaces/dispatcher/DispatcherInterface.h>
 #include <bcos-framework/interfaces/executor/ExecutorInterface.h>
 #include <bcos-framework/interfaces/ledger/LedgerInterface.h>
@@ -36,14 +37,17 @@ class SchedulerInitializer
 {
 public:
     static bcos::scheduler::SchedulerInterface::Ptr build(
-        ProtocolInitializer::Ptr _protocolInitializer, bcos::ledger::LedgerInterface::Ptr _ledger,
-        bcos::storage::StorageInterface::Ptr storage)
+        bcos::scheduler::ExecutorManager::Ptr executorManager,
+        bcos::ledger::LedgerInterface::Ptr _ledger,
+        bcos::storage::TransactionalStorageInterface::Ptr storage,
+        bcos::protocol::ExecutionMessageFactory::Ptr executionMessageFactory,
+        bcos::protocol::TransactionReceiptFactory::Ptr transactionReceiptFactory,
+        bcos::protocol::BlockHeaderFactory::Ptr blockHeaderFactory, crypto::Hash::Ptr hashImpl)
     {
-        auto executionMessageFactory =
-            std::make_shared<bcos::executor::NativeExecutionMessageFactory>();
-
-        return std::make_shared<scheduler::SchedulerImpl>(_ledger, storage, executionMessageFactory,
-            nullptr, nullptr, _protocolInitializer->cryptoSuite()->hashImpl());
+        return std::make_shared<scheduler::SchedulerImpl>(std::move(executorManager),
+            std::move(_ledger), std::move(storage), executionMessageFactory,
+            std::move(transactionReceiptFactory), std::move(blockHeaderFactory),
+            std::move(hashImpl));
     }
 };
 }  // namespace bcos::initializer

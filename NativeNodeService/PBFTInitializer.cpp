@@ -30,7 +30,7 @@ using namespace bcos::txpool;
 using namespace bcos::sync;
 using namespace bcos::ledger;
 using namespace bcos::storage;
-using namespace bcos::dispatcher;
+using namespace bcos::scheduler;
 using namespace bcos::initializer;
 
 void PBFTInitializer::start()
@@ -56,14 +56,13 @@ void PBFTInitializer::stop()
 
 void PBFTInitializer::init(NodeConfig::Ptr _nodeConfig,
     ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
-    LedgerInterface::Ptr _ledger, DispatcherInterface::Ptr _dispatcher,
-    StorageInterface::Ptr _storage)
+    LedgerInterface::Ptr _ledger, SchedulerInterface::Ptr scheduler, StorageInterface::Ptr _storage)
 {
     createTxPool(_nodeConfig, _protocolInitializer, _networkInitializer, _ledger);
     createSealer(_nodeConfig, _protocolInitializer);
     createPBFT(
-        _nodeConfig, _protocolInitializer, _networkInitializer, _storage, _ledger, _dispatcher);
-    createSync(_nodeConfig, _protocolInitializer, _networkInitializer, _ledger, _dispatcher);
+        _nodeConfig, _protocolInitializer, _networkInitializer, _storage, _ledger, scheduler);
+    createSync(_nodeConfig, _protocolInitializer, _networkInitializer, _ledger, scheduler);
     registerHandlers();
 }
 
@@ -270,7 +269,7 @@ void PBFTInitializer::createSealer(
 void PBFTInitializer::createPBFT(NodeConfig::Ptr _nodeConfig,
     ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
     StorageInterface::Ptr _storage, LedgerInterface::Ptr _ledger,
-    DispatcherInterface::Ptr _dispatcher)
+    SchedulerInterface::Ptr _dispatcher)
 {
     auto keyPair = _protocolInitializer->keyPair();
     // create pbft
@@ -305,13 +304,13 @@ void PBFTInitializer::createPBFT(NodeConfig::Ptr _nodeConfig,
 
 void PBFTInitializer::createSync(NodeConfig::Ptr, ProtocolInitializer::Ptr _protocolInitializer,
     NetworkInitializer::Ptr _networkInitializer, LedgerInterface::Ptr _ledger,
-    DispatcherInterface::Ptr _dispatcher)
+    SchedulerInterface::Ptr scheduler)
 {
     // create sync
     auto keyPair = _protocolInitializer->keyPair();
     auto blockSyncFactory = std::make_shared<BlockSyncFactory>(keyPair->publicKey(),
         _protocolInitializer->blockFactory(), _protocolInitializer->txResultFactory(), _ledger,
-        m_txpool, _networkInitializer->frontService(), _dispatcher, m_pbft);
+        m_txpool, _networkInitializer->frontService(), scheduler, m_pbft);
     m_blockSync = blockSyncFactory->createBlockSync();
 
     // register block sync message handler
