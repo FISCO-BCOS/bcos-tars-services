@@ -55,7 +55,7 @@ include(CompilerSettings)
 include(BuildInfoGenerator)
 # import services
 # list(APPEND SERVICE_LIST FrontService GatewayService RpcService TxPoolService NativeNodeService)
-list(APPEND SERVICE_LIST NativeNodeService)
+list(APPEND SERVICE_LIST NativeNode)
 # TODO:
 # PBFTService, DispatcherService, ExecutorService, 
 

@@ -19,6 +19,7 @@
  * @date 2021-07-15
  */
 #include "RpcInitializer.h"
+#include <bcos-boostssl/websocket/WsService.h>
 #include <bcos-rpc/RpcFactory.h>
 #include <include/BuildInfo.h>
 #include <memory>
@@ -59,9 +60,10 @@ void RpcInitializer::init(bcos::tool::NodeConfig::Ptr _nodeConfig, const std::st
 
     auto rpc = factory->buildRpc(_configPath, nodeInfo);
     auto amop = rpc->AMOP();
-    auto amopWeak = std::weak_ptr<bcos::amop::AMOP>(amop);
+    auto amopWeak = std::weak_ptr(amop);
+    auto rpcWeak = std::weak_ptr(rpc);
     auto wsService = rpc->wsService();
-    auto wsServiceWeakPtr = std::weak_ptr<bcos::ws::WsService>(wsService);
+    auto wsServiceWeakPtr = std::weak_ptr<boostssl::ws::WsService>(wsService);
 
     // init AMOP message handler
     m_networkInitializer->registerMsgDispatcher(bcos::protocol::ModuleID::AMOP,
@@ -83,29 +85,27 @@ void RpcInitializer::init(bcos::tool::NodeConfig::Ptr _nodeConfig, const std::st
         });
 
     m_networkInitializer->registerGetNodeIDsDispatcher(bcos::protocol::ModuleID::AMOP,
-        [amopWeak](std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs,
+        [rpcWeak](std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs,
             bcos::front::ReceiveMsgFunc _receiveMsgCallback) {
-            auto amop = amopWeak.lock();
-            if (amop)
+            auto rpc = rpcWeak.lock();
+            if (rpc)
             {
-                amop->asyncNotifyAmopNodeIDs(_nodeIDs, _receiveMsgCallback);
+                rpc->asyncNotifyAmopNodeIDs(_nodeIDs, _receiveMsgCallback);
             }
         });
 
     // register blockNumber notifier
     // TODO: why?
     auto ledger = (bcos::ledger::Ledger*)m_ledger.get();
-    ledger->registerCommittedBlockNotifier(
-        [wsServiceWeakPtr](
-            bcos::protocol::BlockNumber _blockNumber, std::function<void(Error::Ptr)> _callback) {
-            (void)_blockNumber;
-            auto wsService = wsServiceWeakPtr.lock();
-            if (wsService)
-            {
-                wsService->notifyBlockNumberToClient(_blockNumber);
-            }
-            _callback(nullptr);
-        });
+    ledger->registerCommittedBlockNotifier([rpcWeak](bcos::protocol::BlockNumber _blockNumber,
+                                               std::function<void(Error::Ptr)> _callback) {
+        auto rpc = rpcWeak.lock();
+        if (rpc)
+        {
+            rpc->asyncNotifyBlockNumber(_blockNumber, nullptr);
+        }
+        _callback(nullptr);
+    });
 
     m_rpcInterface = rpc;
 }
