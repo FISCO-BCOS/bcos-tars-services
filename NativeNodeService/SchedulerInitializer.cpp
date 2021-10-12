@@ -17,35 +17,23 @@
  * @file DispatcherInitializer.cpp
  * @author: yujiechen
  * @date 2021-06-21
+ * @brief initializer for the dispatcher and executor
+ * @file SchedulerInitializer.cpp
+ * @author: ancelmo
+ * @date 2021-10-14
  */
-#include "DispatcherInitializer.h"
-#include <bcos-executor/Executor.h>
+#include "SchedulerInitializer.h"
+#include "bcos-framework/libexecutor/NativeExecutionMessage.h"
 
 using namespace bcos;
-using namespace bcos::tool;
 using namespace bcos::initializer;
-using namespace bcos::dispatcher;
-using namespace bcos::executor;
-using namespace bcos::ledger;
-using namespace bcos::storage;
 
-void DispatcherInitializer::init(NodeConfig::Ptr _nodeConfig,
-    ProtocolInitializer::Ptr _protocolInitializer, LedgerInterface::Ptr _ledger,
-    StorageInterface::Ptr _stateStorage)
+void SchedulerInitializer::init(ProtocolInitializer::Ptr _protocolInitializer,
+    bcos::ledger::LedgerInterface::Ptr _ledger, bcos::storage::StorageInterface::Ptr storage)
 {
-    m_dispatcher = std::make_shared<DispatcherImpl>();
-    m_executor = std::make_shared<Executor>(_protocolInitializer->blockFactory(), m_dispatcher,
-        _ledger, _stateStorage, _nodeConfig->isWasm());
-}
+    auto executionMessageFactory =
+        std::make_shared<bcos::executor::NativeExecutionMessageFactory>();
 
-void DispatcherInitializer::start()
-{
-    m_dispatcher->start();
-    m_executor->start();
-}
-
-void DispatcherInitializer::stop()
-{
-    m_dispatcher->stop();
-    m_executor->stop();
+    m_scheduler = std::make_shared<scheduler::SchedulerImpl>(_ledger, storage,
+        executionMessageFactory, nullptr, nullptr, _protocolInitializer->cryptoSuite()->hashImpl());
 }

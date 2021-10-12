@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 if (NOT DEFINED URL_BASE)
     set(URL_BASE "github.com")
    endif()
-# set(URL_BASE "github.com.cnpmjs.org")
+set(URL_BASE "github.com.cnpmjs.org")
 set (DEPENDENCIES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/src)
 
 set(BCOS_TARS_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake" CACHE PATH "The cmake path for the library")
@@ -51,11 +51,12 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 include(CompilerSettings)
 # import tars project
-add_subdirectory(libinitializer)
+# add_subdirectory(libinitializer)
 
 include(BuildInfoGenerator)
 # import services
-list(APPEND SERVICE_LIST FrontService GatewayService RpcService TxPoolService NativeNodeService)
+# list(APPEND SERVICE_LIST FrontService GatewayService RpcService TxPoolService NativeNodeService)
+list(APPEND SERVICE_LIST NativeNodeService)
 # TODO:
 # PBFTService, DispatcherService, ExecutorService, 
 

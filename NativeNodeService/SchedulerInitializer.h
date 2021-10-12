@@ -21,36 +21,30 @@
 #pragma once
 #include "libinitializer/Common.h"
 #include "libinitializer/ProtocolInitializer.h"
-#include <bcos-dispatcher/DispatcherImpl.h>
 #include <bcos-framework/interfaces/dispatcher/DispatcherInterface.h>
 #include <bcos-framework/interfaces/executor/ExecutorInterface.h>
 #include <bcos-framework/interfaces/ledger/LedgerInterface.h>
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/libtool/NodeConfig.h>
+#include <bcos-scheduler/SchedulerImpl.h>
 
 namespace bcos
 {
 namespace initializer
 {
-class DispatcherInitializer
+class SchedulerInitializer
 {
 public:
-    DispatcherInitializer() = default;
-    virtual ~DispatcherInitializer() {}
+    SchedulerInitializer() = default;
+    ~SchedulerInitializer() {}
 
-    virtual void init(bcos::tool::NodeConfig::Ptr _nodeConfig,
-        ProtocolInitializer::Ptr _protocolInitializer, bcos::ledger::LedgerInterface::Ptr _ledger,
-        bcos::storage::StorageInterface::Ptr _stateStorage);
+    void init(ProtocolInitializer::Ptr _protocolInitializer,
+        bcos::ledger::LedgerInterface::Ptr _ledger, bcos::storage::StorageInterface::Ptr storage);
 
-    bcos::dispatcher::DispatcherImpl::Ptr dispatcher() { return m_dispatcher; }
-    std::shared_ptr<bcos::executor::ExecutorInterface> executor() { return m_executor;} 
-
-    virtual void start();
-    virtual void stop();
+    scheduler::SchedulerImpl::Ptr scheduler() { return m_scheduler; }
 
 private:
-    bcos::dispatcher::DispatcherImpl::Ptr m_dispatcher;
-    std::shared_ptr<bcos::executor::ExecutorInterface> m_executor;
+    scheduler::SchedulerImpl::Ptr m_scheduler;
 };
 }  // namespace initializer
 }  // namespace bcos
