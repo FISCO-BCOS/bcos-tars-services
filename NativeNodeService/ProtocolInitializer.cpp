@@ -26,17 +26,11 @@
 #include <bcos-crypto/signature/secp256k1/Secp256k1Crypto.h>
 #include <bcos-crypto/signature/sm2/SM2Crypto.h>
 
-#include <bcos-tars-protocol/BlockFactoryImpl.h>
-#include <bcos-tars-protocol/BlockHeaderFactoryImpl.h>
-#include <bcos-tars-protocol/TransactionFactoryImpl.h>
-#include <bcos-tars-protocol/TransactionReceiptFactoryImpl.h>
-#include <bcos-tars-protocol/TransactionSubmitResultFactoryImpl.h>
-
-#include <bcos-framework/libprotocol/TransactionSubmitResultFactoryImpl.h>
-#include <bcos-framework/libprotocol/protobuf/PBBlockFactory.h>
-#include <bcos-framework/libprotocol/protobuf/PBBlockHeaderFactory.h>
-#include <bcos-framework/libprotocol/protobuf/PBTransactionFactory.h>
-#include <bcos-framework/libprotocol/protobuf/PBTransactionReceiptFactory.h>
+#include <bcos-tars-protocol/protocol/BlockFactoryImpl.h>
+#include <bcos-tars-protocol/protocol/BlockHeaderFactoryImpl.h>
+#include <bcos-tars-protocol/protocol/TransactionFactoryImpl.h>
+#include <bcos-tars-protocol/protocol/TransactionReceiptFactoryImpl.h>
+#include <bcos-tars-protocol/protocol/TransactionSubmitResultFactoryImpl.h>
 
 using namespace bcos;
 using namespace bcos::protocol;
@@ -106,17 +100,5 @@ void ProtocolInitializer::createFactory()
     m_blockFactory = std::make_shared<bcostars::protocol::BlockFactoryImpl>(
         m_cryptoSuite, blockHeaderFactory, transactionFactory, receiptFactory);
     m_txResultFactory = std::make_shared<bcostars::protocol::TransactionSubmitResultFactoryImpl>();
-    m_transactionFactory = transactionFactory;
-}
-
-void ProtocolInitializer::createPBFactory()
-{
-    // create the block factory
-    auto blockHeaderFactory = std::make_shared<PBBlockHeaderFactory>(m_cryptoSuite);
-    auto transactionFactory = std::make_shared<PBTransactionFactory>(m_cryptoSuite);
-    auto receiptFactory = std::make_shared<PBTransactionReceiptFactory>(m_cryptoSuite);
-    m_blockFactory =
-        std::make_shared<PBBlockFactory>(blockHeaderFactory, transactionFactory, receiptFactory);
-    m_txResultFactory = std::make_shared<TransactionSubmitResultFactoryImpl>();
     m_transactionFactory = transactionFactory;
 }

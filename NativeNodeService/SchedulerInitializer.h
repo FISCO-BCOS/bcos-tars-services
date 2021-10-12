@@ -19,32 +19,31 @@
  * @date 2021-06-21
  */
 #pragma once
-#include "libinitializer/Common.h"
-#include "libinitializer/ProtocolInitializer.h"
+#include "Common.h"
+#include "ProtocolInitializer.h"
+#include "interfaces/dispatcher/SchedulerInterface.h"
 #include <bcos-framework/interfaces/dispatcher/DispatcherInterface.h>
 #include <bcos-framework/interfaces/executor/ExecutorInterface.h>
 #include <bcos-framework/interfaces/ledger/LedgerInterface.h>
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
+#include <bcos-framework/libexecutor/NativeExecutionMessage.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-scheduler/SchedulerImpl.h>
 
-namespace bcos
-{
-namespace initializer
+namespace bcos::initializer
 {
 class SchedulerInitializer
 {
 public:
-    SchedulerInitializer() = default;
-    ~SchedulerInitializer() {}
+    static bcos::scheduler::SchedulerInterface::Ptr build(
+        ProtocolInitializer::Ptr _protocolInitializer, bcos::ledger::LedgerInterface::Ptr _ledger,
+        bcos::storage::StorageInterface::Ptr storage)
+    {
+        auto executionMessageFactory =
+            std::make_shared<bcos::executor::NativeExecutionMessageFactory>();
 
-    void init(ProtocolInitializer::Ptr _protocolInitializer,
-        bcos::ledger::LedgerInterface::Ptr _ledger, bcos::storage::StorageInterface::Ptr storage);
-
-    scheduler::SchedulerImpl::Ptr scheduler() { return m_scheduler; }
-
-private:
-    scheduler::SchedulerImpl::Ptr m_scheduler;
+        return std::make_shared<scheduler::SchedulerImpl>(_ledger, storage, executionMessageFactory,
+            nullptr, nullptr, _protocolInitializer->cryptoSuite()->hashImpl());
+    }
 };
-}  // namespace initializer
-}  // namespace bcos
+}  // namespace bcos::initializer

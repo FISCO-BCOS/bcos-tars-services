@@ -19,9 +19,8 @@
  * @date 2021-06-10
  */
 #pragma once
-#include "libinitializer/Common.h"
-#include "libinitializer/NetworkInitializer.h"
-#include "libinitializer/ProtocolInitializer.h"
+#include "NetworkInitializer.h"
+#include "ProtocolInitializer.h"
 #include <bcos-framework/libsealer/SealerFactory.h>
 #include <bcos-pbft/pbft/PBFTFactory.h>
 #include <bcos-sync/BlockSyncFactory.h>

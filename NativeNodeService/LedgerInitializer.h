@@ -19,37 +19,26 @@
  * @date 2021-06-10
  */
 #pragma once
-#include "libinitializer/Common.h"
+#include "Common.h"
+#include "interfaces/ledger/LedgerInterface.h"
 #include <bcos-framework/interfaces/protocol/BlockFactory.h>
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-ledger/libledger/Ledger.h>
 
-namespace bcos
-{
-namespace initializer
+namespace bcos::initializer
 {
 class LedgerInitializer
 {
 public:
-    using Ptr = std::shared_ptr<LedgerInitializer>;
-    LedgerInitializer() = default;
-    virtual ~LedgerInitializer() {}
-
-    virtual void init(bcos::protocol::BlockFactory::Ptr _blockFactory, const std::string& groupID,
+    static bcos::ledger::LedgerInterface::Ptr build(bcos::protocol::BlockFactory::Ptr _blockFactory,
         bcos::storage::StorageInterface::Ptr _storage, bcos::tool::NodeConfig::Ptr _nodeConfig)
     {
         auto ledger = std::make_shared<bcos::ledger::Ledger>(_blockFactory, _storage);
         // build genesis block
-        ledger->buildGenesisBlock(_nodeConfig->ledgerConfig(), groupID, _nodeConfig->txGasLimit(),
-            _nodeConfig->genesisData());
-        m_ledger = ledger;
+        ledger->buildGenesisBlock(_nodeConfig->ledgerConfig(), _nodeConfig->groupId(),
+            _nodeConfig->txGasLimit(), _nodeConfig->genesisData());
+        return ledger;
     }
-
-    bcos::ledger::Ledger::Ptr ledger() { return m_ledger; }
-
-private:
-    bcos::ledger::Ledger::Ptr m_ledger;
 };
-}  // namespace initializer
-}  // namespace bcos
+}  // namespace bcos::initializer

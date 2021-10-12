@@ -19,8 +19,8 @@
  * @date 2021-07-15
  */
 #pragma once
-#include "libinitializer/Common.h"
-#include "libinitializer/NetworkInitializer.h"
+#include "Common.h"
+#include "NetworkInitializer.h"
 #include <bcos-framework/interfaces/consensus/ConsensusInterface.h>
 #include <bcos-framework/interfaces/executor/ExecutorInterface.h>
 #include <bcos-framework/interfaces/front/FrontServiceInterface.h>

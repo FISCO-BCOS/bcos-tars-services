@@ -19,7 +19,7 @@
  * @date 2021-06-10
  */
 #pragma once
-#include "libinitializer/Common.h"
+#include "Common.h"
 #include <bcos-framework/interfaces/crypto/CryptoSuite.h>
 #include <bcos-framework/interfaces/crypto/KeyFactory.h>
 #include <bcos-framework/interfaces/protocol/BlockFactory.h>
@@ -57,7 +57,6 @@ private:
     void createSMCryptoSuite();
     void loadKeyPair(bcos::tool::NodeConfig::Ptr _nodeConfig);
     void createFactory();
-    void createPBFactory();
 
 private:
     bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;

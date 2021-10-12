@@ -98,6 +98,7 @@ void RpcInitializer::init(bcos::tool::NodeConfig::Ptr _nodeConfig, const std::st
     ledger->registerCommittedBlockNotifier(
         [wsServiceWeakPtr](
             bcos::protocol::BlockNumber _blockNumber, std::function<void(Error::Ptr)> _callback) {
+            (void)_blockNumber;
             auto wsService = wsServiceWeakPtr.lock();
             if (wsService)
             {

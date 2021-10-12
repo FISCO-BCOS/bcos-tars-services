@@ -19,20 +19,18 @@
  * @date 2021-06-11
  */
 #pragma once
-#include "DispatcherInitializer.h"
-#include "libinitializer/Common.h"
-#include "libinitializer/LedgerInitializer.h"
-#include "libinitializer/NetworkInitializer.h"
-#include "libinitializer/PBFTInitializer.h"
-#include "libinitializer/ProtocolInitializer.h"
-#include "libinitializer/RpcInitializer.h"
-#include "libinitializer/StorageInitializer.h"
+#include "Common.h"
+#include "LedgerInitializer.h"
+#include "NetworkInitializer.h"
+#include "PBFTInitializer.h"
+#include "ProtocolInitializer.h"
+#include "RpcInitializer.h"
+#include "SchedulerInitializer.h"
+#include "StorageInitializer.h"
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <memory>
 
-namespace bcos
-{
-namespace initializer
+namespace bcos::initializer
 {
 class Initializer
 {
@@ -50,19 +48,14 @@ public:
     bcos::tool::NodeConfig::Ptr nodeConfig() { return m_nodeConfig; }
     ProtocolInitializer::Ptr protocolInitializer() { return m_protocolInitializer; }
     PBFTInitializer::Ptr pbftInitializer() { return m_pbftInitializer; }
-    LedgerInitializer::Ptr ledgerInitializer() { return m_ledgerInitializer; }
 
 private:
     BoostLogInitializer::Ptr m_logInitializer;
     bcos::tool::NodeConfig::Ptr m_nodeConfig;
     ProtocolInitializer::Ptr m_protocolInitializer;
     NetworkInitializer::Ptr m_networkInitializer;
-    StorageInitializer::Ptr m_storageInitializer;
 
-    LedgerInitializer::Ptr m_ledgerInitializer;
-    std::shared_ptr<DispatcherInitializer> m_dispatcherInitializer;
     PBFTInitializer::Ptr m_pbftInitializer;
     RpcInitializer::Ptr m_rpcInitializer;
 };
-}  // namespace initializer
-}  // namespace bcos
+}  // namespace bcos::initializer

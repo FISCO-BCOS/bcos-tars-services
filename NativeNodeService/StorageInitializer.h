@@ -17,35 +17,37 @@
  * @file StorageInitializer.h
  * @author: yujiechen
  * @date 2021-06-11
+ * @brief initializer for the storage
+ * @file StorageInitializer.h
+ * @author: ancelmo
+ * @date 2021-10-14
  */
 #pragma once
-#include "libinitializer/Common.h"
+#include "Common.h"
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/libtool/NodeConfig.h>
-namespace bcos
-{
-namespace initializer
+#include <bcos-storage/RocksDBStorage.h>
+#include <rocksdb/write_batch.h>
+namespace bcos::initializer
 {
 class StorageInitializer
 {
 public:
-    using Ptr = std::shared_ptr<StorageInitializer>;
-    StorageInitializer() = default;
-    virtual ~StorageInitializer() {}
-
-    void stop()
+    static bcos::storage::TransactionalStorageInterface::Ptr build(
+        bcos::tool::NodeConfig::Ptr _nodeConfig)
     {
-        if (m_storage)
-        {
-            m_storage->stop();
-        }
+        rocksdb::DB* db;
+        rocksdb::Options options;
+        // Optimize RocksDB. This is the easiest way to get RocksDB to perform well
+        options.IncreaseParallelism();
+        options.OptimizeLevelStyleCompaction();
+        // create the DB if it's not already present
+        options.create_if_missing = true;
+
+        // open DB
+        rocksdb::Status s = rocksdb::DB::Open(options, _nodeConfig->storagePath(), &db);
+
+        return std::make_shared<bcos::storage::RocksDBStorage>(std::unique_ptr<rocksdb::DB>(db));
     }
-
-    virtual void init(bcos::tool::NodeConfig::Ptr _nodeConfig);
-    bcos::storage::StorageInterface::Ptr storage() { return m_storage; }
-
-private:
-    bcos::storage::StorageInterface::Ptr m_storage;
 };
-}  // namespace initializer
-}  // namespace bcos
+}  // namespace bcos::initializer

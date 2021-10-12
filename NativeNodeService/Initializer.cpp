@@ -19,6 +19,9 @@
  * @date 2021-06-11
  */
 #include "Initializer.h"
+#include "LedgerInitializer.h"
+#include "SchedulerInitializer.h"
+#include "StorageInitializer.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-gateway/Gateway.h>
@@ -52,33 +55,24 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         m_networkInitializer->init(
             _configFilePath, m_nodeConfig, m_protocolInitializer->keyPair()->publicKey());
 
-        // init the storage
-        m_storageInitializer = std::make_shared<StorageInitializer>();
-        m_storageInitializer->init(m_nodeConfig);
+        auto storage = StorageInitializer::build(m_nodeConfig);
 
-        // init the ledger
-        m_ledgerInitializer = std::make_shared<LedgerInitializer>();
-        m_ledgerInitializer->init(
-            m_protocolInitializer->blockFactory(), m_storageInitializer->storage(), m_nodeConfig);
+        auto ledger =
+            LedgerInitializer::build(m_protocolInitializer->blockFactory(), storage, m_nodeConfig);
 
-        // init the dispatcher
-        m_dispatcherInitializer = std::make_shared<DispatcherInitializer>();
-        m_dispatcherInitializer->init(m_nodeConfig, m_protocolInitializer,
-            m_ledgerInitializer->ledger(), m_storageInitializer->storage());
-
-        auto dispatcher = m_dispatcherInitializer->dispatcher();
+        auto scheduler = SchedulerInitializer::build(m_protocolInitializer, ledger, storage);
 
         // init the pbft related modules
         m_pbftInitializer = std::make_shared<PBFTInitializer>();
-        m_pbftInitializer->init(m_nodeConfig, m_protocolInitializer, m_networkInitializer,
-            m_ledgerInitializer->ledger(), dispatcher, m_storageInitializer->storage());
+        m_pbftInitializer->init(
+            m_nodeConfig, m_protocolInitializer, m_networkInitializer, ledger, scheduler, storage);
 
         m_rpcInitializer = std::make_shared<RpcInitializer>();
         m_rpcInitializer->setNodeID(nodeID);
         m_rpcInitializer->setNetworkInitializer(m_networkInitializer);
         m_rpcInitializer->setNodeConfig(m_nodeConfig);
         m_rpcInitializer->setFrontService(m_networkInitializer->frontService());
-        m_rpcInitializer->setLedger(m_ledgerInitializer->ledger());
+        m_rpcInitializer->setLedger(ledger);
         m_rpcInitializer->setTxPoolInterface(m_pbftInitializer->txpool());
         m_rpcInitializer->setExecutorInterface(m_dispatcherInitializer->executor());
         m_rpcInitializer->setConsensusInterface(m_pbftInitializer->pbft());

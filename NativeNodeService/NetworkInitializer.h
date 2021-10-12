@@ -20,7 +20,7 @@
  */
 
 #pragma once
-#include "libinitializer/Common.h"
+#include "Common.h"
 #include <bcos-framework/interfaces/front/FrontServiceInterface.h>
 #include <bcos-framework/interfaces/gateway/GatewayInterface.h>
 #include <bcos-framework/interfaces/protocol/Protocol.h>
