@@ -1,6 +1,9 @@
 file(GLOB SRC_LIST "*.cpp")
 file(GLOB HEADERS "*.h")
 
+hunter_add_package(bcos-boostssl)
+find_package(bcos-boostssl CONFIG REQUIRED)
+
 add_executable(fisco-bcos ${SRC_LIST} ${HEADERS})
 
 list(APPEND InitLibs bcos-gateway::bcos-gateway bcos-framework::utilities bcos-framework::tool bcos-framework::storage

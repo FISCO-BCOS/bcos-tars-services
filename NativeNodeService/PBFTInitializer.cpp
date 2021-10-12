@@ -19,6 +19,7 @@
  * @date 2021-06-10
  */
 #include "PBFTInitializer.h"
+#include "libutilities/KVStorageHelper.h"
 
 using namespace bcos;
 using namespace bcos::tool;
@@ -268,15 +269,17 @@ void PBFTInitializer::createSealer(
 
 void PBFTInitializer::createPBFT(NodeConfig::Ptr _nodeConfig,
     ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
-    StorageInterface::Ptr _storage, LedgerInterface::Ptr _ledger,
-    SchedulerInterface::Ptr _dispatcher)
+    StorageInterface::Ptr _storage, LedgerInterface::Ptr _ledger, SchedulerInterface::Ptr scheduler)
 {
     auto keyPair = _protocolInitializer->keyPair();
+
+    auto kvStorage = std::make_shared<bcos::storage::KVStorageHelper>(_storage);
     // create pbft
     auto pbftFactory = std::make_shared<PBFTFactory>(_protocolInitializer->cryptoSuite(),
-        _protocolInitializer->keyPair(), _networkInitializer->frontService(), _storage, _ledger,
-        m_txpool, _dispatcher, _protocolInitializer->blockFactory(),
+        _protocolInitializer->keyPair(), _networkInitializer->frontService(), kvStorage, _ledger,
+        scheduler, m_txpool, _protocolInitializer->blockFactory(),
         _protocolInitializer->txResultFactory());
+
     m_pbft = pbftFactory->createPBFT();
     auto pbftConfig = m_pbft->pbftEngine()->pbftConfig();
     pbftConfig->setCheckPointTimeoutInterval(_nodeConfig->checkPointTimeoutInterval());

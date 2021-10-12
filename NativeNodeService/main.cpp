@@ -17,14 +17,20 @@
  * @file main.cpp
  * @author: yujiechen
  * @date 2021-07-26
+ * @brief main for the fisco-bcos
+ * @file main.cpp
+ * @author: ancelmo
+ * @date 2021-10-14
  */
-#include "fisco-bcos/utilities/Common.h"
-#include "libinitializer/Initializer.h"
+#include "Common.h"
+#include "Initializer.h"
+#include "Utilities.h"
 #include <chrono>
 #include <ctime>
+
 using namespace bcos;
 using namespace bcos::initializer;
-using namespace bcos::node;
+using namespace bcos::utilities;
 
 int main(int argc, const char* argv[])
 {
