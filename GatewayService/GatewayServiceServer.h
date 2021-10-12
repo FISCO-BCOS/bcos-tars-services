@@ -1,8 +1,6 @@
 #pragma once
 
-#include "../Common/ErrorConverter.h"
 #include "../Common/TarsUtils.h"
-#include "../FrontService/FrontServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include "libutilities/Common.h"
 #include "libutilities/Log.h"
@@ -13,7 +11,9 @@
 #include <bcos-gateway/Gateway.h>
 #include <bcos-gateway/GatewayConfig.h>
 #include <bcos-gateway/GatewayFactory.h>
-#include <bcos-tars-protocol/GatewayService.h>
+#include <bcos-tars-protocol/ErrorConverter.h>
+#include <bcos-tars-protocol/client/FrontServiceClient.h>
+#include <bcos-tars-protocol/tars/GatewayService.h>
 #include <chrono>
 #include <mutex>
 
@@ -97,7 +97,7 @@ public:
             GATEWAYSERVICE_LOG(INFO) << LOG_DESC("create the frontService client");
             auto frontServiceProxy =
                 Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
-                    getProxyDesc(FRONT_SERVICE_NAME));
+                    getProxyDesc(bcos::protocol::FRONT_SERVICE_NAME));
             auto frontService = std::make_shared<bcostars::FrontServiceClient>(
                 frontServiceProxy, protocolInitializer->keyFactory());
             GATEWAYSERVICE_LOG(INFO) << LOG_DESC("create the frontService client success");
@@ -227,6 +227,11 @@ public:
 
         return bcostars::Error();
     }
+
+    // TODO: implement this
+    bcostars::Error asyncNotifyGroupInfo(
+        const bcostars::GroupInfo& groupInfo, tars::TarsCurrentPtr current) override
+    {}
 
 private:
     static std::once_flag m_initFlag;

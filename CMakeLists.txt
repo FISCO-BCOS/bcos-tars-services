@@ -19,8 +19,8 @@ list(APPEND CMAKE_MODULE_PATH ${BCOS_TARS_CMAKE_DIR})
 
 include(HunterGate)
 HunterGate(
-    URL "https://${URL_BASE}/FISCO-BCOS/hunter/archive/32b5a266ff0e808b2ed57afa3d351f7bb899c9f6.tar.gz"
-    SHA1 "4fbc308a612c3ca3be7e03a54c4c4d27ba7804ed"
+    URL "https://${URL_BASE}/FISCO-BCOS/hunter/archive/9ea365415828102627dcc933295e25e8feff7d93.tar.gz"
+    SHA1 "b40d19ddd9939f557b70c69e45f8744ff17583ba"
     FILEPATH "${BCOS_TARS_CMAKE_DIR}/config.cmake"
 )
 
@@ -29,17 +29,18 @@ project(Bcos-Tars-Service)
 # import dependencies
 include(InstallBcosFrameworkDependencies)
 include(InstallBcosCryptoDependencies)
+include(InstallBcosTarsProtocolDependencies)
+include(InstallBcosGateWayDependencies)
+include(InstallBcosRpcDependencies)
+
 include(InstallBcosTxPoolDependencies)
 include(InstallBcosPBFTDependencies)
 include(InstallBcosStorageDependencies)
 include(InstallBcosLedgerDependencies)
 include(InstallBcosSyncDependencies)
 include(InstallBcosFrontDependencies)
-include(InstallBcosGateWayDependencies)
-include(InstallBcosRpcDependencies)
-include(InstallBcosDispatcherDependencies)
-include(InstallBcosTarsProtocolDependencies)
-include(ProjectBCOSExecutor)
+include(InstallBcosScheduler)
+#include(ProjectBCOSExecutor)
 
 # copy .clang-format into the project path
 include(CopyClangFormat)
@@ -53,9 +54,11 @@ include(CompilerSettings)
 add_subdirectory(libinitializer)
 
 include(BuildInfoGenerator)
-
 # import services
-list(APPEND SERVICE_LIST StorageService FrontService GatewayService PBFTService ExecutorService DispatcherService TxPoolService RpcService)
+list(APPEND SERVICE_LIST FrontService GatewayService RpcService TxPoolService)
+# TODO:
+# PBFTService, DispatcherService, ExecutorService, 
+
 foreach(SERVICE ${SERVICE_LIST})
     add_subdirectory(${SERVICE})
 
@@ -67,13 +70,11 @@ foreach(SERVICE ${SERVICE_LIST})
 
     list(APPEND SERVICE_TAR_LIST ${SERVICE}-tar)
 endforeach()
-
 add_custom_target(tar DEPENDS ${SERVICE_TAR_LIST})
 
 if(TEST)
     enable_testing()
     add_subdirectory(tests)
-    add_subdirectory(testClients)
 endif()
 
 # for code coverage

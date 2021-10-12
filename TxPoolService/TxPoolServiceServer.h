@@ -1,10 +1,6 @@
 #pragma once
 
-#include "../Common/ErrorConverter.h"
 #include "../Common/TarsUtils.h"
-#include "../FrontService/FrontServiceClient.h"
-#include "../PBFTService/PBFTServiceClient.h"
-#include "../StorageService/StorageServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include <bcos-framework/interfaces/consensus/ConsensusNode.h>
 #include <bcos-framework/interfaces/crypto/CommonType.h>
@@ -15,10 +11,13 @@
 #include <bcos-framework/libutilities/Common.h>
 #include <bcos-framework/libutilities/FixedBytes.h>
 #include <bcos-ledger/libledger/Ledger.h>
-#include <bcos-tars-protocol/CommonProtocol.h>
-#include <bcos-tars-protocol/TransactionImpl.h>
-#include <bcos-tars-protocol/TransactionSubmitResultImpl.h>
-#include <bcos-tars-protocol/TxPoolService.h>
+#include <bcos-tars-protocol/ErrorConverter.h>
+#include <bcos-tars-protocol/client/FrontServiceClient.h>
+#include <bcos-tars-protocol/client/PBFTServiceClient.h>
+#include <bcos-tars-protocol/protocol/BlockFactoryImpl.h>
+#include <bcos-tars-protocol/protocol/TransactionSubmitResultImpl.h>
+#include <bcos-tars-protocol/tars/CommonProtocol.h>
+#include <bcos-tars-protocol/tars/TxPoolService.h>
 #include <bcos-txpool/TxPool.h>
 #include <bcos-txpool/TxPoolFactory.h>
 #include <tarscpp/servant/Servant.h>
@@ -75,26 +74,19 @@ public:
                                        protocolInitializer->keyPair()->publicKey()->shortHex());
 
         m_cryptoSuite = protocolInitializer->cryptoSuite();
-
-        // create the storage client
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the storage client");
-        auto storageProxy =
-            Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(
-                getProxyDesc(STORAGE_SERVICE_NAME));
-        auto storage = std::make_shared<bcostars::StorageServiceClient>(storageProxy);
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the storage client success");
-
         // create the ledger
+        // TODO: modify ledger to LedgerServiceClient and implement the ledger client interfaces
+        // with tars protocol
         TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the ledger");
         m_ledger =
-            std::make_shared<bcos::ledger::Ledger>(protocolInitializer->blockFactory(), storage);
+            std::make_shared<bcos::ledger::Ledger>(protocolInitializer->blockFactory(), nullptr);
         TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the ledger success");
 
         // create the frontService client
         TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the frontService client");
         auto frontServiceProxy =
             Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
-                getProxyDesc(FRONT_SERVICE_NAME));
+                getProxyDesc(bcos::protocol::FRONT_SERVICE_NAME));
         auto frontService = std::make_shared<bcostars::FrontServiceClient>(
             frontServiceProxy, protocolInitializer->keyFactory());
         TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the frontService client success");
@@ -120,7 +112,7 @@ public:
 
         // register handlers for the txpool to interact with the sealer
         auto pbftProxy = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
-            getProxyDesc(PBFT_SERVICE_NAME));
+            getProxyDesc(bcos::protocol::CONSENSUS_SERVICE_NAME));
         auto sealer = std::make_shared<PBFTServiceClient>(pbftProxy);
         m_txpool->registerUnsealedTxsNotifier(
             [sealer](size_t _unsealedTxsSize, std::function<void(bcos::Error::Ptr)> _onRecv) {
@@ -154,10 +146,6 @@ public:
         if (m_txpool)
         {
             m_txpool->stop();
-        }
-        if (m_ledger)
-        {
-            m_ledger->stop();
         }
         TLOGINFO(LOG_DESC("[TXPOOLSERVICE] Stop the txpoolService success") << std::endl);
     }
@@ -257,7 +245,7 @@ public:
     }
 
     bcostars::Error asyncSealTxs(tars::Int64 txsLimit, const vector<vector<tars::Char>>& avoidTxs,
-        vector<vector<tars::Char>>& return1, vector<vector<tars::Char>>& return2,
+        bcostars::Block& txsList, bcostars::Block& sysTxsList,
         tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
@@ -269,30 +257,20 @@ public:
         }
 
         m_txpool->asyncSealTxs(txsLimit, bcosAvoidTxs,
-            [current](bcos::Error::Ptr error, bcos::crypto::HashListPtr list1,
-                bcos::crypto::HashListPtr list2) {
+            [current](bcos::Error::Ptr error, bcos::protocol::Block::Ptr _txsList,
+                bcos::protocol::Block::Ptr _sysTxsList) {
                 if (error)
                 {
                     TXPOOLSERVICE_LOG(WARNING)
                         << LOG_DESC("asyncSealTxs failed") << LOG_KV("code", error->errorCode())
                         << LOG_KV("msg", error->errorMessage());
-                    async_response_asyncSealTxs(current, toTarsError(error),
-                        vector<vector<tars::Char>>(), vector<vector<tars::Char>>());
+                    async_response_asyncSealTxs(
+                        current, toTarsError(error), bcostars::Block(), bcostars::Block());
                     return;
                 }
-                vector<vector<tars::Char>> returnList1;
-                for (auto hash1 : *list1)
-                {
-                    returnList1.emplace_back(hash1.begin(), hash1.end());
-                }
-
-                vector<vector<tars::Char>> returnList2;
-                for (auto hash2 : *list2)
-                {
-                    returnList2.emplace_back(hash2.begin(), hash2.end());
-                }
-
-                async_response_asyncSealTxs(current, toTarsError(error), returnList1, returnList2);
+                async_response_asyncSealTxs(current, toTarsError(error),
+                    std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(_txsList)->inner(),
+                    std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(_sysTxsList)->inner());
             });
 
         return bcostars::Error();

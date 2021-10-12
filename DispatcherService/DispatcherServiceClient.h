@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../Common/ErrorConverter.h"
 #include <bcos-framework/interfaces/dispatcher/DispatcherInterface.h>
-#include <bcos-tars-protocol/BlockFactoryImpl.h>
-#include <bcos-tars-protocol/BlockHeaderFactoryImpl.h>
-#include <bcos-tars-protocol/DispatcherService.h>
+#include <bcos-tars-protocol/ErrorConverter.h>
+#include <bcos-tars-protocol/protocol/BlockFactoryImpl.h>
+#include <bcos-tars-protocol/protocol/BlockHeaderFactoryImpl.h>
+#include <bcos-tars-protocol/tars/DispatcherService.h>
 #include <memory>
 
 namespace bcostars

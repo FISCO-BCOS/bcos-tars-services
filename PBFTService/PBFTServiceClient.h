@@ -21,11 +21,11 @@
 
 #pragma once
 
-#include "../Common/ErrorConverter.h"
 #include "bcos-framework/interfaces/sealer/SealerInterface.h"
 #include <bcos-framework/interfaces/consensus/ConsensusInterface.h>
 #include <bcos-framework/interfaces/sync/BlockSyncInterface.h>
-#include <bcos-tars-protocol/PBFTService.h>
+#include <bcos-tars-protocol/ErrorConverter.h>
+#include <bcos-tars-protocol/tars/PBFTService.h>
 
 namespace bcostars
 {

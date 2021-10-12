@@ -1,10 +1,7 @@
 #pragma once
 
-#include "../Common/ErrorConverter.h"
 #include "../Common/TarsUtils.h"
 #include "../DispatcherService/DispatcherServiceClient.h"
-#include "../RpcService/RpcServiceClient.h"
-#include "../StorageService/StorageServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 #include <bcos-executor/Executor.h>
@@ -12,11 +9,13 @@
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <bcos-ledger/libledger/Ledger.h>
-#include <bcos-tars-protocol/Block.h>
-#include <bcos-tars-protocol/BlockFactoryImpl.h>
-#include <bcos-tars-protocol/ExecutorService.h>
-#include <bcos-tars-protocol/TransactionImpl.h>
-#include <bcos-tars-protocol/TransactionReceiptImpl.h>
+#include <bcos-tars-protocol/ErrorConverter.h>
+#include <bcos-tars-protocol/client/RpcServiceClient.h>
+#include <bcos-tars-protocol/protocol/Block.h>
+#include <bcos-tars-protocol/protocol/BlockFactoryImpl.h>
+#include <bcos-tars-protocol/protocol/TransactionImpl.h>
+#include <bcos-tars-protocol/protocol/TransactionReceiptImpl.h>
+#include <bcos-tars-protocol/tars/ExecutorService.h>
 #include <memory>
 #include <mutex>
 
@@ -95,36 +94,30 @@ public:
             protocolInitializer->init(nodeConfig);
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init protocol success");
 
-            // create the storage client
-            EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init storage service client");
-            bcostars::StorageServicePrx storageServiceProxy =
-                Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(
-                    getProxyDesc(STORAGE_SERVICE_NAME));
-
-            bcos::storage::StorageInterface::Ptr storageServiceClient =
-                std::make_shared<bcostars::StorageServiceClient>(storageServiceProxy);
-            EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init storage service client success");
-
             // init the ledger
+            // TODO: modify ledger to LedgerServiceClient and implement the ledger client interfaces
+            // with tars protocol
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init ledger");
             auto ledger = std::make_shared<bcos::ledger::Ledger>(
-                protocolInitializer->blockFactory(), storageServiceClient);
+                protocolInitializer->blockFactory(), nullptr);
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init ledger success");
 
             // init the dispatcher
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init dispatcher client");
             auto dispatcherProxy =
                 Application::getCommunicator()->stringToProxy<bcostars::DispatcherServicePrx>(
-                    getProxyDesc(DISPATCHER_SERVICE_NAME));
+                    getProxyDesc(bcos::protocol::DISPATCHER_SERVICE_NAME));
             auto dispatcher = std::make_shared<bcostars::DispatcherServiceClient>(
                 dispatcherProxy, protocolInitializer->blockFactory());
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("init dispatcher client success");
 
             // create the executor
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("create executor");
+            // TODO: executor init: modify ledger to LedgerServiceClient and implement the ledger
+            // client interfaces with tars protocol
             m_executor =
                 std::make_shared<bcos::executor::Executor>(protocolInitializer->blockFactory(),
-                    dispatcher, ledger, storageServiceClient, nodeConfig->isWasm());
+                    dispatcher, ledger, nullptr, nodeConfig->isWasm());
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("create executor success");
             // start the executor
             EXECUTORSERVICE_LOG(INFO) << LOG_DESC("start executor");

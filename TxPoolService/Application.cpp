@@ -12,8 +12,8 @@ public:
     virtual void initialize() override
     {
         addAllConfig(this);
-        addServant<TxPoolServiceServer>(
-            ServerConfig::Application + "." + ServerConfig::ServerName + "." + TXPOOL_SERVANT_NAME);
+        addServant<TxPoolServiceServer>(ServerConfig::Application + "." + ServerConfig::ServerName +
+                                        "." + bcos::protocol::TXPOOL_SERVANT_NAME);
     }
 
     virtual void destroyApp() override {}

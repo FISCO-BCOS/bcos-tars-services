@@ -22,7 +22,6 @@
 #pragma once
 
 
-#include "../Common/ErrorConverter.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include <bcos-framework/interfaces/crypto/KeyFactory.h>
 #include <bcos-framework/libsealer/SealerFactory.h>
@@ -31,7 +30,8 @@
 #include <bcos-ledger/libledger/Ledger.h>
 #include <bcos-pbft/pbft/PBFTFactory.h>
 #include <bcos-sync/BlockSyncFactory.h>
-#include <bcos-tars-protocol/PBFTService.h>
+#include <bcos-tars-protocol/ErrorConverter.h>
+#include <bcos-tars-protocol/tars/PBFTService.h>
 #include <bcos-txpool/TxPoolFactory.h>
 #include <tarscpp/servant/Application.h>
 #include <tarscpp/servant/Communicator.h>
@@ -122,7 +122,6 @@ private:
     // the client dependencies used to access the remote server service
     bcos::txpool::TxPoolInterface::Ptr m_txpool;
     bcos::front::FrontServiceInterface::Ptr m_frontService;
-    bcos::storage::StorageInterface::Ptr m_storage;
     bcos::dispatcher::DispatcherInterface::Ptr m_dispatcher;
 
     static bcos::initializer::ProtocolInitializer::Ptr m_protocolInitializer;

@@ -12,8 +12,8 @@ public:
     virtual void initialize() override
     {
         addAllConfig(this);
-        addServant<RpcServiceServer>(
-            ServerConfig::Application + "." + ServerConfig::ServerName + "." + RPC_SERVANT_NAME);
+        addServant<RpcServiceServer>(ServerConfig::Application + "." + ServerConfig::ServerName +
+                                     "." + bcos::protocol::RPC_SERVANT_NAME);
     }
 
     virtual void destroyApp() override {}

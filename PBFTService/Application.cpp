@@ -12,8 +12,8 @@ public:
     virtual void initialize() override
     {
         addAllConfig(this);
-        addServant<PBFTServiceServer>(
-            ServerConfig::Application + "." + ServerConfig::ServerName + "." + PBFT_SERVANT_NAME);
+        addServant<PBFTServiceServer>(ServerConfig::Application + "." + ServerConfig::ServerName +
+                                      "." + bcos::protocol::CONSENSUS_SERVANT_NAME);
     }
 
     virtual void destroyApp() override {}
