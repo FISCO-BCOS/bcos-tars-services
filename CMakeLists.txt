@@ -40,7 +40,7 @@ include(InstallBcosLedgerDependencies)
 include(InstallBcosSyncDependencies)
 include(InstallBcosFrontDependencies)
 include(InstallBcosScheduler)
-#include(ProjectBCOSExecutor)
+include(ProjectBCOSExecutor)
 
 # copy .clang-format into the project path
 include(CopyClangFormat)
@@ -55,7 +55,7 @@ add_subdirectory(libinitializer)
 
 include(BuildInfoGenerator)
 # import services
-list(APPEND SERVICE_LIST FrontService GatewayService RpcService TxPoolService)
+list(APPEND SERVICE_LIST FrontService GatewayService RpcService TxPoolService NativeNodeService)
 # TODO:
 # PBFTService, DispatcherService, ExecutorService, 
 
