@@ -6,13 +6,14 @@
 #include "libutilities/Log.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 #include <bcos-framework/interfaces/crypto/KeyInterface.h>
+#include <bcos-framework/interfaces/multigroup/ChainNodeInfoFactory.h>
+#include <bcos-framework/interfaces/multigroup/GroupInfoFactory.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <bcos-gateway/Gateway.h>
 #include <bcos-gateway/GatewayConfig.h>
 #include <bcos-gateway/GatewayFactory.h>
 #include <bcos-tars-protocol/ErrorConverter.h>
-#include <bcos-tars-protocol/client/FrontServiceClient.h>
 #include <bcos-tars-protocol/tars/GatewayService.h>
 #include <chrono>
 #include <mutex>
@@ -62,6 +63,9 @@ public:
             m_logInitializer->initLog(pt);
             TLOGINFO(GATEWAYSERVICE_BADGE << LOG_DESC("initLog success") << std::endl);
 
+            m_groupInfoFactory = std::make_shared<bcos::group::GroupInfoFactory>();
+            m_chainNodeInfoFactory = std::make_shared<bcos::group::ChainNodeInfoFactory>();
+
             TLOGINFO(GATEWAYSERVICE_BADGE << LOG_DESC("initGateWayConfig")
                                           << LOG_KV("configPath", configPath) << std::endl);
             auto gateWayConfig = std::make_shared<bcos::gateway::GatewayConfig>();
@@ -81,31 +85,6 @@ public:
             nodeConfig->loadConfig(configPath);
             TLOGINFO(GATEWAYSERVICE_BADGE << LOG_DESC("load nodeConfig success") << std::endl);
 
-            GATEWAYSERVICE_LOG(INFO) << LOG_DESC("init protocol");
-            auto protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
-            protocolInitializer->init(nodeConfig);
-            GATEWAYSERVICE_LOG(INFO) << LOG_DESC("init protocol success");
-
-            GATEWAYSERVICE_LOG(INFO) << LOG_DESC("init the nodeID");
-            auto privateKeyPath = ServerConfig::BasePath + "node.pem";
-            protocolInitializer->loadKeyPair(privateKeyPath);
-            GATEWAYSERVICE_LOG(INFO)
-                << LOG_DESC("init the nodeID success")
-                << LOG_KV("nodeID", protocolInitializer->keyPair()->publicKey()->shortHex());
-            m_keyFactory = protocolInitializer->keyFactory();
-
-            GATEWAYSERVICE_LOG(INFO) << LOG_DESC("create the frontService client");
-            auto frontServiceProxy =
-                Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
-                    getProxyDesc(bcos::protocol::FRONT_SERVICE_NAME));
-            auto frontService = std::make_shared<bcostars::FrontServiceClient>(
-                frontServiceProxy, protocolInitializer->keyFactory());
-            GATEWAYSERVICE_LOG(INFO) << LOG_DESC("create the frontService client success");
-
-            GATEWAYSERVICE_LOG(INFO) << LOG_DESC("register the frontService");
-            m_gateway->registerFrontService(
-                nodeConfig->groupId(), protocolInitializer->keyPair()->publicKey(), frontService);
-            GATEWAYSERVICE_LOG(INFO) << LOG_DESC("register the frontService success");
             // start the gateway
             GATEWAYSERVICE_LOG(INFO) << LOG_DESC("start the gateway");
             m_gateway->start();
@@ -228,10 +207,8 @@ public:
         return bcostars::Error();
     }
 
-    // TODO: implement this
     bcostars::Error asyncNotifyGroupInfo(
-        const bcostars::GroupInfo& groupInfo, tars::TarsCurrentPtr current) override
-    {}
+        const bcostars::GroupInfo& groupInfo, tars::TarsCurrentPtr current) override;
 
 private:
     static std::once_flag m_initFlag;
@@ -239,5 +216,8 @@ private:
     static bcos::crypto::KeyFactory::Ptr m_keyFactory;
     std::atomic_bool m_running = {false};
     static bcos::BoostLogInitializer::Ptr m_logInitializer;
+
+    static bcos::group::GroupInfoFactory::Ptr m_groupInfoFactory;
+    static bcos::group::ChainNodeInfoFactory::Ptr m_chainNodeInfoFactory;
 };
 }  // namespace bcostars

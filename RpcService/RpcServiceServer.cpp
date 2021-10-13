@@ -1,14 +1,18 @@
 #include "RpcServiceServer.h"
 #include <bcos-framework/libutilities/Log.h>
-#include <bcos-tars-protocol/client/FrontServiceClient.h>
+#include <bcos-tars-protocol/client/GroupManagerServiceClient.h>
 #include <memory>
 using namespace bcostars;
+using namespace bcos::group;
 
 std::once_flag RpcServiceServer::m_initFlag;
 bcos::rpc::Rpc::Ptr RpcServiceServer::m_rpc;
 bcos::BoostLogInitializer::Ptr RpcServiceServer::m_logInitializer;
 bcos::crypto::KeyFactory::Ptr RpcServiceServer::m_keyFactory;
 std::atomic_bool RpcServiceServer::m_running = {false};
+
+bcos::group::GroupInfoFactory::Ptr RpcServiceServer::m_groupInfoFactory;
+bcos::group::ChainNodeInfoFactory::Ptr RpcServiceServer::m_chainNodeInfoFactory;
 
 void RpcServiceServer::initialize()
 {
@@ -50,10 +54,6 @@ void RpcServiceServer::init()
     auto configPath = ServerConfig::BasePath + "config.ini";
     boost::property_tree::ptree pt;
     boost::property_tree::read_ini(configPath, pt);
-
-    // TLOGINFO(RPCSERVICE_BADGE << LOG_DESC("init") << LOG_KV("configPath", configPath) <<
-    // std::endl);
-
     // init log
     m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
     m_logInitializer->setLogPath(getLogPath());
@@ -68,121 +68,48 @@ void RpcServiceServer::init()
     RPCSERVICE_LOG(INFO) << LOG_DESC("init node config success");
 
     // init rpc config
-    RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc config");
-
-    auto nodeInfo = std::make_shared<bcos::rpc::NodeInfo>();
-    nodeInfo->chainID = nodeConfig->chainId();
-    nodeInfo->groupID = nodeConfig->groupId();
-    nodeInfo->isWasm = nodeConfig->isWasm();
-    nodeInfo->isSM = nodeConfig->smCryptoType();
-
-    RPCSERVICE_LOG(INFO) << LOG_DESC("init node id");
-    auto protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
-    protocolInitializer->init(nodeConfig);
-    auto privateKeyPath = ServerConfig::BasePath + "node.pem";
-    protocolInitializer->loadKeyPair(privateKeyPath);
-
-    std::string nodeID = protocolInitializer->keyPair()->publicKey()->hex();
-    nodeInfo->nodeID = nodeID;
-    RPCSERVICE_LOG(INFO) << LOG_DESC("init node id success") << LOG_KV("nodeID", nodeID);
-
-#ifdef FISCO_BCOS_PROJECT_VERSION
-    nodeInfo->version = FISCO_BCOS_PROJECT_VERSION;
-#endif
-#ifdef FISCO_BCOS_BUILD_TIME
-    nodeInfo->buildTime = FISCO_BCOS_BUILD_TIME;
-#endif
-#ifdef FISCO_BCOS_COMMIT_HASH
-    nodeInfo->gitCommitHash = FISCO_BCOS_COMMIT_HASH;
-#endif
-
     RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc factory");
     auto factory = initRpcFactory(nodeConfig);
     RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc factory success");
-
-    RPCSERVICE_LOG(INFO) << LOG_DESC("init keyFactory");
-    m_keyFactory = factory->keyFactory();
-
-    RPCSERVICE_LOG(INFO) << LOG_DESC("start rpc");
     auto config = factory->initConfig(configPath);
     RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc config success");
 
-    auto rpc = factory->buildRpc(config, *nodeInfo);
+    auto rpc = factory->buildRpc(config);
     m_rpc = rpc;
+    RPCSERVICE_LOG(INFO) << LOG_DESC("start rpc");
     m_rpc->start();
     RPCSERVICE_LOG(INFO) << LOG_DESC("start rpc success");
 
     TLOGINFO(RPCSERVICE_BADGE << LOG_DESC("the rpc service success") << std::endl);
 }
 
-bcos::ledger::Ledger::Ptr RpcServiceServer::initLedger(
-    bcos::initializer::ProtocolInitializer::Ptr protocolInitializer)
-{
-    // init the ledger
-    RPCSERVICE_LOG(INFO) << LOG_DESC("init ledger");
-    // TODO: modify ledger to LedgerServiceClient and implement the ledger client interfaces with
-    // tars protocol
-    auto ledger =
-        std::make_shared<bcos::ledger::Ledger>(protocolInitializer->blockFactory(), nullptr);
-    RPCSERVICE_LOG(INFO) << LOG_DESC("init ledger success");
-
-    return ledger;
-}
-
-bcos::rpc::RpcFactory::Ptr RpcServiceServer::initRpcFactory(bcos::tool::NodeConfig::Ptr nodeConfig)
+bcos::rpc::RpcFactory::Ptr RpcServiceServer::initRpcFactory(bcos::tool::NodeConfig::Ptr _nodeConfig)
 {
     RPCSERVICE_LOG(INFO) << LOG_DESC("create rpc factory");
 
     // init the protocol
     RPCSERVICE_LOG(INFO) << LOG_DESC("init protocol");
     auto protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
-    protocolInitializer->init(nodeConfig);
+    protocolInitializer->init(_nodeConfig);
+    m_keyFactory = protocolInitializer->keyFactory();
     RPCSERVICE_LOG(INFO) << LOG_DESC("init protocol success");
 
-    // set the gateway interface
+    // get the gateway client
     auto gatewayProxy = Application::getCommunicator()->stringToProxy<GatewayServicePrx>(
-        getProxyDesc(bcos::protocol::GATEWAY_SERVICE_NAME));
+        _nodeConfig->gatewayServiceName());
     auto gateway =
         std::make_shared<GatewayServiceClient>(gatewayProxy, protocolInitializer->keyFactory());
 
-    auto frontServiceProxy =
-        Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
-            getProxyDesc(bcos::protocol::FRONT_SERVICE_NAME));
-    auto frontService = std::make_shared<bcostars::FrontServiceClient>(
-        frontServiceProxy, protocolInitializer->keyFactory());
-
-    // pbft
-    auto pbftProxy = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
-        getProxyDesc(bcos::protocol::CONSENSUS_SERVICE_NAME));
-    auto pbft = std::make_shared<PBFTServiceClient>(pbftProxy);
-    auto sync = std::make_shared<BlockSyncServiceClient>(pbftProxy);
-
-    // txPool
-    auto txPoolProxy = Application::getCommunicator()->stringToProxy<TxPoolServicePrx>(
-        getProxyDesc(bcos::protocol::TXPOOL_SERVICE_NAME));
-    auto txpool = std::make_shared<bcostars::TxPoolServiceClient>(
-        txPoolProxy, protocolInitializer->cryptoSuite(), protocolInitializer->blockFactory());
-
-    // executor
-    auto executorProxy = Application::getCommunicator()->stringToProxy<ExecutorServicePrx>(
-        getProxyDesc(bcos::protocol::EXECUTOR_SERVICE_NAME));
-    auto executor = std::make_shared<bcostars::ExecutorServiceClient>(
-        executorProxy, protocolInitializer->cryptoSuite());
-
-    auto ledger = initLedger(protocolInitializer);
-    auto factory = std::make_shared<bcos::rpc::RpcFactory>();
-    // transaction factory
-    factory->setGatewayInterface(gateway);
-    factory->setBlockSyncInterface(sync);
-    factory->setConsensusInterface(pbft);
-    factory->setTxPoolInterface(txpool);
-    factory->setExecutorInterface(executor);
-    factory->setFrontServiceInterface(frontService);
-    factory->setLedger(ledger);
-    factory->setTransactionFactory(protocolInitializer->blockFactory()->transactionFactory());
-    factory->setKeyFactory(protocolInitializer->keyFactory());
-    factory->checkParams();
-
+    // get the group manager service client
+    m_groupInfoFactory = std::make_shared<GroupInfoFactory>();
+    m_chainNodeInfoFactory = std::make_shared<ChainNodeInfoFactory>();
+    auto groupManagerPrx = Application::getCommunicator()->stringToProxy<GroupManagerServicePrx>(
+        _nodeConfig->groupManagerServiceName());
+    auto groupManagerClient = std::make_shared<GroupManagerServiceClient>(
+        groupManagerPrx, m_chainNodeInfoFactory, m_groupInfoFactory);
+    auto factory =
+        std::make_shared<bcos::rpc::RpcFactory>(_nodeConfig->chainId(), gateway, groupManagerClient,
+            m_groupInfoFactory, m_chainNodeInfoFactory, protocolInitializer->keyFactory());
     RPCSERVICE_LOG(INFO) << LOG_DESC("create rpc factory success");
     return factory;
 }
@@ -242,5 +169,16 @@ bcostars::Error RpcServiceServer::asyncNotifyAmopMessage(const vector<tars::Char
             async_response_asyncNotifyAmopMessage(current, toTarsError(_error));
         });
 
+    return bcostars::Error();
+}
+
+bcostars::Error RpcServiceServer::asyncNotifyGroupInfo(
+    const bcostars::GroupInfo& groupInfo, tars::TarsCurrentPtr current)
+{
+    current->setResponse(false);
+    auto bcosGroupInfo = toBcosGroupInfo(m_chainNodeInfoFactory, m_groupInfoFactory, groupInfo);
+    m_rpc->asyncNotifyGroupInfo(bcosGroupInfo, [current](bcos::Error::Ptr&& _error) {
+        async_response_asyncNotifyGroupInfo(current, toTarsError(_error));
+    });
     return bcostars::Error();
 }
