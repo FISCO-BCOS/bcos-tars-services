@@ -25,11 +25,11 @@
 #include <bcos-crypto/hash/SM3.h>
 #include <bcos-crypto/signature/secp256k1/Secp256k1Crypto.h>
 #include <bcos-crypto/signature/sm2/SM2Crypto.h>
-#include <bcos-tars-protocol/BlockFactoryImpl.h>
-#include <bcos-tars-protocol/BlockHeaderFactoryImpl.h>
-#include <bcos-tars-protocol/TransactionFactoryImpl.h>
-#include <bcos-tars-protocol/TransactionReceiptFactoryImpl.h>
-#include <bcos-tars-protocol/TransactionSubmitResultFactoryImpl.h>
+#include <bcos-tars-protocol/protocol/BlockFactoryImpl.h>
+#include <bcos-tars-protocol/protocol/BlockHeaderFactoryImpl.h>
+#include <bcos-tars-protocol/protocol/TransactionFactoryImpl.h>
+#include <bcos-tars-protocol/protocol/TransactionReceiptFactoryImpl.h>
+#include <bcos-tars-protocol/protocol/TransactionSubmitResultFactoryImpl.h>
 
 using namespace bcos;
 using namespace bcostars::protocol;

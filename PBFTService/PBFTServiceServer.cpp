@@ -22,14 +22,13 @@
 #include "PBFTServiceServer.h"
 #include "../Common/TarsUtils.h"
 #include "../DispatcherService/DispatcherServiceClient.h"
-#include "../FrontService/FrontServiceClient.h"
-#include "../RpcService/RpcServiceClient.h"
-#include "../StorageService/StorageServiceClient.h"
-#include "../TxPoolService/TxPoolServiceClient.h"
 #include "PBFTService/Common.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 #include <bcos-framework/libutilities/Common.h>
-#include <bcos-tars-protocol/BlockFactoryImpl.h>
+#include <bcos-tars-protocol/client/FrontServiceClient.h>
+#include <bcos-tars-protocol/client/RpcServiceClient.h>
+#include <bcos-tars-protocol/client/TxPoolServiceClient.h>
+#include <bcos-tars-protocol/protocol/BlockFactoryImpl.h>
 
 using namespace bcostars;
 using namespace bcos::crypto;
@@ -127,28 +126,23 @@ void PBFTServiceServer::init()
     // create the frontService
     auto frontServiceProxy =
         Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
-            getProxyDesc(FRONT_SERVICE_NAME));
+            getProxyDesc(bcos::protocol::FRONT_SERVICE_NAME));
     m_frontService =
         std::make_shared<bcostars::FrontServiceClient>(frontServiceProxy, m_keyFactory);
-
-    // create the storage
-    auto storageProxy = Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(
-        getProxyDesc(STORAGE_SERVICE_NAME));
-
-    m_storage = std::make_shared<bcostars::StorageServiceClient>(storageProxy);
 
     // create dispatcher
     auto dispatcherProxy =
         Application::getCommunicator()->stringToProxy<bcostars::DispatcherServicePrx>(
-            getProxyDesc(DISPATCHER_SERVICE_NAME));
+            getProxyDesc(bcos::protocol::DISPATCHER_SERVICE_NAME));
 
     m_dispatcher = std::make_shared<bcostars::DispatcherServiceClient>(
         dispatcherProxy, m_protocolInitializer->blockFactory());
 
     // create the ledger
-    // Note: the executor module init the genesis block
+    // TODO: modify ledger to LedgerServiceClient and implement the ledger client interfaces with
+    // tars protocol
     auto ledger =
-        std::make_shared<bcos::ledger::Ledger>(m_protocolInitializer->blockFactory(), m_storage);
+        std::make_shared<bcos::ledger::Ledger>(m_protocolInitializer->blockFactory(), nullptr);
 
     m_ledger = ledger;
     // create the txpool client only
@@ -199,7 +193,7 @@ void PBFTServiceServer::registerHandlers()
     // register block number notify
     PBFTSERVICE_LOG(INFO) << LOG_DESC("init rpc client");
     auto rpcServicePrx = Application::getCommunicator()->stringToProxy<bcostars::RpcServicePrx>(
-        getProxyDesc(RPC_SERVICE_NAME));
+        getProxyDesc(bcos::protocol::RPC_SERVICE_NAME));
     auto rpcServiceClient = std::make_shared<bcostars::RpcServiceClient>(rpcServicePrx);
     PBFTSERVICE_LOG(INFO) << LOG_DESC("init rpc client success");
     // register blockNumber notify
@@ -215,9 +209,9 @@ void PBFTServiceServer::createTxPool(bcos::tool::NodeConfig::Ptr _nodeConfig)
 {
     PBFTSERVICE_LOG(INFO) << LOG_DESC("createTxPool");
     auto txpoolProxy = Application::getCommunicator()->stringToProxy<bcostars::TxPoolServicePrx>(
-        getProxyDesc(TXPOOL_SERVICE_NAME));
+        getProxyDesc(bcos::protocol::TXPOOL_SERVICE_NAME));
     m_txpool = std::make_shared<bcostars::TxPoolServiceClient>(
-        txpoolProxy, m_protocolInitializer->cryptoSuite());
+        txpoolProxy, m_protocolInitializer->cryptoSuite(), protocolInitializer->blockFactory());
     PBFTSERVICE_LOG(INFO) << LOG_DESC("create TxPool client success");
 }
 
@@ -236,10 +230,10 @@ void PBFTServiceServer::createPBFT(bcos::tool::NodeConfig::Ptr _nodeConfig)
     PBFTSERVICE_LOG(INFO) << LOG_DESC("createPBFT");
     auto keyPair = m_protocolInitializer->keyPair();
     // create pbft
+    // TODO: init KVStorageHelper with TikvStorage in microservice model
     auto pbftFactory = std::make_shared<PBFTFactory>(m_protocolInitializer->cryptoSuite(),
-        m_protocolInitializer->keyPair(), m_frontService, m_storage, m_ledger, m_txpool,
-        m_dispatcher, m_protocolInitializer->blockFactory(),
-        m_protocolInitializer->txResultFactory());
+        m_protocolInitializer->keyPair(), m_frontService, nullptr, m_ledger, m_txpool, m_dispatcher,
+        m_protocolInitializer->blockFactory(), m_protocolInitializer->txResultFactory());
     m_pbft = pbftFactory->createPBFT();
     auto pbftConfig = m_pbft->pbftEngine()->pbftConfig();
     pbftConfig->setCheckPointTimeoutInterval(_nodeConfig->checkPointTimeoutInterval());

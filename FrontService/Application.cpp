@@ -12,8 +12,8 @@ public:
     virtual void initialize() override
     {
         addAllConfig(this);
-        addServant<FrontServiceServer>(
-            ServerConfig::Application + "." + ServerConfig::ServerName + "." + FRONT_SERVANT_NAME);
+        addServant<FrontServiceServer>(ServerConfig::Application + "." + ServerConfig::ServerName +
+                                       "." + bcos::protocol::FRONT_SERVANT_NAME);
     }
 
     virtual void destroyApp() override {}

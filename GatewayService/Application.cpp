@@ -13,7 +13,8 @@ public:
     {
         addAllConfig(this);
         addServant<GatewayServiceServer>(ServerConfig::Application + "." +
-                                         ServerConfig::ServerName + "." + GATEWAY_SERVANT_NAME);
+                                         ServerConfig::ServerName + "." +
+                                         bcos::protocol::GATEWAY_SERVANT_NAME);
     }
 
     void destroyApp() override {}

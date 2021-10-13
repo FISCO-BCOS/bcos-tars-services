@@ -1,13 +1,13 @@
 #pragma once
-#include "../Common/ErrorConverter.h"
 #include "../Common/TarsUtils.h"
-#include "../TxPoolService/TxPoolServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include <bcos-dispatcher/DispatcherImpl.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
-#include <bcos-tars-protocol/BlockFactoryImpl.h>
-#include <bcos-tars-protocol/DispatcherService.h>
+#include <bcos-tars-protocol/ErrorConverter.h>
+#include <bcos-tars-protocol/client/TxPoolServiceClient.h>
+#include <bcos-tars-protocol/protocol/BlockFactoryImpl.h>
+#include <bcos-tars-protocol/tars/DispatcherService.h>
 #include <tarscpp/servant/Application.h>
 #include <memory>
 
@@ -43,9 +43,9 @@ public:
             // set the txpool to the dispatcher
             auto txpoolProxy =
                 Application::getCommunicator()->stringToProxy<bcostars::TxPoolServicePrx>(
-                    getProxyDesc(TXPOOL_SERVICE_NAME));
-            auto txpool = std::make_shared<bcostars::TxPoolServiceClient>(
-                txpoolProxy, protocolInitializer->cryptoSuite());
+                    getProxyDesc(bcos::protocol::TXPOOL_SERVICE_NAME));
+            auto txpool = std::make_shared<bcostars::TxPoolServiceClient>(txpoolProxy,
+                protocolInitializer->cryptoSuite(), protocolInitializer->blockFactory());
             DISPATCHERSERVICE_LOG(INFO) << LOG_DESC("init and start the dispatcher service");
             m_dispatcher->init(txpool);
             m_dispatcher->start();

@@ -13,7 +13,8 @@ public:
     {
         addAllConfig(this);
         addServant<ExecutorServiceServer>(ServerConfig::Application + "." +
-                                          ServerConfig::ServerName + "." + EXECUTOR_SERVANT_NAME);
+                                          ServerConfig::ServerName + "." +
+                                          bcos::protocol::EXECUTOR_SERVANT_NAME);
     }
 
     void destroyApp() override {}

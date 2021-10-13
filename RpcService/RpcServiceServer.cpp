@@ -1,6 +1,6 @@
 #include "RpcServiceServer.h"
-#include "../FrontService/FrontServiceClient.h"
 #include <bcos-framework/libutilities/Log.h>
+#include <bcos-tars-protocol/client/FrontServiceClient.h>
 #include <memory>
 using namespace bcostars;
 
@@ -69,9 +69,6 @@ void RpcServiceServer::init()
 
     // init rpc config
     RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc config");
-    auto config = std::make_shared<bcos::rpc::RpcConfig>();
-    config->initConfig(configPath);
-    RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc config success");
 
     auto nodeInfo = std::make_shared<bcos::rpc::NodeInfo>();
     nodeInfo->chainID = nodeConfig->chainId();
@@ -107,7 +104,10 @@ void RpcServiceServer::init()
     m_keyFactory = factory->keyFactory();
 
     RPCSERVICE_LOG(INFO) << LOG_DESC("start rpc");
-    auto rpc = factory->buildRpc(*config, *nodeInfo);
+    auto config = factory->initConfig(configPath);
+    RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc config success");
+
+    auto rpc = factory->buildRpc(config, *nodeInfo);
     m_rpc = rpc;
     m_rpc->start();
     RPCSERVICE_LOG(INFO) << LOG_DESC("start rpc success");
@@ -118,20 +118,12 @@ void RpcServiceServer::init()
 bcos::ledger::Ledger::Ptr RpcServiceServer::initLedger(
     bcos::initializer::ProtocolInitializer::Ptr protocolInitializer)
 {
-    // init the storage client
-    RPCSERVICE_LOG(INFO) << LOG_DESC("init storage service client");
-    bcostars::StorageServicePrx storageServiceProxy =
-        Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(
-            getProxyDesc(STORAGE_SERVICE_NAME));
-
-    bcos::storage::StorageInterface::Ptr storageServiceClient =
-        std::make_shared<bcostars::StorageServiceClient>(storageServiceProxy);
-    RPCSERVICE_LOG(INFO) << LOG_DESC("init storage service client success");
-
     // init the ledger
     RPCSERVICE_LOG(INFO) << LOG_DESC("init ledger");
-    auto ledger = std::make_shared<bcos::ledger::Ledger>(
-        protocolInitializer->blockFactory(), storageServiceClient);
+    // TODO: modify ledger to LedgerServiceClient and implement the ledger client interfaces with
+    // tars protocol
+    auto ledger =
+        std::make_shared<bcos::ledger::Ledger>(protocolInitializer->blockFactory(), nullptr);
     RPCSERVICE_LOG(INFO) << LOG_DESC("init ledger success");
 
     return ledger;
@@ -149,39 +141,33 @@ bcos::rpc::RpcFactory::Ptr RpcServiceServer::initRpcFactory(bcos::tool::NodeConf
 
     // set the gateway interface
     auto gatewayProxy = Application::getCommunicator()->stringToProxy<GatewayServicePrx>(
-        getProxyDesc(GATEWAY_SERVICE_NAME));
+        getProxyDesc(bcos::protocol::GATEWAY_SERVICE_NAME));
     auto gateway =
         std::make_shared<GatewayServiceClient>(gatewayProxy, protocolInitializer->keyFactory());
 
     auto frontServiceProxy =
         Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
-            getProxyDesc(FRONT_SERVICE_NAME));
+            getProxyDesc(bcos::protocol::FRONT_SERVICE_NAME));
     auto frontService = std::make_shared<bcostars::FrontServiceClient>(
         frontServiceProxy, protocolInitializer->keyFactory());
 
     // pbft
     auto pbftProxy = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
-        getProxyDesc(PBFT_SERVICE_NAME));
+        getProxyDesc(bcos::protocol::CONSENSUS_SERVICE_NAME));
     auto pbft = std::make_shared<PBFTServiceClient>(pbftProxy);
     auto sync = std::make_shared<BlockSyncServiceClient>(pbftProxy);
 
     // txPool
     auto txPoolProxy = Application::getCommunicator()->stringToProxy<TxPoolServicePrx>(
-        getProxyDesc(TXPOOL_SERVICE_NAME));
+        getProxyDesc(bcos::protocol::TXPOOL_SERVICE_NAME));
     auto txpool = std::make_shared<bcostars::TxPoolServiceClient>(
-        txPoolProxy, protocolInitializer->cryptoSuite());
+        txPoolProxy, protocolInitializer->cryptoSuite(), protocolInitializer->blockFactory());
 
     // executor
     auto executorProxy = Application::getCommunicator()->stringToProxy<ExecutorServicePrx>(
-        getProxyDesc(EXECUTOR_SERVICE_NAME));
+        getProxyDesc(bcos::protocol::EXECUTOR_SERVICE_NAME));
     auto executor = std::make_shared<bcostars::ExecutorServiceClient>(
         executorProxy, protocolInitializer->cryptoSuite());
-
-    // storage
-    auto storageProxy = Application::getCommunicator()->stringToProxy<bcostars::StorageServicePrx>(
-        getProxyDesc(STORAGE_SERVICE_NAME));
-    bcos::storage::StorageInterface::Ptr storageServiceClient =
-        std::make_shared<bcostars::StorageServiceClient>(storageProxy);
 
     auto ledger = initLedger(protocolInitializer);
     auto factory = std::make_shared<bcos::rpc::RpcFactory>();

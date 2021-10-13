@@ -1,13 +1,13 @@
 #pragma once
 
-#include "../Common/ErrorConverter.h"
 #include "bcos-framework/interfaces/txpool/TxPoolInterface.h"
 #include "libutilities/Common.h"
-#include <bcos-tars-protocol/Transaction.h>
-#include <bcos-tars-protocol/TransactionImpl.h>
-#include <bcos-tars-protocol/TransactionSubmitResult.h>
-#include <bcos-tars-protocol/TransactionSubmitResultImpl.h>
-#include <bcos-tars-protocol/TxPoolService.h>
+#include <bcos-tars-protocol/ErrorConverter.h>
+#include <bcos-tars-protocol/protocol/Transaction.h>
+#include <bcos-tars-protocol/protocol/TransactionImpl.h>
+#include <bcos-tars-protocol/protocol/TransactionSubmitResult.h>
+#include <bcos-tars-protocol/protocol/TransactionSubmitResultImpl.h>
+#include <bcos-tars-protocol/tars/TxPoolService.h>
 #include <memory>
 
 namespace bcostars

@@ -16,7 +16,7 @@ public:
         // Note: the tars packet name must be the same with ServerConfig::ServerName
         addServant<DispatcherServiceServer>(ServerConfig::Application + "." +
                                             ServerConfig::ServerName + "." +
-                                            DISPATCHER_SERVANT_NAME);
+                                            bcos::protocol::DISPATCHER_SERVANT_NAME);
     }
 
     virtual void destroyApp() override {}

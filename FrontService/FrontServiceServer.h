@@ -1,11 +1,6 @@
 #pragma once
 
-#include "../Common/ErrorConverter.h"
 #include "../Common/TarsUtils.h"
-#include "../GatewayService/GatewayServiceClient.h"
-#include "../PBFTService/PBFTServiceClient.h"
-#include "../RpcService/RpcServiceClient.h"
-#include "../TxPoolService/TxPoolServiceClient.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include "libutilities/Common.h"
 #include "libutilities/Log.h"
@@ -18,7 +13,12 @@
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <bcos-front/FrontService.h>
 #include <bcos-front/FrontServiceFactory.h>
-#include <bcos-tars-protocol/FrontService.h>
+#include <bcos-tars-protocol/ErrorConverter.h>
+#include <bcos-tars-protocol/client/GatewayServiceClient.h>
+#include <bcos-tars-protocol/client/PBFTServiceClient.h>
+#include <bcos-tars-protocol/client/RpcServiceClient.h>
+#include <bcos-tars-protocol/client/TxPoolServiceClient.h>
+#include <bcos-tars-protocol/tars/FrontService.h>
 #include <tarscpp/servant/Communicator.h>
 #include <tarscpp/servant/Global.h>
 #include <boost/core/ignore_unused.hpp>
@@ -72,7 +72,7 @@ public:
 
             // set the gateway interface
             auto gateWayProxy = Application::getCommunicator()->stringToProxy<GatewayServicePrx>(
-                getProxyDesc(GATEWAY_SERVICE_NAME));
+                getProxyDesc(bcos::protocol::GATEWAY_SERVICE_NAME));
             auto gateWay = std::make_shared<GatewayServiceClient>(gateWayProxy, m_keyFactory);
             frontServiceFactory.setGatewayInterface(gateWay);
             FRONTSERVICE_LOG(INFO) << LOG_DESC("init the gateway client success");
@@ -83,7 +83,7 @@ public:
 
             // register the message dispatcher handler to the frontService
             auto pbftProxy = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
-                getProxyDesc(PBFT_SERVICE_NAME));
+                getProxyDesc(bcos::protocol::CONSENSUS_SERVICE_NAME));
             auto pbft = std::make_shared<PBFTServiceClient>(pbftProxy);
             // register the message dispatcher for PBFT module
             front->registerModuleMessageDispatcher(bcos::protocol::ModuleID::PBFT,
@@ -105,9 +105,9 @@ public:
             // register the message dispatcher for the txsSync module
             auto txpoolProxy =
                 Application::getCommunicator()->stringToProxy<bcostars::TxPoolServicePrx>(
-                    getProxyDesc(TXPOOL_SERVICE_NAME));
-            auto txpoolClient = std::make_shared<bcostars::TxPoolServiceClient>(
-                txpoolProxy, protocolInitializer->cryptoSuite());
+                    getProxyDesc(bcos::protocol::TXPOOL_SERVICE_NAME));
+            auto txpoolClient = std::make_shared<bcostars::TxPoolServiceClient>(txpoolProxy,
+                protocolInitializer->cryptoSuite(), protocolInitializer->blockFactory());
             front->registerModuleMessageDispatcher(bcos::protocol::ModuleID::TxsSync,
                 [txpoolClient](bcos::crypto::NodeIDPtr _nodeID, std::string const& _id,
                     bcos::bytesConstRef _data) {
@@ -168,7 +168,7 @@ public:
                 << LOG_DESC("registerModuleNodeIDsDispatcher for the BlockSync module success");
 
             auto rpcServicePrx = Application::getCommunicator()->stringToProxy<RpcServicePrx>(
-                getProxyDesc(RPC_SERVICE_NAME));
+                getProxyDesc(bcos::protocol::RPC_SERVICE_NAME));
             auto rpcServiceClient = std::make_shared<RpcServiceClient>(rpcServicePrx);
             // register the message dispatcher for the amop module
             front->registerModuleMessageDispatcher(bcos::protocol::ModuleID::AMOP,
