@@ -103,7 +103,7 @@ public:
     }
 
 protected:
-    virtual void registerHandlers();
+    virtual void registerHandlers(std::shared_ptr<bcos::tool::NodeConfig> _nodeConfig);
 
     // create the txpool client only
     virtual void createTxPool(bcos::tool::NodeConfig::Ptr _nodeConfig);

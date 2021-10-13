@@ -3,24 +3,16 @@
 #include "../Common/TarsUtils.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
-#include <bcos-framework/interfaces/amop/AMOPInterface.h>
 #include <bcos-framework/interfaces/rpc/RPCInterface.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <bcos-framework/libutilities/Log.h>
-#include <bcos-ledger/libledger/Ledger.h>
 #include <bcos-rpc/Rpc.h>
 #include <bcos-rpc/RpcFactory.h>
 #include <bcos-tars-protocol/ErrorConverter.h>
-#include <bcos-tars-protocol/client/ExecutorServiceClient.h>
 #include <bcos-tars-protocol/client/GatewayServiceClient.h>
-#include <bcos-tars-protocol/client/PBFTServiceClient.h>
-#include <bcos-tars-protocol/client/TxPoolServiceClient.h>
-#include <bcos-tars-protocol/tars/CommonProtocol.h>
-#include <bcos-tars-protocol/tars/ExecutorService.h>
-#include <bcos-tars-protocol/tars/PBFTService.h>
+#include <bcos-tars-protocol/client/GroupManagerServiceClient.h>
 #include <bcos-tars-protocol/tars/RpcService.h>
-#include <bcos-tars-protocol/tars/StorageService.h>
 #include <tarscpp/servant/Servant.h>
 #include <memory>
 #include <utility>
@@ -34,26 +26,21 @@ class RpcServiceServer : public bcostars::RpcService
 public:
     virtual ~RpcServiceServer() {}
 
-    virtual void initialize() override;
-    virtual void destroy() override;
+    void initialize() override;
+    void destroy() override;
     virtual void init();
 
-    virtual bcostars::Error asyncNotifyBlockNumber(
-        tars::Int64 blockNumber, tars::TarsCurrentPtr current) override;
-    virtual bcostars::Error asyncNotifyAmopNodeIDs(
+    bcostars::Error asyncNotifyBlockNumber(const std::string& _groupID,
+        const std::string& _nodeName, tars::Int64 blockNumber,
+        tars::TarsCurrentPtr current) override;
+    bcostars::Error asyncNotifyAmopNodeIDs(
         const vector<vector<tars::Char> >& _nodeIDs, tars::TarsCurrentPtr current) override;
-    virtual bcostars::Error asyncNotifyAmopMessage(const vector<tars::Char>& _nodeID,
+    bcostars::Error asyncNotifyAmopMessage(const vector<tars::Char>& _nodeID,
         const std::string& _uuid, const vector<tars::Char>& _data,
         tars::TarsCurrentPtr current) override;
-
-    bcos::ledger::Ledger::Ptr initLedger(
-        bcos::initializer::ProtocolInitializer::Ptr protocolInitializer);
-    bcos::rpc::RpcFactory::Ptr initRpcFactory(bcos::tool::NodeConfig::Ptr nodeConfig);
-
-    // TODO: implement this
     bcostars::Error asyncNotifyGroupInfo(
-        const bcostars::GroupInfo& groupInfo, tars::TarsCurrentPtr current) override
-    {}
+        const bcostars::GroupInfo& groupInfo, tars::TarsCurrentPtr current) override;
+    bcos::rpc::RpcFactory::Ptr initRpcFactory(bcos::tool::NodeConfig::Ptr nodeConfig);
 
 private:
     static std::once_flag m_initFlag;
@@ -61,5 +48,8 @@ private:
     static bcos::crypto::KeyFactory::Ptr m_keyFactory;
     static std::atomic_bool m_running;
     static bcos::BoostLogInitializer::Ptr m_logInitializer;
+
+    static bcos::group::GroupInfoFactory::Ptr m_groupInfoFactory;
+    static bcos::group::ChainNodeInfoFactory::Ptr m_chainNodeInfoFactory;
 };
 }  // namespace bcostars
