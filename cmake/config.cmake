@@ -1,12 +1,12 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
-hunter_config(bcos-framework VERSION 3.0.0-local
+hunter_config(bcos-framework VERSION 3.0.1-local
 	URL  https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/3c4ec4971c88b0caa96f8b5e7acdd05fba9e6c3a.tar.gz
 	SHA1 b20b2e9a21fddbb8a3ac28770e5274873a31cbe9
 	CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
 hunter_config(bcos-crypto
-    VERSION 3.0.0-local-43df7523
+    VERSION 3.0.0-local-43df7524
     URL  https://${URL_BASE}/FISCO-BCOS/bcos-crypto/archive/255002b047b359a45c953d1dab29efd2ff6eb080.tar.gz
     SHA1 4d02de20be1f9bf79d762c5b8686368286504e07
     CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
@@ -82,8 +82,8 @@ hunter_config(bcos-dispatcher VERSION 3.0.0-local-2903b298
 )
 
 hunter_config(bcos-rpc VERSION 3.0.0-local
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-rpc/archive/b8f614b1bf65adc7d2fd9ec14d1b6aaa2201913a.tar.gz
-    SHA1 c38d1c049684b79ea0966dd2c977a3a4892c0f3a
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-rpc/archive/0b3bd2c46cc5a84a20ed54e8cf03d65c866a4a89.tar.gz
+    SHA1 a1befbebc4206160ae4ad6aa94571fd918e48228
     CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
