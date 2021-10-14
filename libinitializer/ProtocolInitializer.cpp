@@ -18,7 +18,7 @@
  * @author: yujiechen
  * @date 2021-06-10
  */
-#include "ProtocolInitializer.h"
+#include "libinitializer/ProtocolInitializer.h"
 #include <bcos-crypto/encrypt/AESCrypto.h>
 #include <bcos-crypto/encrypt/SM4Crypto.h>
 #include <bcos-crypto/hash/Keccak256.h>
