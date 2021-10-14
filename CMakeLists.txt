@@ -19,8 +19,8 @@ list(APPEND CMAKE_MODULE_PATH ${BCOS_TARS_CMAKE_DIR})
 
 include(HunterGate)
 HunterGate(
-    URL "https://${URL_BASE}/FISCO-BCOS/hunter/archive/9ea365415828102627dcc933295e25e8feff7d93.tar.gz"
-    SHA1 "b40d19ddd9939f557b70c69e45f8744ff17583ba"
+    URL "https://${URL_BASE}/FISCO-BCOS/hunter/archive/b55a347258b0fc3eda47f4ccd3e2c0db595b4957.tar.gz"
+    SHA1 "9331d1e70cee5498bd59ada13aa68278cbb9a2d6"
     FILEPATH "${BCOS_TARS_CMAKE_DIR}/config.cmake"
 )
 
@@ -40,6 +40,7 @@ include(InstallBcosLedgerDependencies)
 include(InstallBcosSyncDependencies)
 include(InstallBcosFrontDependencies)
 include(InstallBcosScheduler)
+include(InstallBcosGroupManager)
 #include(ProjectBCOSExecutor)
 
 # copy .clang-format into the project path
@@ -55,7 +56,7 @@ add_subdirectory(libinitializer)
 
 include(BuildInfoGenerator)
 # import services
-list(APPEND SERVICE_LIST FrontService GatewayService RpcService TxPoolService)
+list(APPEND SERVICE_LIST GroupManagerService FrontService GatewayService RpcService TxPoolService)
 # TODO:
 # PBFTService, DispatcherService, ExecutorService, 
 

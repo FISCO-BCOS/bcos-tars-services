@@ -151,7 +151,7 @@ void PBFTServiceServer::init()
     createSealer(nodeConfig);
     createPBFT(nodeConfig);
     createBlockSync(nodeConfig);
-    registerHandlers();
+    registerHandlers(nodeConfig);
 
     // init and start all the modules
     m_blockSync->init();
@@ -164,7 +164,7 @@ void PBFTServiceServer::init()
 }
 
 
-void PBFTServiceServer::registerHandlers()
+void PBFTServiceServer::registerHandlers(std::shared_ptr<bcos::tool::NodeConfig> _nodeConfig)
 {
     // register handlers for the consensus to interact with the sealer
     auto sealer = m_sealer;
@@ -200,7 +200,8 @@ void PBFTServiceServer::registerHandlers()
     m_ledger->registerCommittedBlockNotifier(
         [rpcServiceClient](bcos::protocol::BlockNumber _blockNumber,
             std::function<void(bcos::Error::Ptr)> _callback) {
-            rpcServiceClient->asyncNotifyBlockNumber(_blockNumber, _callback);
+            rpcServiceClient->asyncNotifyBlockNumber(
+                _nodeConfig->groupID(), ServerConfig::Application, _blockNumber, _callback);
         });
     PBFTSERVICE_LOG(INFO) << LOG_DESC("registerCommittedBlockNotifier success");
 }
