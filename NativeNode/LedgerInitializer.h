@@ -19,8 +19,7 @@
  * @date 2021-06-10
  */
 #pragma once
-#include "Common.h"
-#include "interfaces/ledger/LedgerInterface.h"
+#include <bcos-framework/interfaces/ledger/LedgerInterface.h>
 #include <bcos-framework/interfaces/protocol/BlockFactory.h>
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/libtool/NodeConfig.h>

@@ -19,14 +19,12 @@
  * @date 2021-06-11
  */
 #pragma once
-#include "Common.h"
 #include "LedgerInitializer.h"
 #include "NetworkInitializer.h"
 #include "PBFTInitializer.h"
-#include "ProtocolInitializer.h"
-#include "RpcInitializer.h"
 #include "SchedulerInitializer.h"
 #include "StorageInitializer.h"
+#include "libinitializer/ProtocolInitializer.h"
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <memory>
 
@@ -56,6 +54,5 @@ private:
     NetworkInitializer::Ptr m_networkInitializer;
 
     PBFTInitializer::Ptr m_pbftInitializer;
-    RpcInitializer::Ptr m_rpcInitializer;
 };
 }  // namespace bcos::initializer

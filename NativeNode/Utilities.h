@@ -19,6 +19,7 @@
  */
 
 #pragma once
+#include "libinitializer/Common.h"
 #include <include/BuildInfo.h>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -53,16 +54,6 @@ inline void setDefaultOrCLocale()
 #endif
 }
 
-inline void printVersion()
-{
-    std::cout << "FISCO-BCOS Version : " << FISCO_BCOS_PROJECT_VERSION << std::endl;
-    std::cout << "Build Time         : " << FISCO_BCOS_BUILD_TIME << std::endl;
-    std::cout << "Build Type         : " << FISCO_BCOS_BUILD_PLATFORM << "/"
-              << FISCO_BCOS_BUILD_TYPE << std::endl;
-    std::cout << "Git Branch         : " << FISCO_BCOS_BUILD_BRANCH << std::endl;
-    std::cout << "Git Commit Hash    : " << FISCO_BCOS_COMMIT_HASH << std::endl;
-}
-
 struct Params
 {
     std::string configFilePath;
@@ -70,7 +61,7 @@ struct Params
     float txSpeed;
 };
 
-inline Params initCommandLine(int argc, const char* argv[], bool _autoSendTx)
+inline Params initParamsFromCommandLine(int argc, const char* argv[], bool _autoSendTx)
 {
     boost::program_options::options_description main_options("Usage of FISCO-BCOS");
     main_options.add_options()("help,h", "print help information")(
@@ -106,7 +97,7 @@ inline Params initCommandLine(int argc, const char* argv[], bool _autoSendTx)
     /// version information
     if (vm.count("version") || vm.count("v"))
     {
-        printVersion();
+        bcos::initializer::printVersion();
         exit(0);
     }
     std::string configPath("./config.ini");

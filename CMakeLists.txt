@@ -51,7 +51,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 include(CompilerSettings)
 # import tars project
-# add_subdirectory(libinitializer)
+add_subdirectory(libinitializer)
 
 include(BuildInfoGenerator)
 # import services

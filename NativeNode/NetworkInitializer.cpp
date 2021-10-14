@@ -20,8 +20,9 @@
  */
 #include "NetworkInitializer.h"
 #include <bcos-front/FrontServiceFactory.h>
-#include <bcos-gateway/GatewayConfig.h>
-#include <bcos-gateway/GatewayFactory.h>
+#include <bcos-tars-protocol/client/GatewayServiceClient.h>
+#include <tarscpp/servant/Application.h>
+#include <tarscpp/servant/Servant.h>
 
 using namespace bcos;
 using namespace bcos::tool;
@@ -31,12 +32,11 @@ using namespace bcos::front;
 using namespace bcos::crypto;
 using namespace bcos::protocol;
 
-void NetworkInitializer::init(
-    std::string const& _configFilePath, NodeConfig::Ptr _nodeConfig, NodeIDPtr _nodeID)
+void NetworkInitializer::init(NodeConfig::Ptr _nodeConfig, NodeIDPtr _nodeID)
 {
     INITIALIZER_LOG(INFO) << LOG_DESC("init the network") << LOG_KV("nodeId", _nodeID->shortHex())
                           << LOG_KV("groupId", _nodeConfig->groupId());
-    initGateWay(_configFilePath);
+    initGateWay(_nodeConfig);
     initFrontService(_nodeConfig, _nodeID);
 }
 
@@ -45,10 +45,13 @@ FrontServiceInterface::Ptr NetworkInitializer::frontService()
     return m_frontService;
 }
 
-void NetworkInitializer::initGateWay(std::string const& _configFilePath)
+void NetworkInitializer::initGateWay(NodeConfig::Ptr _nodeConfig)
 {
-    auto gateWayFactory = std::make_shared<GatewayFactory>();
-    m_gateWay = gateWayFactory->buildGateway(_configFilePath);
+    // get the gateway client
+    auto gatewayPrx = Application::getCommunicator()->stringToProxy<bcostars::GatewayServicePrx>(
+        _nodeConfig->gatewayServiceName());
+    m_gateWay = std::make_shared<bcostars::GatewayServiceClient>(
+        gatewayPrx, m_protocol->cryptoSuite()->keyFactory());
 }
 
 void NetworkInitializer::initFrontService(NodeConfig::Ptr _nodeConfig, NodeIDPtr _nodeID)
@@ -58,18 +61,15 @@ void NetworkInitializer::initFrontService(NodeConfig::Ptr _nodeConfig, NodeIDPtr
     auto threadPool = std::make_shared<ThreadPool>("frontService", 1);
     frontServiceFactory->setThreadPool(threadPool);
     m_frontService = frontServiceFactory->buildFrontService(_nodeConfig->groupId(), _nodeID);
-    m_gateWay->registerFrontService(_nodeConfig->groupId(), _nodeID, m_frontService);
 }
 
 void NetworkInitializer::start()
 {
-    m_gateWay->start();
     m_frontService->start();
 }
 void NetworkInitializer::stop()
 {
     m_frontService->stop();
-    m_gateWay->stop();
 }
 
 void NetworkInitializer::registerMsgDispatcher(ModuleID _moduleID,

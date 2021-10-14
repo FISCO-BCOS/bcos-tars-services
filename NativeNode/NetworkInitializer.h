@@ -20,7 +20,7 @@
  */
 
 #pragma once
-#include "Common.h"
+#include "libinitializer/ProtocolInitializer.h"
 #include <bcos-framework/interfaces/front/FrontServiceInterface.h>
 #include <bcos-framework/interfaces/gateway/GatewayInterface.h>
 #include <bcos-framework/interfaces/protocol/Protocol.h>
@@ -29,11 +29,6 @@
 
 namespace bcos
 {
-namespace gateway
-{
-class Gateway;
-}
-
 namespace front
 {
 class FrontService;
@@ -47,16 +42,15 @@ public:
     using Ptr = std::shared_ptr<NetworkInitializer>;
     using SendResponse =
         std::function<void(std::string const&, int, bcos::crypto::NodeIDPtr, bytesConstRef)>;
-    NetworkInitializer() = default;
+    NetworkInitializer(ProtocolInitializer::Ptr _protocol) : m_protocol(_protocol) {}
     virtual ~NetworkInitializer() { stop(); }
 
-    virtual void init(std::string const& _configFilePath, bcos::tool::NodeConfig::Ptr _nodeConfig,
-        bcos::crypto::NodeIDPtr _nodeID);
+    virtual void init(bcos::tool::NodeConfig::Ptr _nodeConfig, bcos::crypto::NodeIDPtr _nodeID);
     virtual void start();
     virtual void stop();
 
     bcos::front::FrontServiceInterface::Ptr frontService();
-    std::shared_ptr<bcos::gateway::Gateway> gateway() { return m_gateWay; }
+    std::shared_ptr<bcos::gateway::GatewayInterface> gateway() { return m_gateWay; }
 
     virtual void registerMsgDispatcher(bcos::protocol::ModuleID _moduleID,
         std::function<void(
@@ -69,12 +63,13 @@ public:
             _dispatcher);
 
 protected:
-    virtual void initGateWay(std::string const& _configFilePath);
+    virtual void initGateWay(bcos::tool::NodeConfig::Ptr _nodeConfig);
     virtual void initFrontService(
         bcos::tool::NodeConfig::Ptr _nodeConfig, bcos::crypto::NodeIDPtr _nodeID);
 
 private:
-    std::shared_ptr<bcos::gateway::Gateway> m_gateWay;
+    ProtocolInitializer::Ptr m_protocol;
+    std::shared_ptr<bcos::gateway::GatewayInterface> m_gateWay;
     std::shared_ptr<bcos::front::FrontService> m_frontService;
 };
 }  // namespace initializer

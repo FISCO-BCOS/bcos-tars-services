@@ -23,7 +23,6 @@
  * @date 2021-10-14
  */
 #pragma once
-#include "Common.h"
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-storage/RocksDBStorage.h>

@@ -57,9 +57,8 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
 
         std::string nodeID = m_protocolInitializer->keyPair()->publicKey()->hex();
         // init the network
-        m_networkInitializer = std::make_shared<NetworkInitializer>();
-        m_networkInitializer->init(
-            _configFilePath, m_nodeConfig, m_protocolInitializer->keyPair()->publicKey());
+        m_networkInitializer = std::make_shared<NetworkInitializer>(m_protocolInitializer);
+        m_networkInitializer->init(m_nodeConfig, m_protocolInitializer->keyPair()->publicKey());
 
         auto storage = StorageInitializer::build(m_nodeConfig);
 
@@ -86,20 +85,6 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         auto executor = ExecutorInitializer::build(m_pbftInitializer->txpool(), storage,
             executionMessageFactory, m_protocolInitializer->cryptoSuite()->hashImpl(), false);
         executorManager->addExecutor("default", executor);
-
-        m_rpcInitializer = std::make_shared<RpcInitializer>();
-        m_rpcInitializer->setNodeID(nodeID);
-        m_rpcInitializer->setNetworkInitializer(m_networkInitializer);
-        m_rpcInitializer->setNodeConfig(m_nodeConfig);
-        m_rpcInitializer->setFrontService(m_networkInitializer->frontService());
-        m_rpcInitializer->setLedger(ledger);
-        m_rpcInitializer->setTxPoolInterface(m_pbftInitializer->txpool());
-        m_rpcInitializer->setExecutorInterface(nullptr);
-        m_rpcInitializer->setConsensusInterface(m_pbftInitializer->pbft());
-        m_rpcInitializer->setBlockSyncInterface(m_pbftInitializer->blockSync());
-        m_rpcInitializer->setGatewayInterface(m_networkInitializer->gateway());
-        m_rpcInitializer->setTransactionFactory(m_protocolInitializer->transactionFactory());
-        m_rpcInitializer->init(m_nodeConfig, _configFilePath);
     }
     catch (std::exception const& e)
     {
@@ -121,11 +106,6 @@ void Initializer::start()
         {
             m_networkInitializer->start();
         }
-
-        if (m_rpcInitializer)
-        {
-            m_rpcInitializer->start();
-        }
     }
     catch (std::exception const& e)
     {
@@ -138,10 +118,6 @@ void Initializer::stop()
 {
     try
     {
-        if (m_rpcInitializer)
-        {
-            m_rpcInitializer->stop();
-        }
         if (m_networkInitializer)
         {
             m_networkInitializer->stop();

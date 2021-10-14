@@ -22,9 +22,9 @@
  * @author: ancelmo
  * @date 2021-10-14
  */
-#include "Common.h"
 #include "Initializer.h"
 #include "Utilities.h"
+#include "libinitializer/Common.h"
 #include <chrono>
 #include <ctime>
 
@@ -49,7 +49,7 @@ int main(int argc, const char* argv[])
     auto initializer = std::make_shared<Initializer>();
     try
     {
-        auto param = initCommandLine(argc, argv, false);
+        auto param = initParamsFromCommandLine(argc, argv, false);
         initializer->init(param.configFilePath, param.genesisFilePath);
         initializer->start();
     }

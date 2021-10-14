@@ -20,7 +20,7 @@
  */
 #pragma once
 #include "NetworkInitializer.h"
-#include "ProtocolInitializer.h"
+#include "libinitializer/ProtocolInitializer.h"
 #include <bcos-framework/libsealer/SealerFactory.h>
 #include <bcos-pbft/pbft/PBFTFactory.h>
 #include <bcos-sync/BlockSyncFactory.h>

@@ -19,11 +19,10 @@
  * @date 2021-06-21
  */
 #pragma once
-#include "Common.h"
-#include "ProtocolInitializer.h"
-#include "interfaces/dispatcher/SchedulerInterface.h"
-#include "interfaces/executor/ExecutionMessage.h"
+#include "libinitializer/ProtocolInitializer.h"
 #include <bcos-framework/interfaces/dispatcher/DispatcherInterface.h>
+#include <bcos-framework/interfaces/dispatcher/SchedulerInterface.h>
+#include <bcos-framework/interfaces/executor/ExecutionMessage.h>
 #include <bcos-framework/interfaces/executor/ExecutorInterface.h>
 #include <bcos-framework/interfaces/ledger/LedgerInterface.h>
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
