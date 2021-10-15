@@ -1,7 +1,12 @@
 #pragma once
 #include <bcos-framework/interfaces/protocol/ServiceDesc.h>
+#include <bcos-framework/libutilities/Log.h>
 #include <tarscpp/servant/Application.h>
 #include <string>
+
+#define RPCSERVICE_LOG(LEVEL) BCOS_LOG(LEVEL) << "[RPCSERVICE][INITIALIZER]"
+
+#define GATEWAYSERVICE_LOG(LEVEL) BCOS_LOG(LEVEL) << "[GATEWAYSERVICE][INITIALIZER]"
 
 namespace bcostars
 {
