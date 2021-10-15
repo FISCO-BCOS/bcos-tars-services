@@ -23,6 +23,8 @@
 #include "LedgerInitializer.h"
 #include "SchedulerInitializer.h"
 #include "StorageInitializer.h"
+#include "interfaces/protocol/ProtocolTypeDef.h"
+#include "interfaces/rpc/RPCInterface.h"
 #include "libexecutor/NativeExecutionMessage.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 #include <bcos-framework/libtool/NodeConfig.h>
@@ -74,9 +76,9 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
             m_protocolInitializer->cryptoSuite());
         auto executorManager = std::make_shared<bcos::scheduler::ExecutorManager>();
 
-        auto scheduler = SchedulerInitializer::build(executorManager, ledger, storage,
-            executionMessageFactory, transactionReceiptFactory, blockHeaderFactory,
-            m_protocolInitializer->cryptoSuite()->hashImpl());
+        auto scheduler =
+            SchedulerInitializer::build(executorManager, ledger, storage, executionMessageFactory,
+                transactionReceiptFactory, m_protocolInitializer->cryptoSuite()->hashImpl());
 
         // init the pbft related modules
         m_pbftInitializer = std::make_shared<PBFTInitializer>();
@@ -99,6 +101,13 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         m_rpcInitializer->setBlockSyncInterface(m_pbftInitializer->blockSync());
         m_rpcInitializer->setGatewayInterface(m_networkInitializer->gateway());
         m_rpcInitializer->setTransactionFactory(m_protocolInitializer->transactionFactory());
+
+        scheduler->registerBlockNumberReceiver(
+            [rpc = m_rpcInitializer->rpcInterface()](bcos::protocol::BlockNumber number) {
+                BCOS_LOG(INFO) << "Notify blocknumber: " << number;
+                rpc->asyncNotifyBlockNumber({}, {}, number, [](Error::Ptr) {});
+            });
+
         m_rpcInitializer->init(m_nodeConfig, _configFilePath);
     }
     catch (std::exception const& e)

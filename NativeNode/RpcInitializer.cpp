@@ -94,19 +94,6 @@ void RpcInitializer::init(bcos::tool::NodeConfig::Ptr _nodeConfig, const std::st
             }
         });
 
-    // register blockNumber notifier
-    // TODO: why?
-    auto ledger = (bcos::ledger::Ledger*)m_ledger.get();
-    ledger->registerCommittedBlockNotifier([rpcWeak](bcos::protocol::BlockNumber _blockNumber,
-                                               std::function<void(Error::Ptr)> _callback) {
-        auto rpc = rpcWeak.lock();
-        if (rpc)
-        {
-            rpc->asyncNotifyBlockNumber(_blockNumber, nullptr);
-        }
-        _callback(nullptr);
-    });
-
     m_rpcInterface = rpc;
 }
 
