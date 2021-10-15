@@ -102,13 +102,13 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         m_rpcInitializer->setGatewayInterface(m_networkInitializer->gateway());
         m_rpcInitializer->setTransactionFactory(m_protocolInitializer->transactionFactory());
 
+        m_rpcInitializer->init(m_nodeConfig, _configFilePath);
+
         scheduler->registerBlockNumberReceiver(
             [rpc = m_rpcInitializer->rpcInterface()](bcos::protocol::BlockNumber number) {
                 BCOS_LOG(INFO) << "Notify blocknumber: " << number;
                 rpc->asyncNotifyBlockNumber({}, {}, number, [](Error::Ptr) {});
             });
-
-        m_rpcInitializer->init(m_nodeConfig, _configFilePath);
     }
     catch (std::exception const& e)
     {
