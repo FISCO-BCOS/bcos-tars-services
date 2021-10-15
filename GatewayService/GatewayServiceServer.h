@@ -2,133 +2,38 @@
 
 #include "../Common/TarsUtils.h"
 #include "../libinitializer/ProtocolInitializer.h"
-#include "libutilities/Common.h"
-#include "libutilities/Log.h"
-#include <bcos-crypto/signature/key/KeyFactoryImpl.h>
-#include <bcos-framework/interfaces/crypto/KeyInterface.h>
-#include <bcos-framework/interfaces/multigroup/ChainNodeInfoFactory.h>
-#include <bcos-framework/interfaces/multigroup/GroupInfoFactory.h>
-#include <bcos-framework/libtool/NodeConfig.h>
-#include <bcos-framework/libutilities/BoostLogInitializer.h>
-#include <bcos-gateway/Gateway.h>
-#include <bcos-gateway/GatewayConfig.h>
-#include <bcos-gateway/GatewayFactory.h>
+#include "GatewayInitializer.h"
 #include <bcos-tars-protocol/ErrorConverter.h>
-#include <bcos-tars-protocol/client/GroupManagerServiceClient.h>
 #include <bcos-tars-protocol/tars/GatewayService.h>
 #include <chrono>
 #include <mutex>
-
-#define GATEWAYSERVICE_LOG(LEVEL) BCOS_LOG(LEVEL) << "[GATEWAYSERVICE][INITIALIZER]"
-#define GATEWAYSERVICE_BADGE "[GATEWAYSERVICE]"
 
 using namespace bcos;
 using namespace bcos::group;
 
 namespace bcostars
 {
+struct GatewayServiceParam
+{
+    GatewayInitializer::Ptr gatewayInitializer;
+};
 class GatewayServiceServer : public bcostars::GatewayService
 {
 public:
-    void initialize() override
-    {
-        try
-        {
-            init();
-            m_running = true;
-        }
-        catch (tars::TC_Exception const& e)
-        {
-            TLOGERROR(GATEWAYSERVICE_BADGE << "init the GateWay exceptioned, exist now"
-                                           << LOG_KV("error", e.what()) << std::endl);
-            exit(0);
-        }
-        catch (std::exception const& e)
-        {
-            TLOGERROR(GATEWAYSERVICE_BADGE << "init the GateWay exceptioned, exist now"
-                                           << LOG_KV("error", boost::diagnostic_information(e))
-                                           << std::endl);
-            exit(0);
-        }
-    }
-
-    void init()
-    {
-        std::call_once(m_initFlag, []() {
-            auto configPath = ServerConfig::BasePath + "config.ini";
-
-            TLOGINFO(GATEWAYSERVICE_BADGE << LOG_DESC("initLog") << LOG_KV("configPath", configPath)
-                                          << std::endl);
-            boost::property_tree::ptree pt;
-            boost::property_tree::read_ini(configPath, pt);
-            m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
-            // set the boost log into the tars log directory
-            m_logInitializer->setLogPath(getLogPath());
-            m_logInitializer->initLog(pt);
-            TLOGINFO(GATEWAYSERVICE_BADGE << LOG_DESC("initLog success") << std::endl);
-
-            m_groupInfoFactory = std::make_shared<bcos::group::GroupInfoFactory>();
-            m_chainNodeInfoFactory = std::make_shared<bcos::group::ChainNodeInfoFactory>();
-
-            TLOGINFO(GATEWAYSERVICE_BADGE << LOG_DESC("initGateWayConfig")
-                                          << LOG_KV("configPath", configPath) << std::endl);
-            auto gateWayConfig = std::make_shared<bcos::gateway::GatewayConfig>();
-            gateWayConfig->setCertPath(ServerConfig::BasePath);
-            gateWayConfig->setNodePath(ServerConfig::BasePath);
-            gateWayConfig->initConfig(configPath);
-
-
-            TLOGINFO(GATEWAYSERVICE_BADGE << "load nodeConfig" << std::endl);
-            auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
-            nodeConfig->loadConfig(configPath);
-            TLOGINFO(GATEWAYSERVICE_BADGE << LOG_DESC("load nodeConfig success") << std::endl);
-
-            auto groupManagerPrx =
-                Application::getCommunicator()->stringToProxy<GroupManagerServicePrx>(
-                    nodeConfig->groupManagerServiceName());
-            auto groupManagerClient = std::make_shared<GroupManagerServiceClient>(
-                groupManagerPrx, m_chainNodeInfoFactory, m_groupInfoFactory);
-            TLOGINFO(GATEWAYSERVICE_BADGE
-                     << LOG_DESC("buildGateWay") << LOG_KV("certPath", gateWayConfig->certPath())
-                     << LOG_KV("nodePath", gateWayConfig->nodePath()) << std::endl);
-            bcos::gateway::GatewayFactory factory(nodeConfig->chainId(), groupManagerClient);
-            auto gateway = factory.buildGateway(gateWayConfig);
-            // init the gateway
-            gateway->init();
-            m_gateway = gateway;
-            TLOGINFO(GATEWAYSERVICE_BADGE << "buildGateway success" << std::endl);
-
-            // start the gateway
-            GATEWAYSERVICE_LOG(INFO) << LOG_DESC("start the gateway");
-            m_gateway->start();
-            GATEWAYSERVICE_LOG(INFO) << LOG_DESC("start the gateway success");
-        });
-    }
-
-    void destroy() override
-    {
-        if (!m_running)
-        {
-            GATEWAYSERVICE_LOG(WARNING) << LOG_DESC("The GatewayService has already been stopped");
-            return;
-        }
-        m_running = false;
-        GATEWAYSERVICE_LOG(INFO) << LOG_DESC("Stop the GatewayService");
-        if (m_gateway)
-        {
-            m_gateway->stop();
-        }
-        TLOGINFO(LOG_DESC("[GATEWAYSERVICE] Stop the GatewayService success") << std::endl);
-    }
+    GatewayServiceServer(GatewayServiceParam const& _param)
+      : m_gatewayInitializer(_param.gatewayInitializer)
+    {}
+    void initialize() override {}
+    void destroy() override {}
 
     bcostars::Error asyncSendBroadcastMessage(const std::string& groupID,
         const vector<tars::Char>& srcNodeID, const vector<tars::Char>& payload,
         tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
-        auto bcosNodeID = m_keyFactory->createKey(
+        auto bcosNodeID = m_gatewayInitializer->keyFactory()->createKey(
             bcos::bytesConstRef((const bcos::byte*)srcNodeID.data(), srcNodeID.size()));
-        m_gateway->asyncSendBroadcastMessage(groupID, bcosNodeID,
+        m_gatewayInitializer->gateway()->asyncSendBroadcastMessage(groupID, bcosNodeID,
             bcos::bytesConstRef((const bcos::byte*)payload.data(), payload.size()));
 
         async_response_asyncSendBroadcastMessage(current, toTarsError(nullptr));
@@ -140,7 +45,7 @@ public:
         auto t1 = std::chrono::high_resolution_clock::now();
         GATEWAYSERVICE_LOG(DEBUG) << LOG_DESC("asyncGetPeers") << LOG_DESC("request");
         current->setResponse(false);
-        m_gateway->asyncGetPeers(
+        m_gatewayInitializer->gateway()->asyncGetPeers(
             [current, t1](const bcos::Error::Ptr _error, std::string const& peers) {
                 auto t2 = std::chrono::high_resolution_clock::now();
                 auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
@@ -156,14 +61,14 @@ public:
         const vector<tars::Char>& payload, tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
-
-        auto bcosSrcNodeID = m_keyFactory->createKey(
+        auto keyFactory = m_gatewayInitializer->keyFactory();
+        auto bcosSrcNodeID = keyFactory->createKey(
             bcos::bytesConstRef((const bcos::byte*)srcNodeID.data(), srcNodeID.size()));
-        auto bcosDstNodeID = m_keyFactory->createKey(
+        auto bcosDstNodeID = keyFactory->createKey(
             bcos::bytesConstRef((const bcos::byte*)dstNodeID.data(), dstNodeID.size()));
 
-        m_gateway->asyncSendMessageByNodeID(groupID, bcosSrcNodeID, bcosDstNodeID,
-            bcos::bytesConstRef((const bcos::byte*)payload.data(), payload.size()),
+        m_gatewayInitializer->gateway()->asyncSendMessageByNodeID(groupID, bcosSrcNodeID,
+            bcosDstNodeID, bcos::bytesConstRef((const bcos::byte*)payload.data(), payload.size()),
             [current](bcos::Error::Ptr error) {
                 async_response_asyncSendMessageByNodeID(current, toTarsError(error));
             });
@@ -175,18 +80,18 @@ public:
         const vector<tars::Char>& payload, tars::TarsCurrentPtr current) override
     {
         current->setResponse(false);
-
-        auto bcosSrcNodeID = m_keyFactory->createKey(
+        auto keyFactory = m_gatewayInitializer->keyFactory();
+        auto bcosSrcNodeID = keyFactory->createKey(
             bcos::bytesConstRef((const bcos::byte*)srcNodeID.data(), srcNodeID.size()));
         std::vector<bcos::crypto::NodeIDPtr> nodeIDs;
         nodeIDs.reserve(dstNodeID.size());
         for (auto const& it : dstNodeID)
         {
-            nodeIDs.push_back(m_keyFactory->createKey(
+            nodeIDs.push_back(keyFactory->createKey(
                 bcos::bytesConstRef((const bcos::byte*)it.data(), it.size())));
         }
 
-        m_gateway->asyncSendMessageByNodeIDs(groupID, bcosSrcNodeID, nodeIDs,
+        m_gatewayInitializer->gateway()->asyncSendMessageByNodeIDs(groupID, bcosSrcNodeID, nodeIDs,
             bcos::bytesConstRef((const bcos::byte*)payload.data(), payload.size()));
 
         async_response_asyncSendMessageByNodeIDs(current, toTarsError(nullptr));
@@ -198,7 +103,7 @@ public:
     {
         current->setResponse(false);
 
-        m_gateway->asyncGetNodeIDs(
+        m_gatewayInitializer->gateway()->asyncGetNodeIDs(
             groupID, [current](bcos::Error::Ptr _error,
                          std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs) {
                 // Note: the nodeIDs maybe null if no connections
@@ -224,13 +129,6 @@ public:
         const bcostars::GroupInfo& groupInfo, tars::TarsCurrentPtr current) override;
 
 private:
-    static std::once_flag m_initFlag;
-    static bcos::gateway::Gateway::Ptr m_gateway;
-    static bcos::crypto::KeyFactory::Ptr m_keyFactory;
-    std::atomic_bool m_running = {false};
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
-
-    static bcos::group::GroupInfoFactory::Ptr m_groupInfoFactory;
-    static bcos::group::ChainNodeInfoFactory::Ptr m_chainNodeInfoFactory;
+    GatewayInitializer::Ptr m_gatewayInitializer;
 };
 }  // namespace bcostars
