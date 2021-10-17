@@ -50,7 +50,7 @@ void RpcInitializer::init(bcos::tool::NodeConfig::Ptr _nodeConfig, const std::st
     auto factory = std::make_shared<bcos::rpc::RpcFactory>();
     factory->setLedger(m_ledger);
     factory->setTxPoolInterface(m_txPoolInterface);
-    factory->setExecutorInterface(m_executorInterface);
+    factory->setScheduler(m_scheduler);
     factory->setConsensusInterface(m_consensusInterface);
     factory->setBlockSyncInterface(m_blockSyncInterface);
     factory->setGatewayInterface(m_gatewayInterface);

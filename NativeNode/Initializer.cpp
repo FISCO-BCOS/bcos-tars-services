@@ -76,9 +76,9 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
             m_protocolInitializer->cryptoSuite());
         auto executorManager = std::make_shared<bcos::scheduler::ExecutorManager>();
 
-        auto scheduler =
-            SchedulerInitializer::build(executorManager, ledger, storage, executionMessageFactory,
-                transactionReceiptFactory, m_protocolInitializer->cryptoSuite()->hashImpl());
+        auto scheduler = SchedulerInitializer::build(executorManager, ledger, storage,
+            executionMessageFactory, m_protocolInitializer->blockFactory(),
+            m_protocolInitializer->cryptoSuite()->hashImpl());
 
         // init the pbft related modules
         m_pbftInitializer = std::make_shared<PBFTInitializer>();
@@ -96,7 +96,7 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         m_rpcInitializer->setFrontService(m_networkInitializer->frontService());
         m_rpcInitializer->setLedger(ledger);
         m_rpcInitializer->setTxPoolInterface(m_pbftInitializer->txpool());
-        m_rpcInitializer->setExecutorInterface(nullptr);
+        m_rpcInitializer->setScheduler(scheduler);
         m_rpcInitializer->setConsensusInterface(m_pbftInitializer->pbft());
         m_rpcInitializer->setBlockSyncInterface(m_pbftInitializer->blockSync());
         m_rpcInitializer->setGatewayInterface(m_networkInitializer->gateway());
