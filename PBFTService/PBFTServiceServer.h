@@ -20,36 +20,29 @@
  */
 
 #pragma once
-
-
-#include "../libinitializer/ProtocolInitializer.h"
-#include <bcos-framework/interfaces/crypto/KeyFactory.h>
-#include <bcos-framework/libsealer/SealerFactory.h>
-#include <bcos-framework/libtool/NodeConfig.h>
-#include <bcos-framework/libutilities/BoostLogInitializer.h>
-#include <bcos-ledger/libledger/Ledger.h>
-#include <bcos-pbft/pbft/PBFTFactory.h>
-#include <bcos-sync/BlockSyncFactory.h>
+#include "PBFTInitializer.h"
 #include <bcos-tars-protocol/ErrorConverter.h>
+#include <bcos-tars-protocol/protocol/BlockImpl.h>
 #include <bcos-tars-protocol/tars/PBFTService.h>
-#include <bcos-txpool/TxPoolFactory.h>
 #include <tarscpp/servant/Application.h>
 #include <tarscpp/servant/Communicator.h>
 #include <mutex>
 
-#define PBFTSERVICE_LOG(LEVEL) BCOS_LOG(LEVEL) << "[PBFTSERVICE]"
-
 namespace bcostars
 {
+struct PBFTServiceParam
+{
+    bcos::initializer::PBFTInitializer::Ptr pbftInitializer;
+};
 class PBFTServiceServer : public bcostars::PBFTService
 {
 public:
     using Ptr = std::shared_ptr<PBFTServiceServer>;
-    PBFTServiceServer() {}
+    PBFTServiceServer(PBFTServiceParam const& _param) : m_pbftInitializer(_param.pbftInitializer) {}
     ~PBFTServiceServer() override {}
 
-    void initialize() override;
-    void destroy() override;
+    void initialize() override {}
+    void destroy() override {}
 
     // for the sync module to check block
     // Node: since the sync module is intergrated with the PBFT, this interfaces is useless now
@@ -90,11 +83,11 @@ public:
         bcos::crypto::NodeIDSet bcosNodeIDSet;
         for (auto const& it : connectedNodes)
         {
-            bcosNodeIDSet.insert(m_protocolInitializer->cryptoSuite()->keyFactory()->createKey(
+            bcosNodeIDSet.insert(m_pbftInitializer->keyFactory()->createKey(
                 bcos::bytesConstRef((const bcos::byte*)it.data(), it.size())));
         }
 
-        m_blockSync->config()->notifyConnectedNodes(
+        m_pbftInitializer->blockSync()->config()->notifyConnectedNodes(
             bcosNodeIDSet, [current](bcos::Error::Ptr error) {
                 async_response_asyncNotifyConnectedNodes(current, bcostars::toTarsError(error));
             });
@@ -102,36 +95,8 @@ public:
         return bcostars::Error();
     }
 
-protected:
-    virtual void registerHandlers(std::shared_ptr<bcos::tool::NodeConfig> _nodeConfig);
-
-    // create the txpool client only
-    virtual void createTxPool(bcos::tool::NodeConfig::Ptr _nodeConfig);
-    virtual void createSealer(bcos::tool::NodeConfig::Ptr _nodeConfig);
-    virtual void createBlockSync(bcos::tool::NodeConfig::Ptr _nodeConfig);
-    virtual void createPBFT(bcos::tool::NodeConfig::Ptr _nodeConfig);
-
-    virtual void init();
-
 private:
-    // the local dependencies
-    static bcos::consensus::PBFTImpl::Ptr m_pbft;
-    static bcos::sealer::Sealer::Ptr m_sealer;
-    static bcos::sync::BlockSync::Ptr m_blockSync;
-
-    // the client dependencies used to access the remote server service
-    bcos::txpool::TxPoolInterface::Ptr m_txpool;
-    bcos::front::FrontServiceInterface::Ptr m_frontService;
-    bcos::dispatcher::DispatcherInterface::Ptr m_dispatcher;
-
-    static bcos::initializer::ProtocolInitializer::Ptr m_protocolInitializer;
-
-    static std::shared_ptr<bcos::ledger::Ledger> m_ledger;
-    static bcos::crypto::KeyFactory::Ptr m_keyFactory;
-
-    std::atomic_bool m_running = {false};
-    static std::once_flag m_initFlag;
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
+    bcos::initializer::PBFTInitializer::Ptr m_pbftInitializer;
 };
 
 }  // namespace bcostars

@@ -38,8 +38,7 @@ protected:
         m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
         m_logInitializer->initLog(pt);
         // init rpc
-        m_rpcInitializer = std::make_shared<RpcInitializer>();
-        m_rpcInitializer->init(_configPath);
+        m_rpcInitializer = std::make_shared<RpcInitializer>(_configPath);
         m_rpcInitializer->start();
     }
 

@@ -19,11 +19,12 @@
  * @date 2021-06-11
  */
 #pragma once
+#include "FrontService/FrontServiceInitializer.h"
 #include "LedgerInitializer.h"
-#include "NetworkInitializer.h"
-#include "PBFTInitializer.h"
+#include "PBFTService/PBFTInitializer.h"
 #include "SchedulerInitializer.h"
 #include "StorageInitializer.h"
+#include "TxPoolService/TxPoolInitializer.h"
 #include "libinitializer/ProtocolInitializer.h"
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <memory>
@@ -51,7 +52,8 @@ private:
     BoostLogInitializer::Ptr m_logInitializer;
     bcos::tool::NodeConfig::Ptr m_nodeConfig;
     ProtocolInitializer::Ptr m_protocolInitializer;
-    NetworkInitializer::Ptr m_networkInitializer;
+    FrontServiceInitializer::Ptr m_frontServiceInitializer;
+    TxPoolInitializer::Ptr m_txpoolInitializer;
 
     PBFTInitializer::Ptr m_pbftInitializer;
 };

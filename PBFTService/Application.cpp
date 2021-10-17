@@ -1,24 +1,5 @@
-#include "../Common/TarsUtils.h"
-#include "PBFTServiceServer.h"
-#include <tarscpp/servant/Application.h>
-
+#include "PBFTServiceApp.h"
 using namespace bcostars;
-
-class PBFTServiceApp : public Application
-{
-public:
-    virtual ~PBFTServiceApp() override{};
-
-    virtual void initialize() override
-    {
-        addAllConfig(this);
-        addServant<PBFTServiceServer>(ServerConfig::Application + "." + ServerConfig::ServerName +
-                                      "." + bcos::protocol::CONSENSUS_SERVANT_NAME);
-    }
-
-    virtual void destroyApp() override {}
-};
-
 int main(int argc, char* argv[])
 {
     try

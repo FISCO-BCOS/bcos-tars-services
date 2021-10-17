@@ -2,402 +2,73 @@
 
 #include "../Common/TarsUtils.h"
 #include "../libinitializer/ProtocolInitializer.h"
+#include "TxPoolInitializer.h"
 #include <bcos-framework/interfaces/consensus/ConsensusNode.h>
-#include <bcos-framework/interfaces/crypto/CommonType.h>
-#include <bcos-framework/interfaces/crypto/Hash.h>
-#include <bcos-framework/interfaces/crypto/KeyInterface.h>
-#include <bcos-framework/libtool/NodeConfig.h>
-#include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <bcos-framework/libutilities/Common.h>
 #include <bcos-framework/libutilities/FixedBytes.h>
-#include <bcos-ledger/libledger/Ledger.h>
 #include <bcos-tars-protocol/ErrorConverter.h>
-#include <bcos-tars-protocol/client/FrontServiceClient.h>
-#include <bcos-tars-protocol/client/PBFTServiceClient.h>
 #include <bcos-tars-protocol/protocol/BlockFactoryImpl.h>
 #include <bcos-tars-protocol/protocol/TransactionSubmitResultImpl.h>
 #include <bcos-tars-protocol/tars/CommonProtocol.h>
 #include <bcos-tars-protocol/tars/TxPoolService.h>
-#include <bcos-txpool/TxPool.h>
-#include <bcos-txpool/TxPoolFactory.h>
 #include <tarscpp/servant/Servant.h>
 #include <memory>
-
-#define TXPOOLSERVICE_LOG(LEVEL) BCOS_LOG(LEVEL) << "[TXPOOLSERVICE]"
 namespace bcostars
 {
+struct TxPoolServiceParam
+{
+    bcos::initializer::TxPoolInitializer::Ptr txPoolInitializer;
+};
 class TxPoolServiceServer : public bcostars::TxPoolService
 {
 public:
-    void initialize() override
-    {
-        try
-        {
-            std::call_once(m_initFlag, [this]() {
-                init();
-                m_running = true;
-            });
-        }
-        catch (std::exception const& e)
-        {
-            TLOGERROR("init the txpoolService exceptioned"
-                      << LOG_KV("error", boost::diagnostic_information(e)) << std::endl);
-            exit(0);
-        }
-    }
+    TxPoolServiceServer(TxPoolServiceParam const& _param)
+      : m_txpoolInitializer(_param.txPoolInitializer)
+    {}
+    ~TxPoolServiceServer() override {}
 
-    void init()
-    {
-        // load the configuration for txpool
-        auto configPath = ServerConfig::BasePath + "config.ini";
-        boost::property_tree::ptree pt;
-        boost::property_tree::read_ini(configPath, pt);
-        m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
-        // set the boost log into the tars log directory
-        m_logInitializer->setLogPath(getLogPath());
-        m_logInitializer->initLog(pt);
-        TLOGINFO(LOG_DESC("TxPoolService initLog success") << std::endl);
-
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("load nodeConfig");
-        auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
-        nodeConfig->loadConfig(configPath);
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("load nodeConfig success");
-
-        // create the protocolInitializer
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("load protocol and nodeID");
-        auto protocolInitializer = std::make_shared<bcos::initializer::ProtocolInitializer>();
-        protocolInitializer->init(nodeConfig);
-        auto privateKeyPath = ServerConfig::BasePath + "node.pem";
-        protocolInitializer->loadKeyPair(privateKeyPath);
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("load protocol and nodeID success")
-                                << LOG_KV("nodeID",
-                                       protocolInitializer->keyPair()->publicKey()->shortHex());
-
-        m_cryptoSuite = protocolInitializer->cryptoSuite();
-        // create the ledger
-        // TODO: modify ledger to LedgerServiceClient and implement the ledger client interfaces
-        // with tars protocol
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the ledger");
-        m_ledger =
-            std::make_shared<bcos::ledger::Ledger>(protocolInitializer->blockFactory(), nullptr);
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the ledger success");
-
-        // create the frontService client
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the frontService client");
-        auto frontServiceProxy =
-            Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
-                getProxyDesc(bcos::protocol::FRONT_SERVICE_NAME));
-        auto frontService = std::make_shared<bcostars::FrontServiceClient>(
-            frontServiceProxy, protocolInitializer->keyFactory());
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the frontService client success");
-
-        // create txpoolFactory
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the txpool");
-        auto txpoolFactory = std::make_shared<bcos::txpool::TxPoolFactory>(
-            protocolInitializer->keyPair()->publicKey(), protocolInitializer->cryptoSuite(),
-            protocolInitializer->txResultFactory(), protocolInitializer->blockFactory(),
-            frontService, m_ledger, nodeConfig->groupId(), nodeConfig->chainId(),
-            nodeConfig->blockLimit());
-
-        auto txpool = txpoolFactory->createTxPool();
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("create the txpool success");
-        m_txpool = txpool;
-
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("load the txpool config");
-        auto txpoolConfig = txpool->txpoolConfig();
-        txpoolConfig->setPoolLimit(nodeConfig->txpoolLimit());
-        txpoolConfig->setNotifierWorkerNum(nodeConfig->notifyWorkerNum());
-        txpoolConfig->setVerifyWorkerNum(nodeConfig->verifierWorkerNum());
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("load the txpool config success");
-
-        // register handlers for the txpool to interact with the sealer
-        auto pbftProxy = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
-            getProxyDesc(bcos::protocol::CONSENSUS_SERVICE_NAME));
-        auto sealer = std::make_shared<PBFTServiceClient>(pbftProxy);
-        m_txpool->registerUnsealedTxsNotifier(
-            [sealer](size_t _unsealedTxsSize, std::function<void(bcos::Error::Ptr)> _onRecv) {
-                try
-                {
-                    sealer->asyncNoteUnSealedTxsSize(_unsealedTxsSize, _onRecv);
-                }
-                catch (std::exception const& e)
-                {
-                    TXPOOLSERVICE_LOG(WARNING)
-                        << LOG_DESC("call UnsealedTxsNotifier to the sealer exception")
-                        << LOG_KV("error", boost::diagnostic_information(e));
-                }
-            });
-        // init and start the txpool
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("init and start the txpool");
-        txpool->init();
-        m_txpool->start();
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("init and start the txpool success");
-    }
-
-    void destroy() override
-    {
-        if (!m_running)
-        {
-            TXPOOLSERVICE_LOG(WARNING) << LOG_DESC("The txpoolService has already stopped!");
-            return;
-        }
-        m_running = false;
-        TXPOOLSERVICE_LOG(INFO) << LOG_DESC("Stop the txpoolService");
-        if (m_txpool)
-        {
-            m_txpool->stop();
-        }
-        TLOGINFO(LOG_DESC("[TXPOOLSERVICE] Stop the txpoolService success") << std::endl);
-    }
+    void initialize() override {}
+    void destroy() override {}
 
     bcostars::Error asyncFillBlock(const vector<vector<tars::Char>>& txHashs,
-        vector<bcostars::Transaction>& filled, tars::TarsCurrentPtr current) override
-    {
-        current->setResponse(false);
-        auto hashList = std::make_shared<std::vector<bcos::crypto::HashType>>();
-        for (auto const& hashData : txHashs)
-        {
-            hashList->push_back(bcos::crypto::HashType(
-                reinterpret_cast<const bcos::byte*>(hashData.data()), hashData.size()));
-        }
-
-        m_txpool->asyncFillBlock(hashList, [current](bcos::Error::Ptr error,
-                                               bcos::protocol::TransactionsPtr txs) {
-            std::vector<bcostars::Transaction> txList;
-            if (error)
-            {
-                async_response_asyncFillBlock(current, toTarsError(error), txList);
-                TXPOOLSERVICE_LOG(WARNING)
-                    << LOG_DESC("asyncFillBlock failed") << LOG_KV("code", error->errorCode())
-                    << LOG_KV("msg", error->errorMessage());
-                return;
-            }
-            for (auto tx : *txs)
-            {
-                txList.push_back(
-                    std::dynamic_pointer_cast<bcostars::protocol::TransactionImpl>(tx)->inner());
-            }
-
-            async_response_asyncFillBlock(current, toTarsError(error), txList);
-        });
-
-        return bcostars::Error();
-    }
+        vector<bcostars::Transaction>& filled, tars::TarsCurrentPtr current) override;
 
     bcostars::Error asyncMarkTxs(const vector<vector<tars::Char>>& txHashs, tars::Bool sealedFlag,
         tars::Int64 _batchId, const vector<tars::Char>& _batchHash,
-        tars::TarsCurrentPtr current) override
-    {
-        current->setResponse(false);
-        auto hashList = std::make_shared<std::vector<bcos::crypto::HashType>>();
-        for (auto hashData : txHashs)
-        {
-            hashList->push_back(bcos::crypto::HashType(
-                reinterpret_cast<const bcos::byte*>(hashData.data()), hashData.size()));
-        }
-        auto batchHash = bcos::crypto::HashType(
-            reinterpret_cast<const bcos::byte*>(_batchHash.data()), _batchHash.size());
-        m_txpool->asyncMarkTxs(
-            hashList, sealedFlag, _batchId, batchHash, [current](bcos::Error::Ptr error) {
-                async_response_asyncMarkTxs(current, toTarsError(error));
-            });
-        return bcostars::Error();
-    }
+        tars::TarsCurrentPtr current) override;
 
     bcostars::Error asyncNotifyBlockResult(tars::Int64 blockNumber,
         const vector<bcostars::TransactionSubmitResult>& result,
-        tars::TarsCurrentPtr current) override
-    {
-        current->setResponse(false);
-
-        auto bcosResultList = std::make_shared<bcos::protocol::TransactionSubmitResults>();
-        for (auto tarsResult : result)
-        {
-            auto bcosResult =
-                std::make_shared<bcostars::protocol::TransactionSubmitResultImpl>(m_cryptoSuite);
-            bcosResult->setInner(tarsResult);
-            bcosResultList->push_back(bcosResult);
-        }
-
-        m_txpool->asyncNotifyBlockResult(
-            blockNumber, bcosResultList, [current](bcos::Error::Ptr error) {
-                async_response_asyncNotifyBlockResult(current, toTarsError(error));
-            });
-        return bcostars::Error();
-    }
+        tars::TarsCurrentPtr current) override;
 
     bcostars::Error asyncNotifyTxsSyncMessage(const bcostars::Error& error, const std::string& id,
         const vector<tars::Char>& nodeID, const vector<tars::Char>& data,
-        tars::TarsCurrentPtr current) override
-    {
-        current->setResponse(false);
-
-        auto bcosNodeID =
-            m_cryptoSuite->keyFactory()->createKey(bcos::bytes(nodeID.begin(), nodeID.end()));
-
-        m_txpool->asyncNotifyTxsSyncMessage(toBcosError(error), id, bcosNodeID,
-            bcos::bytesConstRef(reinterpret_cast<const bcos::byte*>(data.data()), data.size()),
-            [current](bcos::Error::Ptr error) {
-                async_response_asyncNotifyTxsSyncMessage(current, toTarsError(error));
-            });
-
-        return bcostars::Error();
-    }
+        tars::TarsCurrentPtr current) override;
 
     bcostars::Error asyncSealTxs(tars::Int64 txsLimit, const vector<vector<tars::Char>>& avoidTxs,
         bcostars::Block& txsList, bcostars::Block& sysTxsList,
-        tars::TarsCurrentPtr current) override
-    {
-        current->setResponse(false);
-
-        auto bcosAvoidTxs = std::make_shared<bcos::txpool::TxsHashSet>();
-        for (auto tx : avoidTxs)
-        {
-            bcosAvoidTxs->insert(bcos::crypto::HashType(bcos::bytes(tx.begin(), tx.end())));
-        }
-
-        m_txpool->asyncSealTxs(txsLimit, bcosAvoidTxs,
-            [current](bcos::Error::Ptr error, bcos::protocol::Block::Ptr _txsList,
-                bcos::protocol::Block::Ptr _sysTxsList) {
-                if (error)
-                {
-                    TXPOOLSERVICE_LOG(WARNING)
-                        << LOG_DESC("asyncSealTxs failed") << LOG_KV("code", error->errorCode())
-                        << LOG_KV("msg", error->errorMessage());
-                    async_response_asyncSealTxs(
-                        current, toTarsError(error), bcostars::Block(), bcostars::Block());
-                    return;
-                }
-                async_response_asyncSealTxs(current, toTarsError(error),
-                    std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(_txsList)->inner(),
-                    std::dynamic_pointer_cast<bcostars::protocol::BlockImpl>(_sysTxsList)->inner());
-            });
-
-        return bcostars::Error();
-    }
+        tars::TarsCurrentPtr current) override;
 
     bcostars::Error asyncSubmit(const vector<tars::Char>& tx,
-        bcostars::TransactionSubmitResult& result, tars::TarsCurrentPtr current) override
-    {
-        current->setResponse(false);
-        auto dataPtr = std::make_shared<bcos::bytes>(tx.begin(), tx.end());
-        m_txpool->asyncSubmit(dataPtr, [current](bcos::Error::Ptr error,
-                                           bcos::protocol::TransactionSubmitResult::Ptr result) {
-            async_response_asyncSubmit(current, toTarsError(error),
-                std::dynamic_pointer_cast<bcostars::protocol::TransactionSubmitResultImpl>(result)
-                    ->inner());
-        });
-
-        return bcostars::Error();
-    }
+        bcostars::TransactionSubmitResult& result, tars::TarsCurrentPtr current) override;
 
     bcostars::Error asyncVerifyBlock(const vector<tars::Char>& generatedNodeID,
-        const vector<tars::Char>& block, tars::Bool& result, tars::TarsCurrentPtr current) override
-    {
-        current->setResponse(false);
-
-        bcos::crypto::PublicPtr pk = m_cryptoSuite->keyFactory()->createKey(
-            bcos::bytesConstRef((const bcos::byte*)generatedNodeID.data(), generatedNodeID.size()));
-        m_txpool->asyncVerifyBlock(pk,
-            bcos::bytesConstRef((const bcos::byte*)block.data(), block.size()),
-            [current](bcos::Error::Ptr error, bool result) {
-                async_response_asyncVerifyBlock(current, toTarsError(error), result);
-            });
-
-        return bcostars::Error();
-    }
+        const vector<tars::Char>& block, tars::Bool& result, tars::TarsCurrentPtr current) override;
 
     bcostars::Error notifyConnectedNodes(
-        const vector<vector<tars::Char>>& connectedNodes, tars::TarsCurrentPtr current) override
-    {
-        current->setResponse(false);
-
-        bcos::crypto::NodeIDSet bcosNodeIDSet;
-        for (auto const& it : connectedNodes)
-        {
-            bcosNodeIDSet.insert(m_cryptoSuite->keyFactory()->createKey(
-                bcos::bytesConstRef((const bcos::byte*)it.data(), it.size())));
-        }
-
-        m_txpool->transactionSync()->config()->notifyConnectedNodes(
-            bcosNodeIDSet, [current](bcos::Error::Ptr error) {
-                async_response_notifyConnectedNodes(current, toTarsError(error));
-            });
-
-        return bcostars::Error();
-    }
+        const vector<vector<tars::Char>>& connectedNodes, tars::TarsCurrentPtr current) override;
 
     bcostars::Error notifyConsensusNodeList(
         const vector<bcostars::ConsensusNode>& consensusNodeList,
-        tars::TarsCurrentPtr current) override
-    {
-        current->setResponse(false);
-
-        bcos::consensus::ConsensusNodeList bcosNodeList;
-        for (auto const& it : consensusNodeList)
-        {
-            auto node = std::make_shared<bcos::consensus::ConsensusNode>(
-                m_cryptoSuite->keyFactory()->createKey(
-                    bcos::bytesConstRef((const bcos::byte*)it.nodeID.data(), it.nodeID.size())),
-                it.weight);
-            bcosNodeList.emplace_back(node);
-        }
-
-        m_txpool->notifyConsensusNodeList(bcosNodeList, [current](bcos::Error::Ptr error) {
-            async_response_notifyConsensusNodeList(current, toTarsError(error));
-        });
-
-        return bcostars::Error();
-    }
+        tars::TarsCurrentPtr current) override;
 
     bcostars::Error notifyObserverNodeList(const vector<bcostars::ConsensusNode>& observerNodeList,
-        tars::TarsCurrentPtr current) override
-    {
-        current->setResponse(false);
-
-        bcos::consensus::ConsensusNodeList bcosObserverNodeList;
-        for (auto const& it : observerNodeList)
-        {
-            auto node = std::make_shared<bcos::consensus::ConsensusNode>(
-                m_cryptoSuite->keyFactory()->createKey(
-                    bcos::bytesConstRef((const bcos::byte*)it.nodeID.data(), it.nodeID.size())),
-                it.weight);
-            bcosObserverNodeList.emplace_back(node);
-        }
-
-        m_txpool->notifyObserverNodeList(bcosObserverNodeList, [current](bcos::Error::Ptr error) {
-            async_response_notifyObserverNodeList(current, toTarsError(error));
-        });
-
-        return bcostars::Error();
-    }
-
+        tars::TarsCurrentPtr current) override;
     bcostars::Error asyncGetPendingTransactionSize(
-        tars::Int64& _pendingTxsSize, tars::TarsCurrentPtr _current) override
-    {
-        _current->setResponse(false);
-        m_txpool->asyncGetPendingTransactionSize([_current](
-                                                     bcos::Error::Ptr _error, size_t _txsSize) {
-            async_response_asyncGetPendingTransactionSize(_current, toTarsError(_error), _txsSize);
-        });
-        return bcostars::Error();
-    }
-
-    bcostars::Error asyncResetTxPool(tars::TarsCurrentPtr _current) override
-    {
-        _current->setResponse(false);
-        m_txpool->asyncResetTxPool([_current](bcos::Error::Ptr _error) {
-            async_response_asyncResetTxPool(_current, toTarsError(_error));
-        });
-        return bcostars::Error();
-    }
+        tars::Int64& _pendingTxsSize, tars::TarsCurrentPtr _current) override;
+    bcostars::Error asyncResetTxPool(tars::TarsCurrentPtr _current) override;
 
 private:
-    static std::once_flag m_initFlag;
-    static bcos::txpool::TxPool::Ptr m_txpool;
-    static std::shared_ptr<bcos::ledger::Ledger> m_ledger;
-    static bcos::crypto::CryptoSuite::Ptr m_cryptoSuite;
-    static std::atomic_bool m_running;
-    static bcos::BoostLogInitializer::Ptr m_logInitializer;
+    bcos::initializer::TxPoolInitializer::Ptr m_txpoolInitializer;
 };
 }  // namespace bcostars

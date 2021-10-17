@@ -50,14 +50,18 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 include(CompilerSettings)
-# import tars project
+
 add_subdirectory(libinitializer)
+
+set(PBFT_INITIALIZER_LIB PBFTInitializer)
+set(TXPOOL_INITIALIZER_LIB txPoolInitializer)
+set(FRONT_INITIALIZER_LIB frontServiceInitializer)
 
 include(BuildInfoGenerator)
 # import services
-list(APPEND SERVICE_LIST GroupManagerService FrontService GatewayService RpcService TxPoolService NativeNode)
+list(APPEND SERVICE_LIST GroupManagerService FrontService GatewayService RpcService TxPoolService PBFTService NativeNode)
 # TODO:
-# PBFTService, DispatcherService, ExecutorService, 
+# DispatcherService, ExecutorService, 
 
 foreach(SERVICE ${SERVICE_LIST})
     add_subdirectory(${SERVICE})

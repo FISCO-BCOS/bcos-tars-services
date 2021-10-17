@@ -34,9 +34,27 @@ protected:
         boost::property_tree::read_ini(_configPath, pt);
         m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
         m_logInitializer->initLog(pt);
+
+        auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
+        nodeConfig->loadConfig(_configPath);
+        if (nodeConfig->smCryptoType())
+        {
+            addAppConfig("sm_ca.crt");
+            addAppConfig("sm_ssl.crt");
+            addAppConfig("sm_enssl.crt");
+            addAppConfig("sm_ssl.key");
+            addAppConfig("sm_enssl.key");
+        }
+        else
+        {
+            addAppConfig("ca.crt");
+            addAppConfig("ssl.key");
+            addAppConfig("ssl.crt");
+        }
+
         // init rpc
-        m_gatewayInitializer = std::make_shared<GatewayInitializer>();
-        m_gatewayInitializer->init(_configPath, ServerConfig::BasePath, ServerConfig::BasePath);
+        m_gatewayInitializer = std::make_shared<GatewayInitializer>(
+            _configPath, ServerConfig::BasePath, ServerConfig::BasePath);
         m_gatewayInitializer->start();
     }
 
