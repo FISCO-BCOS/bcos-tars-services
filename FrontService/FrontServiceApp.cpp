@@ -30,6 +30,7 @@ using namespace bcos::initializer;
 
 void FrontServiceApp::initialize()
 {
+    initConfig();
     initService();
     FrontServiceParam param;
     param.frontServiceInitializer = m_frontServiceInitializer;
@@ -45,6 +46,7 @@ void FrontServiceApp::initService()
     boost::property_tree::ptree pt;
     boost::property_tree::read_ini(m_iniConfigPath, pt);
     m_logInitializer = std::make_shared<BoostLogInitializer>();
+    m_logInitializer->setLogPath(getLogPath());
     m_logInitializer->initLog(pt);
 
     // load iniConfig

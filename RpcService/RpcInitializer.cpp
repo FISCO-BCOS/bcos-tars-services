@@ -58,10 +58,10 @@ bcos::rpc::RpcFactory::Ptr RpcInitializer::initRpcFactory(bcos::tool::NodeConfig
     m_keyFactory = protocolInitializer->keyFactory();
 
     // get the gateway client
-    auto gatewayProxy = Application::getCommunicator()->stringToProxy<GatewayServicePrx>(
+    auto gatewayPrx = Application::getCommunicator()->stringToProxy<GatewayServicePrx>(
         _nodeConfig->gatewayServiceName());
     auto gateway =
-        std::make_shared<GatewayServiceClient>(gatewayProxy, protocolInitializer->keyFactory());
+        std::make_shared<GatewayServiceClient>(gatewayPrx, protocolInitializer->keyFactory());
 
     // get the group manager service client
     auto groupManagerPrx = Application::getCommunicator()->stringToProxy<GroupManagerServicePrx>(

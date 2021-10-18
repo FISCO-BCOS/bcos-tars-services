@@ -33,7 +33,8 @@ using namespace bcos;
 using namespace bcos::tool;
 using namespace bcos::initializer;
 
-void Initializer::init(std::string const& _configFilePath, std::string const& _genesisFile)
+void Initializer::init(std::string const& _configFilePath, std::string const& _genesisFile,
+    std::string const& _privateKeyPath)
 {
     try
     {
@@ -46,7 +47,7 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         // init the protocol
         m_protocolInitializer = std::make_shared<ProtocolInitializer>();
         m_protocolInitializer->init(m_nodeConfig);
-        m_protocolInitializer->loadKeyPair(m_nodeConfig->privateKeyPath());
+        m_protocolInitializer->loadKeyPair(_privateKeyPath);
 
         // get gateway client
         auto gatewayPrx =
@@ -60,7 +61,10 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
             std::make_shared<FrontServiceInitializer>(m_nodeConfig, m_protocolInitializer, gateWay);
 
         // build the storage
-        auto storage = StorageInitializer::build(m_nodeConfig);
+        auto storagePath = ServerConfig::BasePath + "../" + m_nodeConfig->groupId() + "/" +
+                           m_nodeConfig->storagePath();
+        auto storage = StorageInitializer::build(storagePath);
+
         // build ledger
         auto ledger =
             LedgerInitializer::build(m_protocolInitializer->blockFactory(), storage, m_nodeConfig);

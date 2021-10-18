@@ -31,13 +31,7 @@ namespace bcostars
 class TxPoolServiceApp : public Application
 {
 public:
-    TxPoolServiceApp()
-      : m_iniConfigPath(ServerConfig::BasePath + "config.ini"),
-        m_privateKeyPath(ServerConfig::BasePath + "node.pem")
-    {
-        addAppConfig("node.pem");
-        addAppConfig("config.ini");
-    }
+    TxPoolServiceApp() {}
 
     ~TxPoolServiceApp() override{};
 
@@ -46,6 +40,13 @@ public:
 
 protected:
     virtual void initService();
+    virtual void initConfig()
+    {
+        m_iniConfigPath = ServerConfig::BasePath + "/config.ini";
+        m_privateKeyPath = ServerConfig::BasePath + "/node.pem";
+        addAppConfig("node.pem");
+        addAppConfig("config.ini");
+    }
 
 private:
     std::string m_iniConfigPath;

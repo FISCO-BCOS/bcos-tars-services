@@ -19,13 +19,13 @@
  * @date 2021-10-18
  */
 #include "NativeNodeApp.h"
-
 using namespace bcostars;
 using namespace bcos;
 using namespace bcos::initializer;
 
 void NativeNodeApp::initialize()
 {
+    initConfig();
     initLog();
     initNodeService();
     initTarsNodeService();
@@ -36,13 +36,14 @@ void NativeNodeApp::initLog()
     boost::property_tree::ptree pt;
     boost::property_tree::read_ini(m_iniConfigPath, pt);
     m_logInitializer = std::make_shared<BoostLogInitializer>();
+    m_logInitializer->setLogPath(getLogPath());
     m_logInitializer->initLog(pt);
 }
 
 void NativeNodeApp::initNodeService()
 {
     m_nodeInitializer = std::make_shared<Initializer>();
-    m_nodeInitializer->init(m_iniConfigPath, m_genesisConfigPath);
+    m_nodeInitializer->init(m_iniConfigPath, m_genesisConfigPath, m_privateKeyPath);
     m_nodeInitializer->start();
 }
 
@@ -51,33 +52,36 @@ void NativeNodeApp::initTarsNodeService()
     // init the txpool servant
     TxPoolServiceParam txpoolParam;
     txpoolParam.txPoolInitializer = m_nodeInitializer->txPoolInitializer();
-    addServantWithParams<TxPoolServiceServer, TxPoolServiceParam>(
-        ServerConfig::Application + "." + ServerConfig::ServerName + "." +
-            bcos::protocol::TXPOOL_SERVICE_NAME,
-        txpoolParam);
+    getServantHelper()->addServant<TxPoolServiceServer>(
+        ServerConfig::Application + "." + ServerConfig::ServerName + "." + "NativeNodeObj", this,
+        txpoolParam, true);
+
+    getServantHelper()->addServant<TxPoolServiceServer>(
+        ServerConfig::Application + "." + bcos::protocol::TXPOOL_SERVICE_NAME, this, txpoolParam,
+        false);
 
     // init the pbft servant
     PBFTServiceParam pbftParam;
     pbftParam.pbftInitializer = m_nodeInitializer->pbftInitializer();
-    addServantWithParams<PBFTServiceServer, PBFTServiceParam>(
-        ServerConfig::Application + "." + ServerConfig::ServerName + "." +
-            bcos::protocol::CONSENSUS_SERVANT_NAME,
-        pbftParam);
+    getServantHelper()->addServant<PBFTServiceServer>(ServerConfig::Application + "." +
+                                                          ServerConfig::ServerName + "." +
+                                                          bcos::protocol::CONSENSUS_SERVANT_NAME,
+        this, pbftParam, false);
 
     // init the ledger
     LedgerServiceParam ledgerParam;
     ledgerParam.ledger = m_nodeInitializer->ledger();
-    addServantWithParams<LedgerServiceServer, LedgerServiceParam>(
-        ServerConfig::Application + "." + ServerConfig::ServerName + "." +
-            bcos::protocol::LEDGER_SERVICE_NAME,
-        ledgerParam);
+    getServantHelper()->addServant<LedgerServiceServer>(ServerConfig::Application + "." +
+                                                            ServerConfig::ServerName + "." +
+                                                            bcos::protocol::LEDGER_SERVANT_NAME,
+        this, ledgerParam, false);
 
     // init the scheduler
     SchedulerServiceParam schedulerParam;
     schedulerParam.scheduler = m_nodeInitializer->scheduler();
     schedulerParam.cryptoSuite = m_nodeInitializer->protocolInitializer()->cryptoSuite();
-    addServantWithParams<SchedulerServiceServer, SchedulerServiceParam>(
+    getServantHelper()->addServant<SchedulerServiceServer>(
         ServerConfig::Application + "." + ServerConfig::ServerName + "." +
-            bcos::protocol::SCHEDULER_SERVICE_NAME,
-        schedulerParam);
+            bcos::protocol::SCHEDULER_SERVANT_NAME,
+        this, schedulerParam, false);
 }

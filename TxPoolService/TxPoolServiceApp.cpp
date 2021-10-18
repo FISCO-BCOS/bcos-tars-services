@@ -30,12 +30,13 @@ using namespace bcos::tool;
 
 void TxPoolServiceApp::initialize()
 {
+    initConfig();
     initService();
     TxPoolServiceParam param;
     param.txPoolInitializer = m_txpoolInitializer;
     addServantWithParams<TxPoolServiceServer, TxPoolServiceParam>(
         ServerConfig::Application + "." + ServerConfig::ServerName + "." +
-            bcos::protocol::TXPOOL_SERVICE_NAME,
+            bcos::protocol::TXPOOL_SERVANT_NAME,
         param);
 }
 
@@ -45,6 +46,7 @@ void TxPoolServiceApp::initService()
     boost::property_tree::ptree pt;
     boost::property_tree::read_ini(m_iniConfigPath, pt);
     m_logInitializer = std::make_shared<BoostLogInitializer>();
+    m_logInitializer->setLogPath(getLogPath());
     m_logInitializer->initLog(pt);
 
     // load iniConfig

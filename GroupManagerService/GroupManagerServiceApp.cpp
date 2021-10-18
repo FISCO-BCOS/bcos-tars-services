@@ -19,6 +19,7 @@
  * @date 2021-10-18
  */
 #include "GroupManagerServiceApp.h"
+#include "boost/filesystem.hpp"
 #include <bcos-storage/RocksDBStorage.h>
 #include <rocksdb/write_batch.h>
 #include <tarscpp/framework/AdminReg.h>
@@ -33,6 +34,7 @@ void GroupManagerServiceApp::initService()
     boost::property_tree::ptree pt;
     boost::property_tree::read_ini(m_iniConfigPath, pt);
     m_logInitializer = std::make_shared<BoostLogInitializer>();
+    m_logInitializer->setLogPath(getLogPath());
     m_logInitializer->initLog(pt);
 
     m_groupInfoFactory = std::make_shared<GroupInfoFactory>();
@@ -45,19 +47,20 @@ void GroupManagerServiceApp::initService()
 
     // create storage
     auto configParser = std::make_shared<ConfigParser>(m_iniConfigPath);
-    auto storagePath = ServerConfig::BasePath + configParser->storagePath();
+    auto storagePath = ServerConfig::BasePath + "../storage/" + configParser->storagePath();
     GROUP_LOG(INFO) << LOG_DESC("create storage") << LOG_KV("storagePath", storagePath);
     auto storage = createStorage(storagePath);
 
     auto factory = std::make_shared<GroupManagerFactory>();
-    auto groupManager = factory->build(adminPrx, configParser, m_groupInfoFactory,
-        m_chainNodeInfoFactory, storage, m_iniConfigPath);
+    m_groupManager =
+        factory->build(adminPrx, configParser, m_groupInfoFactory, m_chainNodeInfoFactory, storage);
     GROUP_LOG(INFO) << LOG_DESC("int groupManager success");
 }
 
 bcos::storage::StorageInterface::Ptr GroupManagerServiceApp::createStorage(
     std::string const& _storagePath)
 {
+    boost::filesystem::create_directories(_storagePath);
     // create storage
     rocksdb::DB* db;
     rocksdb::Options options;
@@ -69,5 +72,9 @@ bcos::storage::StorageInterface::Ptr GroupManagerServiceApp::createStorage(
     options.create_if_missing = true;
     // open DB
     rocksdb::Status s = rocksdb::DB::Open(options, _storagePath, &db);
+    if (!s.ok())
+    {
+        throw std::runtime_error("createRocksDB failed!");
+    }
     return std::make_shared<bcos::storage::RocksDBStorage>(std::unique_ptr<rocksdb::DB>(db));
 }

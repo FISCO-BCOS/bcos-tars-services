@@ -19,6 +19,7 @@
  * @date 2021-10-18
  */
 #pragma once
+#include "../Common/TarsUtils.h"
 #include "../libinitializer/Common.h"
 #include "GroupManagerServiceServer.h"
 #include <bcos-framework/interfaces/protocol/ServiceDesc.h>
@@ -31,14 +32,14 @@ namespace bcostars
 class GroupManagerServiceApp : public tars::Application
 {
 public:
-    GroupManagerServiceApp() : m_iniConfigPath(ServerConfig::BasePath + "config.ini")
-    {
-        addAppConfig("config.ini");
-    }
+    GroupManagerServiceApp() : Application() {}
+
     virtual ~GroupManagerServiceApp() override{};
 
     virtual void initialize() override
     {
+        m_iniConfigPath = ServerConfig::BasePath + "/config.ini";
+        addAppConfig("config.ini");
         initService();
         GroupManagerServiceServerParam param;
         param.groupManager = m_groupManager;
@@ -46,7 +47,7 @@ public:
         param.chainNodeInfoFactory = m_chainNodeInfoFactory;
         addServantWithParams<GroupManagerServiceServer, GroupManagerServiceServerParam>(
             ServerConfig::Application + "." + ServerConfig::ServerName + "." +
-                bcos::protocol::GROUPMANAGER_SERVICE_NAME,
+                bcos::protocol::GROUPMANAGER_SERVANT_NAME,
             param);
     }
     virtual void destroyApp() override {}

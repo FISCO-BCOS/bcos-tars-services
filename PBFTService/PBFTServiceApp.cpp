@@ -32,6 +32,7 @@ using namespace bcos::initializer;
 
 void PBFTServiceApp::initialize()
 {
+    initConfig();
     initService();
     PBFTServiceParam param;
     param.pbftInitializer = m_pbftInitializer;
@@ -47,6 +48,7 @@ void PBFTServiceApp::initService()
     boost::property_tree::ptree pt;
     boost::property_tree::read_ini(m_iniConfigPath, pt);
     m_logInitializer = std::make_shared<BoostLogInitializer>();
+    m_logInitializer->setLogPath(getLogPath());
     m_logInitializer->initLog(pt);
 
     // load iniConfig

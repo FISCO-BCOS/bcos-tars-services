@@ -34,20 +34,22 @@ namespace bcostars
 class NativeNodeApp : public Application
 {
 public:
-    NativeNodeApp()
-      : m_iniConfigPath(ServerConfig::BasePath + "config.ini"),
-        m_genesisConfigPath(ServerConfig::BasePath + "config.genesis")
-    {
-        addAppConfig("node.pem");
-        addAppConfig("config.genesis");
-        addAppConfig("config.ini");
-    }
+    NativeNodeApp() {}
     ~NativeNodeApp() override {}
 
     void initialize() override;
     void destroyApp() override { m_nodeInitializer->stop(); }
 
 protected:
+    virtual void initConfig()
+    {
+        m_iniConfigPath = ServerConfig::BasePath + "/config.ini";
+        m_genesisConfigPath = ServerConfig::BasePath + "/config.genesis";
+        m_privateKeyPath = ServerConfig::BasePath + "/node.pem";
+        addAppConfig("node.pem");
+        addAppConfig("config.genesis");
+        addAppConfig("config.ini");
+    }
     virtual void initLog();
     virtual void initNodeService();
     virtual void initTarsNodeService();
@@ -55,6 +57,7 @@ protected:
 private:
     std::string m_iniConfigPath;
     std::string m_genesisConfigPath;
+    std::string m_privateKeyPath;
 
     bcos::BoostLogInitializer::Ptr m_logInitializer;
     bcos::initializer::Initializer::Ptr m_nodeInitializer;

@@ -38,7 +38,8 @@ public:
     Initializer() = default;
     virtual ~Initializer() { stop(); }
 
-    virtual void init(std::string const& _configFilePath, std::string const& _genesisFile);
+    virtual void init(std::string const& _configFilePath, std::string const& _genesisFile,
+        std::string const& _privateKeyPath);
 
     virtual void start();
     virtual void stop();

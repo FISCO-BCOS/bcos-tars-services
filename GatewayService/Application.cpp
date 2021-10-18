@@ -8,15 +8,14 @@ using namespace bcostars;
 class GatewayServiceApp : public Application
 {
 public:
-    GatewayServiceApp() : m_iniConfigPath(ServerConfig::BasePath + "config.ini")
-    {
-        addAppConfig("config.ini");
-    }
+    GatewayServiceApp() {}
     ~GatewayServiceApp() override{};
 
     void destroyApp() override {}
     void initialize() override
     {
+        m_iniConfigPath = ServerConfig::BasePath + "/config.ini";
+        addAppConfig("config.ini");
         initService(m_iniConfigPath);
         GatewayServiceParam param;
         param.gatewayInitializer = m_gatewayInitializer;
@@ -33,10 +32,12 @@ protected:
         boost::property_tree::ptree pt;
         boost::property_tree::read_ini(_configPath, pt);
         m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
+        m_logInitializer->setLogPath(getLogPath());
         m_logInitializer->initLog(pt);
 
         auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
         nodeConfig->loadConfig(_configPath);
+        addAppConfig("nodes.json");
         if (nodeConfig->smCryptoType())
         {
             addAppConfig("sm_ca.crt");

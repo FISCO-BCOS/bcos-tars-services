@@ -30,13 +30,7 @@ namespace bcostars
 class FrontServiceApp : public Application
 {
 public:
-    FrontServiceApp()
-      : m_iniConfigPath(ServerConfig::BasePath + "config.ini"),
-        m_privateKeyPath(ServerConfig::BasePath + "node.pem")
-    {
-        addAppConfig("node.pem");
-        addAppConfig("config.ini");
-    }
+    FrontServiceApp() {}
     virtual ~FrontServiceApp() override{};
 
     virtual void initialize() override;
@@ -44,6 +38,13 @@ public:
 
 protected:
     virtual void initService();
+    virtual void initConfig()
+    {
+        m_iniConfigPath = ServerConfig::BasePath + "/config.ini";
+        m_privateKeyPath = ServerConfig::BasePath + "/node.pem";
+        addAppConfig("node.pem");
+        addAppConfig("config.ini");
+    }
 
 private:
     std::string m_iniConfigPath;

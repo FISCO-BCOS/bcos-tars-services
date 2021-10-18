@@ -8,20 +8,17 @@ using namespace bcostars;
 class RpcServiceApp : public Application
 {
 public:
-    RpcServiceApp() : m_iniConfigPath(ServerConfig::BasePath + "config.ini")
-    {
-        addAppConfig("config.ini");
-    }
+    RpcServiceApp() {}
 
     ~RpcServiceApp() override {}
 
     void initialize() override
     {
+        m_iniConfigPath = ServerConfig::BasePath + "/config.ini";
+        addAppConfig("config.ini");
         initService(m_iniConfigPath);
         RpcServiceParam param;
         param.rpcInitializer = m_rpcInitializer;
-
-
         addServantWithParams<RpcServiceServer, RpcServiceParam>(
             ServerConfig::Application + "." + ServerConfig::ServerName + "." +
                 bcos::protocol::RPC_SERVANT_NAME,
@@ -36,6 +33,7 @@ protected:
         boost::property_tree::ptree pt;
         boost::property_tree::read_ini(_configPath, pt);
         m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
+        m_logInitializer->setLogPath(getLogPath());
         m_logInitializer->initLog(pt);
         // init rpc
         m_rpcInitializer = std::make_shared<RpcInitializer>(_configPath);
