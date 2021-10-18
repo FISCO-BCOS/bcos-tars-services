@@ -26,11 +26,8 @@
 #include "libexecutor/NativeExecutionMessage.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 #include <bcos-framework/libtool/NodeConfig.h>
-#include <bcos-gateway/Gateway.h>
 #include <bcos-scheduler/ExecutorManager.h>
-#include <bcos-tars-protocol/protocol/BlockHeaderFactoryImpl.h>
-#include <bcos-tars-protocol/protocol/TransactionReceiptFactoryImpl.h>
-#include <bcos-tars-protocol/tars/TransactionReceipt.h>
+#include <bcos-tars-protocol/client/GatewayServiceClient.h>
 
 using namespace bcos;
 using namespace bcos::tool;
@@ -54,35 +51,51 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         // init the protocol
         m_protocolInitializer = std::make_shared<ProtocolInitializer>();
         m_protocolInitializer->init(m_nodeConfig);
+        m_protocolInitializer->loadKeyPair(m_nodeConfig->privateKeyPath());
 
-        std::string nodeID = m_protocolInitializer->keyPair()->publicKey()->hex();
-        // init the network
-        m_networkInitializer = std::make_shared<NetworkInitializer>(m_protocolInitializer);
-        m_networkInitializer->init(m_nodeConfig, m_protocolInitializer->keyPair()->publicKey());
+        // get gateway client
+        auto gatewayPrx =
+            Application::getCommunicator()->stringToProxy<bcostars::GatewayServicePrx>(
+                m_nodeConfig->gatewayServiceName());
+        auto gateWay = std::make_shared<bcostars::GatewayServiceClient>(
+            gatewayPrx, m_protocolInitializer->cryptoSuite()->keyFactory());
 
+        // build the front service
+        m_frontServiceInitializer =
+            std::make_shared<FrontServiceInitializer>(m_nodeConfig, m_protocolInitializer, gateWay);
+
+        // build the storage
         auto storage = StorageInitializer::build(m_nodeConfig);
-
+        // build ledger
         auto ledger =
             LedgerInitializer::build(m_protocolInitializer->blockFactory(), storage, m_nodeConfig);
 
         auto executionMessageFactory = std::make_shared<executor::NativeExecutionMessageFactory>();
-        auto transactionReceiptFactory =
-            std::make_shared<bcostars::protocol::TransactionReceiptFactoryImpl>(
-                m_protocolInitializer->cryptoSuite());
-        auto blockHeaderFactory = std::make_shared<bcostars::protocol::BlockHeaderFactoryImpl>(
-            m_protocolInitializer->cryptoSuite());
         auto executorManager = std::make_shared<bcos::scheduler::ExecutorManager>();
 
         auto scheduler = SchedulerInitializer::build(executorManager, ledger, storage,
-            executionMessageFactory, transactionReceiptFactory, blockHeaderFactory,
+            executionMessageFactory, m_protocolInitializer->blockFactory()->receiptFactory(),
+            m_protocolInitializer->blockFactory()->blockHeaderFactory(),
             m_protocolInitializer->cryptoSuite()->hashImpl());
 
-        // init the pbft related modules
-        m_pbftInitializer = std::make_shared<PBFTInitializer>();
-        m_pbftInitializer->init(
-            m_nodeConfig, m_protocolInitializer, m_networkInitializer, ledger, scheduler, storage);
+        // init the txpool
+        m_txpoolInitializer = std::make_shared<TxPoolInitializer>(
+            m_nodeConfig, m_protocolInitializer, m_frontServiceInitializer->front(), ledger);
 
-        auto executor = ExecutorInitializer::build(m_pbftInitializer->txpool(), storage,
+        // build and init the pbft related modules
+        m_pbftInitializer = std::make_shared<PBFTInitializer>(m_nodeConfig, m_protocolInitializer,
+            m_txpoolInitializer->txpool(), ledger, scheduler, storage,
+            m_frontServiceInitializer->front());
+        m_pbftInitializer->init();
+
+        // init the txpool
+        m_txpoolInitializer->init(m_pbftInitializer->sealer());
+
+        // init the frontService
+        m_frontServiceInitializer->init(m_pbftInitializer->pbft(), m_pbftInitializer->blockSync(),
+            m_txpoolInitializer->txpool());
+
+        auto executor = ExecutorInitializer::build(m_txpoolInitializer->txpool(), storage,
             executionMessageFactory, m_protocolInitializer->cryptoSuite()->hashImpl(), false);
         executorManager->addExecutor("default", executor);
     }
@@ -97,14 +110,18 @@ void Initializer::start()
 {
     try
     {
+        if (m_txpoolInitializer)
+        {
+            m_txpoolInitializer->start();
+        }
         if (m_pbftInitializer)
         {
             m_pbftInitializer->start();
         }
 
-        if (m_networkInitializer)
+        if (m_frontServiceInitializer)
         {
-            m_networkInitializer->start();
+            m_frontServiceInitializer->start();
         }
     }
     catch (std::exception const& e)
@@ -118,13 +135,17 @@ void Initializer::stop()
 {
     try
     {
-        if (m_networkInitializer)
+        if (m_frontServiceInitializer)
         {
-            m_networkInitializer->stop();
+            m_frontServiceInitializer->stop();
         }
         if (m_pbftInitializer)
         {
             m_pbftInitializer->stop();
+        }
+        if (m_txpoolInitializer)
+        {
+            m_txpoolInitializer->stop();
         }
     }
     catch (std::exception const& e)

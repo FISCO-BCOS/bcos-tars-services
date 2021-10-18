@@ -1,24 +1,6 @@
-#include "../Common/TarsUtils.h"
-#include "FrontServiceServer.h"
-#include <tarscpp/servant/Application.h>
+#include "FrontServiceApp.h"
 
 using namespace bcostars;
-
-class FrontServiceApp : public Application
-{
-public:
-    virtual ~FrontServiceApp() override{};
-
-    virtual void initialize() override
-    {
-        addAllConfig(this);
-        addServant<FrontServiceServer>(ServerConfig::Application + "." + ServerConfig::ServerName +
-                                       "." + bcos::protocol::FRONT_SERVANT_NAME);
-    }
-
-    virtual void destroyApp() override {}
-};
-
 int main(int argc, char* argv[])
 {
     try

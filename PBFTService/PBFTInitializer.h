@@ -19,9 +19,11 @@
  * @date 2021-06-10
  */
 #pragma once
-#include "NetworkInitializer.h"
+#include "../Common/TarsUtils.h"
 #include "libinitializer/ProtocolInitializer.h"
+#include <bcos-framework/interfaces/front/FrontServiceInterface.h>
 #include <bcos-framework/libsealer/SealerFactory.h>
+#include <bcos-ledger/libledger/Ledger.h>
 #include <bcos-pbft/pbft/PBFTFactory.h>
 #include <bcos-sync/BlockSyncFactory.h>
 #include <bcos-txpool/TxPoolFactory.h>
@@ -34,48 +36,50 @@ class PBFTInitializer
 {
 public:
     using Ptr = std::shared_ptr<PBFTInitializer>;
-    PBFTInitializer() = default;
+    PBFTInitializer(bcos::tool::NodeConfig::Ptr _nodeConfig,
+        ProtocolInitializer::Ptr _protocolInitializer, bcos::txpool::TxPoolInterface::Ptr _txpool,
+        std::shared_ptr<bcos::ledger::Ledger> _ledger,
+        bcos::scheduler::SchedulerInterface::Ptr _scheduler,
+        bcos::storage::StorageInterface::Ptr _storage,
+        std::shared_ptr<bcos::front::FrontServiceInterface> _frontService);
+
     virtual ~PBFTInitializer() { stop(); }
 
-    virtual void init(bcos::tool::NodeConfig::Ptr _nodeConfig,
-        ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
-        bcos::ledger::LedgerInterface::Ptr _ledger,
-        bcos::scheduler::SchedulerInterface::Ptr scheduler,
-        bcos::storage::StorageInterface::Ptr _storage);
+    virtual void init();
 
     virtual void start();
     virtual void stop();
 
-    // for mini-consensus
     bcos::txpool::TxPoolInterface::Ptr txpool() { return m_txpool; }
     bcos::sync::BlockSync::Ptr blockSync() { return m_blockSync; }
     bcos::consensus::PBFTImpl::Ptr pbft() { return m_pbft; }
+    bcos::sealer::Sealer::Ptr sealer() { return m_sealer; }
 
+    bcos::protocol::BlockFactory::Ptr blockFactory()
+    {
+        return m_protocolInitializer->blockFactory();
+    }
+    bcos::crypto::KeyFactory::Ptr keyFactory() { return m_protocolInitializer->keyFactory(); }
 
 protected:
-    virtual void createTxPool(bcos::tool::NodeConfig::Ptr _nodeConfig,
-        ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
-        bcos::ledger::LedgerInterface::Ptr _ledger);
-
-    virtual void createSealer(
-        bcos::tool::NodeConfig::Ptr _nodeConfig, ProtocolInitializer::Ptr _protocolInitializer);
-
-    virtual void createPBFT(bcos::tool::NodeConfig::Ptr _nodeConfig,
-        ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
-        bcos::storage::StorageInterface::Ptr _storage, bcos::ledger::LedgerInterface::Ptr _ledger,
-        bcos::scheduler::SchedulerInterface::Ptr _dispatcher);
-
-    virtual void createSync(bcos::tool::NodeConfig::Ptr _nodeConfig,
-        ProtocolInitializer::Ptr _protocolInitializer, NetworkInitializer::Ptr _networkInitializer,
-        bcos::ledger::LedgerInterface::Ptr _ledger,
-        bcos::scheduler::SchedulerInterface::Ptr _dispatcher);
-
+    virtual void createSealer();
+    virtual void createPBFT();
+    virtual void createSync();
     virtual void registerHandlers();
 
 private:
+    bcos::tool::NodeConfig::Ptr m_nodeConfig;
+    ProtocolInitializer::Ptr m_protocolInitializer;
+
+    bcos::txpool::TxPoolInterface::Ptr m_txpool;
+    // Note: PBFT and other modules (except rpc and gateway) access ledger with bcos-ledger SDK
+    std::shared_ptr<bcos::ledger::Ledger> m_ledger;
+    bcos::scheduler::SchedulerInterface::Ptr m_scheduler;
+    bcos::storage::StorageInterface::Ptr m_storage;
+    std::shared_ptr<bcos::front::FrontServiceInterface> m_frontService;
+
     bcos::sealer::Sealer::Ptr m_sealer;
     bcos::sync::BlockSync::Ptr m_blockSync;
-    bcos::txpool::TxPool::Ptr m_txpool;
     bcos::consensus::PBFTImpl::Ptr m_pbft;
 };
 }  // namespace initializer

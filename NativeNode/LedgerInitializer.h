@@ -30,7 +30,8 @@ namespace bcos::initializer
 class LedgerInitializer
 {
 public:
-    static bcos::ledger::LedgerInterface::Ptr build(bcos::protocol::BlockFactory::Ptr _blockFactory,
+    static std::shared_ptr<bcos::ledger::Ledger> build(
+        bcos::protocol::BlockFactory::Ptr _blockFactory,
         bcos::storage::StorageInterface::Ptr _storage, bcos::tool::NodeConfig::Ptr _nodeConfig)
     {
         auto ledger = std::make_shared<bcos::ledger::Ledger>(_blockFactory, _storage);

@@ -1,22 +1,51 @@
 #include "../Common/TarsUtils.h"
+#include "RpcInitializer.h"
 #include "RpcServiceServer.h"
+#include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <tarscpp/servant/Application.h>
 
 using namespace bcostars;
-
 class RpcServiceApp : public Application
 {
 public:
-    virtual ~RpcServiceApp() override {}
-
-    virtual void initialize() override
+    RpcServiceApp() : m_iniConfigPath(ServerConfig::BasePath + "config.ini")
     {
-        addAllConfig(this);
-        addServant<RpcServiceServer>(ServerConfig::Application + "." + ServerConfig::ServerName +
-                                     "." + bcos::protocol::RPC_SERVANT_NAME);
+        addAppConfig("config.ini");
     }
 
-    virtual void destroyApp() override {}
+    ~RpcServiceApp() override {}
+
+    void initialize() override
+    {
+        initService(m_iniConfigPath);
+        RpcServiceParam param;
+        param.rpcInitializer = m_rpcInitializer;
+
+
+        addServantWithParams<RpcServiceServer, RpcServiceParam>(
+            ServerConfig::Application + "." + ServerConfig::ServerName + "." +
+                bcos::protocol::RPC_SERVANT_NAME,
+            param);
+    }
+    void destroyApp() override {}
+
+protected:
+    virtual void initService(std::string const& _configPath)
+    {
+        // init the log
+        boost::property_tree::ptree pt;
+        boost::property_tree::read_ini(_configPath, pt);
+        m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
+        m_logInitializer->initLog(pt);
+        // init rpc
+        m_rpcInitializer = std::make_shared<RpcInitializer>(_configPath);
+        m_rpcInitializer->start();
+    }
+
+private:
+    std::string m_iniConfigPath;
+    bcos::BoostLogInitializer::Ptr m_logInitializer;
+    RpcInitializer::Ptr m_rpcInitializer;
 };
 
 int main(int argc, char* argv[])
