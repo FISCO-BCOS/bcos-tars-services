@@ -87,7 +87,7 @@ public:
                 bcos::bytesConstRef((const bcos::byte*)it.data(), it.size())));
         }
 
-        m_pbftInitializer->blockSync()->config()->notifyConnectedNodes(
+        m_pbftInitializer->blockSync()->notifyConnectedNodes(
             bcosNodeIDSet, [current](bcos::Error::Ptr error) {
                 async_response_asyncNotifyConnectedNodes(current, bcostars::toTarsError(error));
             });

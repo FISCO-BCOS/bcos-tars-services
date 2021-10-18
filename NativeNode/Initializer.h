@@ -43,10 +43,13 @@ public:
     virtual void start();
     virtual void stop();
 
-    // for fake transactions(TODO: remove this)
     bcos::tool::NodeConfig::Ptr nodeConfig() { return m_nodeConfig; }
     ProtocolInitializer::Ptr protocolInitializer() { return m_protocolInitializer; }
     PBFTInitializer::Ptr pbftInitializer() { return m_pbftInitializer; }
+    TxPoolInitializer::Ptr txPoolInitializer() { return m_txpoolInitializer; }
+
+    bcos::ledger::LedgerInterface::Ptr ledger() { return m_ledger; }
+    bcos::scheduler::SchedulerInterface::Ptr scheduler() { return m_scheduler; }
 
 private:
     BoostLogInitializer::Ptr m_logInitializer;
@@ -56,5 +59,8 @@ private:
     TxPoolInitializer::Ptr m_txpoolInitializer;
 
     PBFTInitializer::Ptr m_pbftInitializer;
+
+    bcos::ledger::LedgerInterface::Ptr m_ledger;
+    bcos::scheduler::SchedulerInterface::Ptr m_scheduler;
 };
 }  // namespace bcos::initializer

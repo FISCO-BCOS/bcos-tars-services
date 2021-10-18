@@ -37,11 +37,6 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
 {
     try
     {
-        boost::property_tree::ptree pt;
-        boost::property_tree::read_ini(_configFilePath, pt);
-        m_logInitializer = std::make_shared<BoostLogInitializer>();
-        m_logInitializer->initLog(pt);
-
         // loadConfig
         m_nodeConfig =
             std::make_shared<NodeConfig>(std::make_shared<bcos::crypto::KeyFactoryImpl>());
@@ -69,13 +64,13 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         // build ledger
         auto ledger =
             LedgerInitializer::build(m_protocolInitializer->blockFactory(), storage, m_nodeConfig);
+        m_ledger = ledger;
 
         auto executionMessageFactory = std::make_shared<executor::NativeExecutionMessageFactory>();
         auto executorManager = std::make_shared<bcos::scheduler::ExecutorManager>();
 
-        auto scheduler = SchedulerInitializer::build(executorManager, ledger, storage,
-            executionMessageFactory, m_protocolInitializer->blockFactory()->receiptFactory(),
-            m_protocolInitializer->blockFactory()->blockHeaderFactory(),
+        m_scheduler = SchedulerInitializer::build(executorManager, ledger, storage,
+            executionMessageFactory, m_protocolInitializer->blockFactory(),
             m_protocolInitializer->cryptoSuite()->hashImpl());
 
         // init the txpool
@@ -84,7 +79,7 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
 
         // build and init the pbft related modules
         m_pbftInitializer = std::make_shared<PBFTInitializer>(m_nodeConfig, m_protocolInitializer,
-            m_txpoolInitializer->txpool(), ledger, scheduler, storage,
+            m_txpoolInitializer->txpool(), ledger, m_scheduler, storage,
             m_frontServiceInitializer->front());
         m_pbftInitializer->init();
 

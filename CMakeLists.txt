@@ -53,15 +53,17 @@ include(CompilerSettings)
 
 add_subdirectory(libinitializer)
 
-set(PBFT_INITIALIZER_LIB PBFTInitializer)
-set(TXPOOL_INITIALIZER_LIB txPoolInitializer)
-set(FRONT_INITIALIZER_LIB frontServiceInitializer)
+set(PBFT_SERVICE_LIB pbftServiceLib)
+set(TXPOOL_SERVICE_LIB txPoolServiceLib)
+set(FRONT_SERVICE_LIB frontServiceLib)
+set(LEDGER_SERVICE_LIB ledgerServiceLib)
+set(SCHEDULER_SERVICE_LIB schedulerServiceLib)
 
 include(BuildInfoGenerator)
 # import services
 list(APPEND SERVICE_LIST GroupManagerService FrontService GatewayService RpcService TxPoolService PBFTService NativeNode)
 # TODO:
-# DispatcherService, ExecutorService, 
+# SchedulerService, ExecutorService
 
 foreach(SERVICE ${SERVICE_LIST})
     add_subdirectory(${SERVICE})
@@ -74,6 +76,10 @@ foreach(SERVICE ${SERVICE_LIST})
 
     list(APPEND SERVICE_TAR_LIST ${SERVICE}-tar)
 endforeach()
+
+add_subdirectory(LedgerService)
+add_subdirectory(SchedulerService)
+
 add_custom_target(tar DEPENDS ${SERVICE_TAR_LIST})
 
 if(TEST)

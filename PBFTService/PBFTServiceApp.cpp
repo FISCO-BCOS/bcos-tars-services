@@ -21,12 +21,12 @@
 #include "PBFTServiceApp.h"
 #include <bcos-ledger/libledger/Ledger.h>
 #include <bcos-tars-protocol/client/FrontServiceClient.h>
+#include <bcos-tars-protocol/client/SchedulerServiceClient.h>
 #include <bcos-tars-protocol/client/TxPoolServiceClient.h>
 
 using namespace bcos;
 using namespace bcos::tool;
 using namespace bcos::ledger;
-using namespace bcos::dispatcher;
 using namespace bcostars;
 using namespace bcos::initializer;
 
@@ -69,9 +69,7 @@ void PBFTServiceApp::initService()
     auto frontService =
         std::make_shared<bcostars::FrontServiceClient>(frontServiceProxy, keyFactory);
 
-    // create the ledger
-    // TODO: modify ledger to LedgerServiceClient and implement the ledger client interfaces with
-    // tars protocol
+    // create the ledger: TODO: create tikv storage
     auto ledger = std::make_shared<bcos::ledger::Ledger>(blockFactory, nullptr);
 
     // create txpool
@@ -81,9 +79,16 @@ void PBFTServiceApp::initService()
         txpoolProxy, protocolInitializer->cryptoSuite(), blockFactory);
     PBFTSERVICE_LOG(INFO) << LOG_DESC("create TxPool client success");
 
-    // TODO: 1. create scheduler 2. init TiKVStorage
+    // create scheduler
+    auto schedulerPrx =
+        Application::getCommunicator()->stringToProxy<bcostars::SchedulerServicePrx>(
+            getProxyDesc(bcos::protocol::SCHEDULER_SERVICE_NAME));
+    auto scheduler = std::make_shared<bcostars::SchedulerServiceClient>(
+        schedulerPrx, protocolInitializer->cryptoSuite());
+
+    // TODO: create tikv storage
     m_pbftInitializer = std::make_shared<PBFTInitializer>(
-        nodeConfig, protocolInitializer, txpool, ledger, nullptr, nullptr, frontService);
+        nodeConfig, protocolInitializer, txpool, ledger, scheduler, nullptr, frontService);
     m_pbftInitializer->init();
     m_pbftInitializer->start();
 }

@@ -170,7 +170,7 @@ bcostars::Error TxPoolServiceServer::notifyConnectedNodes(
             bcos::bytesConstRef((const bcos::byte*)it.data(), it.size())));
     }
 
-    m_txpoolInitializer->txpool()->transactionSync()->config()->notifyConnectedNodes(
+    m_txpoolInitializer->txpool()->notifyConnectedNodes(
         bcosNodeIDSet, [current](bcos::Error::Ptr error) {
             async_response_notifyConnectedNodes(current, toTarsError(error));
         });

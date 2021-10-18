@@ -133,9 +133,7 @@ void FrontServiceInitializer::initMsgHandlers(bcos::consensus::ConsensusInterfac
             bcos::front::ReceiveMsgFunc _receiveMsgCallback) {
             // TODO: support notifyConnectedNodes for txpool
             auto nodeIdSet = bcos::crypto::NodeIDSet(_nodeIDs->begin(), _nodeIDs->end());
-#if 0
             _txpool->notifyConnectedNodes(nodeIdSet, _receiveMsgCallback);
-#endif
             FRONTSERVICE_LOG(DEBUG) << LOG_DESC("TxPool: notifyConnectedNodes")
                                     << LOG_KV("connectedNodeSize", nodeIdSet.size());
         });
@@ -146,13 +144,10 @@ void FrontServiceInitializer::initMsgHandlers(bcos::consensus::ConsensusInterfac
     m_front->registerModuleNodeIDsDispatcher(bcos::protocol::ModuleID::BlockSync,
         [_blockSync](std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs,
             bcos::front::ReceiveMsgFunc _receiveMsgCallback) {
-
-#if 0
             auto nodeIdSet = bcos::crypto::NodeIDSet(_nodeIDs->begin(), _nodeIDs->end());
             _blockSync->notifyConnectedNodes(nodeIdSet, _receiveMsgCallback);
             FRONTSERVICE_LOG(DEBUG) << LOG_DESC("BlockSync: notifyConnectedNodes")
                                     << LOG_KV("connectedNodeSize", nodeIdSet.size());
-#endif
         });
     FRONTSERVICE_LOG(INFO) << LOG_DESC(
         "registerModuleNodeIDsDispatcher for the BlockSync module success");

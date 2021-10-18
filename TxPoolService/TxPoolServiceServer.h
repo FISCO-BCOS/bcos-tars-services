@@ -22,6 +22,7 @@ struct TxPoolServiceParam
 class TxPoolServiceServer : public bcostars::TxPoolService
 {
 public:
+    using Ptr = std::shared_ptr<TxPoolServiceServer>;
     TxPoolServiceServer(TxPoolServiceParam const& _param)
       : m_txpoolInitializer(_param.txPoolInitializer)
     {}
