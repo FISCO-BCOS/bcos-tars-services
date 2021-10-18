@@ -18,30 +18,9 @@
  * @author: yujiechen
  * @date 2021-10-14
  */
-#include "../libinitializer/Common.h"
-#include "GroupManagerServiceServer.h"
-#include <bcos-framework/interfaces/protocol/ServiceDesc.h>
-#include <tarscpp/servant/Application.h>
+#include "GroupManagerServiceApp.h"
 
 using namespace bcostars;
-
-class GroupManagerServiceApp : public Application
-{
-public:
-    virtual ~GroupManagerServiceApp() override{};
-
-    virtual void initialize() override
-    {
-        // TODO: init groupManagerService
-        GroupManagerServiceServerParam param;
-        addServantWithParams<GroupManagerServiceServer, GroupManagerServiceServerParam>(
-            ServerConfig::Application + "." + ServerConfig::ServerName + "." +
-                bcos::protocol::GROUPMANAGER_SERVICE_NAME,
-            param);
-    }
-    virtual void destroyApp() override {}
-};
-
 int main(int argc, char* argv[])
 {
     try

@@ -131,7 +131,6 @@ void FrontServiceInitializer::initMsgHandlers(bcos::consensus::ConsensusInterfac
     m_front->registerModuleNodeIDsDispatcher(bcos::protocol::ModuleID::TxsSync,
         [_txpool](std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs,
             bcos::front::ReceiveMsgFunc _receiveMsgCallback) {
-            // TODO: support notifyConnectedNodes for txpool
             auto nodeIdSet = bcos::crypto::NodeIDSet(_nodeIDs->begin(), _nodeIDs->end());
             _txpool->notifyConnectedNodes(nodeIdSet, _receiveMsgCallback);
             FRONTSERVICE_LOG(DEBUG) << LOG_DESC("TxPool: notifyConnectedNodes")

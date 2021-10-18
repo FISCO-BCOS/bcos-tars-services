@@ -88,8 +88,8 @@ hunter_config(bcos-rpc VERSION 3.0.0-local
 )
 
 hunter_config(bcos-group-manager VERSION 3.0.0-local
-	URL https://${URL_BASE}/FISCO-BCOS/bcos-group-manager/archive/5897f844cc0c936a7940b53600d809c84e5a8268.tar.gz
-	SHA1 2d5a170b8470b244ff3e2f587867e970fdee6ba8
+	URL https://${URL_BASE}/cyjseagull/bcos-group-manager/archive/fbc938f79e77fcdf20c743d673093e41bdea7ff7.tar.gz
+	SHA1 076b2b82b536805c15ff8a66935198bfc7d20564
 	CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
