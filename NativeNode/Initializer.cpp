@@ -23,6 +23,8 @@
 #include "LedgerInitializer.h"
 #include "SchedulerInitializer.h"
 #include "StorageInitializer.h"
+#include "interfaces/protocol/ProtocolTypeDef.h"
+#include "interfaces/rpc/RPCInterface.h"
 #include "libexecutor/NativeExecutionMessage.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 #include <bcos-framework/libtool/NodeConfig.h>
@@ -75,7 +77,7 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         auto executorManager = std::make_shared<bcos::scheduler::ExecutorManager>();
 
         auto scheduler = SchedulerInitializer::build(executorManager, ledger, storage,
-            executionMessageFactory, transactionReceiptFactory, blockHeaderFactory,
+            executionMessageFactory, m_protocolInitializer->blockFactory(),
             m_protocolInitializer->cryptoSuite()->hashImpl());
 
         // init the pbft related modules
@@ -94,12 +96,19 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         m_rpcInitializer->setFrontService(m_networkInitializer->frontService());
         m_rpcInitializer->setLedger(ledger);
         m_rpcInitializer->setTxPoolInterface(m_pbftInitializer->txpool());
-        m_rpcInitializer->setExecutorInterface(nullptr);
+        m_rpcInitializer->setScheduler(scheduler);
         m_rpcInitializer->setConsensusInterface(m_pbftInitializer->pbft());
         m_rpcInitializer->setBlockSyncInterface(m_pbftInitializer->blockSync());
         m_rpcInitializer->setGatewayInterface(m_networkInitializer->gateway());
         m_rpcInitializer->setTransactionFactory(m_protocolInitializer->transactionFactory());
+
         m_rpcInitializer->init(m_nodeConfig, _configFilePath);
+
+        scheduler->registerBlockNumberReceiver(
+            [rpc = m_rpcInitializer->rpcInterface()](bcos::protocol::BlockNumber number) {
+                BCOS_LOG(INFO) << "Notify blocknumber: " << number;
+                rpc->asyncNotifyBlockNumber({}, {}, number, [](Error::Ptr) {});
+            });
     }
     catch (std::exception const& e)
     {

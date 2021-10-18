@@ -23,8 +23,7 @@
 #include "ProtocolInitializer.h"
 #include "interfaces/dispatcher/SchedulerInterface.h"
 #include "interfaces/executor/ExecutionMessage.h"
-#include <bcos-framework/interfaces/dispatcher/DispatcherInterface.h>
-#include <bcos-framework/interfaces/executor/ExecutorInterface.h>
+#include "interfaces/protocol/BlockFactory.h"
 #include <bcos-framework/interfaces/ledger/LedgerInterface.h>
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
 #include <bcos-framework/libexecutor/NativeExecutionMessage.h>
@@ -41,13 +40,11 @@ public:
         bcos::ledger::LedgerInterface::Ptr _ledger,
         bcos::storage::TransactionalStorageInterface::Ptr storage,
         bcos::protocol::ExecutionMessageFactory::Ptr executionMessageFactory,
-        bcos::protocol::TransactionReceiptFactory::Ptr transactionReceiptFactory,
-        bcos::protocol::BlockHeaderFactory::Ptr blockHeaderFactory, crypto::Hash::Ptr hashImpl)
+        bcos::protocol::BlockFactory::Ptr blockFactory, crypto::Hash::Ptr hashImpl)
     {
         return std::make_shared<scheduler::SchedulerImpl>(std::move(executorManager),
             std::move(_ledger), std::move(storage), executionMessageFactory,
-            std::move(transactionReceiptFactory), std::move(blockHeaderFactory),
-            std::move(hashImpl));
+            std::move(blockFactory), std::move(hashImpl));
     }
 };
 }  // namespace bcos::initializer

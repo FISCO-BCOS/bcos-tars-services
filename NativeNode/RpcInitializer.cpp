@@ -50,7 +50,7 @@ void RpcInitializer::init(bcos::tool::NodeConfig::Ptr _nodeConfig, const std::st
     auto factory = std::make_shared<bcos::rpc::RpcFactory>();
     factory->setLedger(m_ledger);
     factory->setTxPoolInterface(m_txPoolInterface);
-    factory->setExecutorInterface(m_executorInterface);
+    factory->setScheduler(m_scheduler);
     factory->setConsensusInterface(m_consensusInterface);
     factory->setBlockSyncInterface(m_blockSyncInterface);
     factory->setGatewayInterface(m_gatewayInterface);
@@ -93,19 +93,6 @@ void RpcInitializer::init(bcos::tool::NodeConfig::Ptr _nodeConfig, const std::st
                 rpc->asyncNotifyAmopNodeIDs(_nodeIDs, _receiveMsgCallback);
             }
         });
-
-    // register blockNumber notifier
-    // TODO: why?
-    auto ledger = (bcos::ledger::Ledger*)m_ledger.get();
-    ledger->registerCommittedBlockNotifier([rpcWeak](bcos::protocol::BlockNumber _blockNumber,
-                                               std::function<void(Error::Ptr)> _callback) {
-        auto rpc = rpcWeak.lock();
-        if (rpc)
-        {
-            rpc->asyncNotifyBlockNumber(_blockNumber, nullptr);
-        }
-        _callback(nullptr);
-    });
 
     m_rpcInterface = rpc;
 }

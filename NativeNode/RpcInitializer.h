@@ -21,8 +21,9 @@
 #pragma once
 #include "Common.h"
 #include "NetworkInitializer.h"
+#include "interfaces/dispatcher/SchedulerInterface.h"
 #include <bcos-framework/interfaces/consensus/ConsensusInterface.h>
-#include <bcos-framework/interfaces/executor/ExecutorInterface.h>
+#include <bcos-framework/interfaces/dispatcher/SchedulerInterface.h>
 #include <bcos-framework/interfaces/front/FrontServiceInterface.h>
 #include <bcos-framework/interfaces/gateway/GatewayInterface.h>
 #include <bcos-framework/interfaces/rpc/RPCInterface.h>
@@ -55,13 +56,10 @@ public:
     bcos::ledger::Ledger::Ptr ledger() const { return m_ledger; }
     void setLedger(bcos::ledger::Ledger::Ptr _ledger) { m_ledger = _ledger; }
 
-    std::shared_ptr<bcos::executor::ExecutorInterface> executorInterface() const
+    bcos::scheduler::SchedulerInterface::Ptr scheduler() const { return m_scheduler; }
+    void setScheduler(bcos::scheduler::SchedulerInterface::Ptr scheduler)
     {
-        return m_executorInterface;
-    }
-    void setExecutorInterface(std::shared_ptr<bcos::executor::ExecutorInterface> _executorInterface)
-    {
-        m_executorInterface = _executorInterface;
+        m_scheduler = std::move(scheduler);
     }
 
     bcos::txpool::TxPoolInterface::Ptr txPoolInterface() const { return m_txPoolInterface; }
@@ -119,8 +117,8 @@ public:
     NetworkInitializer::Ptr m_networkInitializer;
     bcos::front::FrontServiceInterface::Ptr m_frontService;
     bcos::rpc::RPCInterface::Ptr m_rpcInterface;
+    bcos::scheduler::SchedulerInterface::Ptr m_scheduler;
     bcos::ledger::Ledger::Ptr m_ledger;
-    std::shared_ptr<bcos::executor::ExecutorInterface> m_executorInterface;
     bcos::txpool::TxPoolInterface::Ptr m_txPoolInterface;
     bcos::consensus::ConsensusInterface::Ptr m_consensusInterface;
     bcos::sync::BlockSyncInterface::Ptr m_blockSyncInterface;
