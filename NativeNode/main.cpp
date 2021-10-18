@@ -22,50 +22,37 @@
  * @author: ancelmo
  * @date 2021-10-14
  */
-#include "Initializer.h"
-#include "Utilities.h"
+#include "NativeNodeApp.h"
 #include "libinitializer/Common.h"
+#include <bcos-framework/libutilities/Common.h>
 #include <chrono>
 #include <ctime>
 
+using namespace bcostars;
 using namespace bcos;
 using namespace bcos::initializer;
-using namespace bcos::utilities;
-
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {
-    /// set LC_ALL
-    setDefaultOrCLocale();
-    std::set_terminate([]() {
-        std::cerr << "terminate handler called" << std::endl;
-        abort();
-    });
-    // get datetime and output welcome info
-    ExitHandler exitHandler;
-    signal(SIGTERM, &ExitHandler::exitHandler);
-    signal(SIGABRT, &ExitHandler::exitHandler);
-    signal(SIGINT, &ExitHandler::exitHandler);
-    // Note: the initializer must exist in the life time of the whole program
-    auto initializer = std::make_shared<Initializer>();
     try
     {
-        auto param = initParamsFromCommandLine(argc, argv, false);
-        initializer->init(param.configFilePath, param.genesisFilePath);
-        initializer->start();
+        bcos::initializer::initCommandLine(argc, argv);
+        NativeNodeApp app;
+        printVersion();
+        std::cout << "[" << getCurrentDateTime() << "] ";
+        std::cout << "The fisco-bcos is running..." << std::endl;
+        app.main(argc, argv);
+        app.waitForShutdown();
+        std::cout << "[" << getCurrentDateTime() << "] ";
+        std::cout << "fisco-bcos program exit normally." << std::endl;
+        return 0;
     }
-    catch (std::exception const& e)
+    catch (std::exception& e)
     {
-        std::cerr << "Init failed!!!" << std::endl;
-        return -1;
+        cerr << "std::exception:" << e.what() << std::endl;
     }
-    printVersion();
-    std::cout << "[" << getCurrentDateTime() << "] ";
-    std::cout << "The fisco-bcos is running..." << std::endl;
-    while (!exitHandler.shouldExit())
+    catch (...)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        cerr << "unknown exception." << std::endl;
     }
-    initializer.reset();
-    std::cout << "[" << getCurrentDateTime() << "] ";
-    std::cout << "fisco-bcos program exit normally." << std::endl;
+    return -1;
 }

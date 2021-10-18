@@ -22,21 +22,4 @@ inline std::string getLogPath()
 {
     return ServerConfig::LogPath + "/" + ServerConfig::Application + "/" + ServerConfig::ServerName;
 }
-
-inline void addAllConfig(Application* app)
-{
-    app->addAppConfig("nodes.json");
-    app->addAppConfig("node.pem");
-    app->addAppConfig("config.genesis");
-    app->addAppConfig("config.ini");
-    app->addAppConfig("ca.crt");
-    app->addAppConfig("ssl.key");
-    app->addAppConfig("ssl.crt");
-    app->addAppConfig("sm_ca.crt");
-    app->addAppConfig("sm_ssl.crt");
-    app->addAppConfig("sm_enssl.crt");
-    app->addAppConfig("sm_ssl.key");
-    app->addAppConfig("sm_enssl.key");
-}
-
 }  // namespace bcostars
