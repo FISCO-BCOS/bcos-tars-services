@@ -29,6 +29,8 @@ project(Bcos-Tars-Service)
 include(InstallBcosFrameworkDependencies)
 include(InstallBcosCryptoDependencies)
 include(InstallBcosTarsProtocolDependencies)
+include(InstallBoostSSL)
+
 include(InstallBcosGateWayDependencies)
 include(InstallBcosRpcDependencies)
 

@@ -48,6 +48,7 @@ void RpcInitializer::init(std::string const& _configPath)
 
     RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc");
     rpc->init();
+    RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc success");
 }
 
 bcos::rpc::RpcFactory::Ptr RpcInitializer::initRpcFactory(bcos::tool::NodeConfig::Ptr _nodeConfig)

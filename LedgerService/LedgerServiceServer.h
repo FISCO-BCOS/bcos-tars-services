@@ -28,7 +28,7 @@ struct LedgerServiceParam
 {
     bcos::ledger::LedgerInterface::Ptr ledger;
 };
-class LedgerServiceServer : public LedgerService
+class LedgerServiceServer : public virtual LedgerService
 {
 public:
     LedgerServiceServer(LedgerServiceParam const& _param) : m_ledger(_param.ledger) {}

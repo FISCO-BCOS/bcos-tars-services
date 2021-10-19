@@ -19,6 +19,7 @@
  * @date 2021-10-18
  */
 #include "NativeNodeApp.h"
+#include "NativeNode.h"
 using namespace bcostars;
 using namespace bcos;
 using namespace bcos::initializer;
@@ -49,39 +50,29 @@ void NativeNodeApp::initNodeService()
 
 void NativeNodeApp::initTarsNodeService()
 {
-    // init the txpool servant
+    NativeNodeParam param;
+
+    // init the txpool param
     TxPoolServiceParam txpoolParam;
     txpoolParam.txPoolInitializer = m_nodeInitializer->txPoolInitializer();
-    getServantHelper()->addServant<TxPoolServiceServer>(
-        ServerConfig::Application + "." + ServerConfig::ServerName + "." + "NativeNodeObj", this,
-        txpoolParam, true);
+    param.txpoolParam = txpoolParam;
 
-    getServantHelper()->addServant<TxPoolServiceServer>(
-        ServerConfig::Application + "." + bcos::protocol::TXPOOL_SERVICE_NAME, this, txpoolParam,
-        false);
-
-    // init the pbft servant
+    // init the pbft param
     PBFTServiceParam pbftParam;
     pbftParam.pbftInitializer = m_nodeInitializer->pbftInitializer();
-    getServantHelper()->addServant<PBFTServiceServer>(ServerConfig::Application + "." +
-                                                          ServerConfig::ServerName + "." +
-                                                          bcos::protocol::CONSENSUS_SERVANT_NAME,
-        this, pbftParam, false);
+    param.pbftParam = pbftParam;
 
-    // init the ledger
+    // init the param
     LedgerServiceParam ledgerParam;
     ledgerParam.ledger = m_nodeInitializer->ledger();
-    getServantHelper()->addServant<LedgerServiceServer>(ServerConfig::Application + "." +
-                                                            ServerConfig::ServerName + "." +
-                                                            bcos::protocol::LEDGER_SERVANT_NAME,
-        this, ledgerParam, false);
+    param.ledgerParam = ledgerParam;
 
-    // init the scheduler
+    // init the scheduler param
     SchedulerServiceParam schedulerParam;
     schedulerParam.scheduler = m_nodeInitializer->scheduler();
     schedulerParam.cryptoSuite = m_nodeInitializer->protocolInitializer()->cryptoSuite();
-    getServantHelper()->addServant<SchedulerServiceServer>(
-        ServerConfig::Application + "." + ServerConfig::ServerName + "." +
-            bcos::protocol::SCHEDULER_SERVANT_NAME,
-        this, schedulerParam, false);
+    param.schedulerParam = schedulerParam;
+
+    addServantWithParams<NativeNode, NativeNodeParam>(
+        ServerConfig::Application + "." + ServerConfig::ServerName + "." + "NativeNodeObj", param);
 }

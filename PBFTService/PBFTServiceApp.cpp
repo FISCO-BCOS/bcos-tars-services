@@ -89,8 +89,9 @@ void PBFTServiceApp::initService()
         schedulerPrx, protocolInitializer->cryptoSuite());
 
     // TODO: create tikv storage
-    m_pbftInitializer = std::make_shared<PBFTInitializer>(
-        nodeConfig, protocolInitializer, txpool, ledger, scheduler, nullptr, frontService);
+    m_pbftInitializer = std::make_shared<PBFTInitializer>(ServerConfig::Application,
+        m_genesisConfigPath, m_iniConfigPath, nodeConfig, protocolInitializer, txpool, ledger,
+        scheduler, nullptr, frontService);
     m_pbftInitializer->init();
     m_pbftInitializer->start();
 }

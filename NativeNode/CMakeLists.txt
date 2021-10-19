@@ -1,9 +1,6 @@
 file(GLOB SRC_LIST "*.cpp")
 file(GLOB HEADERS "*.h")
 
-hunter_add_package(bcos-boostssl)
-find_package(bcos-boostssl CONFIG REQUIRED)
-
 set(BINARY_NAME NativeNode)
 add_executable(${BINARY_NAME} ${SRC_LIST} ${HEADERS})
 

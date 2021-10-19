@@ -20,6 +20,8 @@
  */
 #include "PBFTInitializer.h"
 #include "libutilities/KVStorageHelper.h"
+#include <bcos-framework/libutilities/FileUtility.h>
+#include <bcos-tars-protocol/client/GatewayServiceClient.h>
 #include <bcos-tars-protocol/client/RpcServiceClient.h>
 
 using namespace bcos;
@@ -34,10 +36,12 @@ using namespace bcos::ledger;
 using namespace bcos::storage;
 using namespace bcos::scheduler;
 using namespace bcos::initializer;
+using namespace bcos::group;
 
-PBFTInitializer::PBFTInitializer(bcos::tool::NodeConfig::Ptr _nodeConfig,
-    ProtocolInitializer::Ptr _protocolInitializer, bcos::txpool::TxPoolInterface::Ptr _txpool,
-    std::shared_ptr<bcos::ledger::Ledger> _ledger,
+PBFTInitializer::PBFTInitializer(std::string const& _nodeName,
+    std::string const& _genesisConfigPath, std::string const& _iniConfigPath,
+    bcos::tool::NodeConfig::Ptr _nodeConfig, ProtocolInitializer::Ptr _protocolInitializer,
+    bcos::txpool::TxPoolInterface::Ptr _txpool, std::shared_ptr<bcos::ledger::Ledger> _ledger,
     bcos::scheduler::SchedulerInterface::Ptr _scheduler,
     bcos::storage::StorageInterface::Ptr _storage,
     std::shared_ptr<bcos::front::FrontServiceInterface> _frontService)
@@ -53,18 +57,57 @@ PBFTInitializer::PBFTInitializer(bcos::tool::NodeConfig::Ptr _nodeConfig,
     createPBFT();
     createSync();
     registerHandlers();
+    initChainNodeInfo(_nodeName, _genesisConfigPath, _iniConfigPath, _nodeConfig);
+    m_timer = std::make_shared<Timer>(m_timerSchedulerInterval, "node info report");
+
+    m_timer->registerTimeoutHandler(boost::bind(&PBFTInitializer::reportNodeInfo, this));
 }
 
+void PBFTInitializer::initChainNodeInfo(std::string const& _nodeName,
+    std::string const& _genesisConfigPath, std::string const& _iniConfigPath,
+    bcos::tool::NodeConfig::Ptr _nodeConfig)
+{
+    m_groupInfo = std::make_shared<GroupInfo>(_nodeConfig->chainId(), _nodeConfig->groupId());
+    m_groupInfo->setStatus((int32_t)(GroupStatus::Started));
+
+    auto genesisConfig = readContentsToString(boost::filesystem::path(_genesisConfigPath));
+    m_groupInfo->setGenesisConfig(*genesisConfig);
+
+    int32_t nodeType = bcos::group::NodeType::NON_SM_NODE;
+    if (_nodeConfig->smCryptoType())
+    {
+        nodeType = bcos::group::NodeType::SM_NODE;
+    }
+    auto chainNodeInfo = std::make_shared<ChainNodeInfo>(_nodeName, nodeType);
+    chainNodeInfo->setNodeID(m_protocolInitializer->keyPair()->publicKey()->hex());
+
+    auto iniConfig = readContentsToString(boost::filesystem::path(_iniConfigPath));
+    chainNodeInfo->setIniConfig(*iniConfig);
+
+    chainNodeInfo->setStatus((int32_t)(GroupStatus::Started));
+    m_groupInfo->appendNodeInfo(chainNodeInfo);
+}
+
+void PBFTInitializer::reportNodeInfo()
+{
+    asyncNotifyGroupInfo<bcostars::RpcServicePrx, bcostars::RpcServiceClient>(
+        m_nodeConfig->rpcServiceName(), m_groupInfo);
+    asyncNotifyGroupInfo<bcostars::RpcServicePrx, bcostars::RpcServiceClient>(
+        m_nodeConfig->gatewayServiceName(), m_groupInfo);
+    m_timer->restart();
+}
 
 void PBFTInitializer::start()
 {
     m_sealer->start();
     m_blockSync->start();
     m_pbft->start();
+    m_timer->start();
 }
 
 void PBFTInitializer::stop()
 {
+    m_timer->stop();
     m_sealer->stop();
     m_blockSync->stop();
     m_pbft->stop();
@@ -185,14 +228,14 @@ void PBFTInitializer::registerHandlers()
     PBFTSERVICE_LOG(INFO) << LOG_DESC("init rpc client");
     auto rpcServicePrx = Application::getCommunicator()->stringToProxy<bcostars::RpcServicePrx>(
         m_nodeConfig->rpcServiceName());
-    auto rpcServiceClient = std::make_shared<bcostars::RpcServiceClient>(rpcServicePrx);
+    auto rpcClient = std::make_shared<bcostars::RpcServiceClient>(rpcServicePrx);
 
     PBFTSERVICE_LOG(INFO) << LOG_DESC("init rpc client success");
     // register blockNumber notify
     m_ledger->registerCommittedBlockNotifier(
-        [rpcServiceClient, this](bcos::protocol::BlockNumber _blockNumber,
+        [rpcClient, this](bcos::protocol::BlockNumber _blockNumber,
             std::function<void(bcos::Error::Ptr)> _callback) {
-            rpcServiceClient->asyncNotifyBlockNumber(
+            rpcClient->asyncNotifyBlockNumber(
                 m_nodeConfig->groupId(), ServerConfig::Application, _blockNumber, _callback);
         });
     PBFTSERVICE_LOG(INFO) << LOG_DESC("registerCommittedBlockNotifier success");

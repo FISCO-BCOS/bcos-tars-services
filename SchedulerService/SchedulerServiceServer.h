@@ -29,7 +29,7 @@ struct SchedulerServiceParam
     bcos::scheduler::SchedulerInterface::Ptr scheduler;
     bcos::crypto::CryptoSuite::Ptr cryptoSuite;
 };
-class SchedulerServiceServer : public SchedulerService
+class SchedulerServiceServer : public virtual SchedulerService
 {
 public:
     SchedulerServiceServer(SchedulerServiceParam const& _param)

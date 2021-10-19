@@ -22,7 +22,11 @@
 #include "../Common/TarsUtils.h"
 #include "libinitializer/ProtocolInitializer.h"
 #include <bcos-framework/interfaces/front/FrontServiceInterface.h>
+#include <bcos-framework/interfaces/gateway/GatewayInterface.h>
+#include <bcos-framework/interfaces/multigroup/GroupInfo.h>
+#include <bcos-framework/interfaces/rpc/RpcInterface.h>
 #include <bcos-framework/libsealer/SealerFactory.h>
+#include <bcos-framework/libutilities/Timer.h>
 #include <bcos-ledger/libledger/Ledger.h>
 #include <bcos-pbft/pbft/PBFTFactory.h>
 #include <bcos-sync/BlockSyncFactory.h>
@@ -36,7 +40,8 @@ class PBFTInitializer
 {
 public:
     using Ptr = std::shared_ptr<PBFTInitializer>;
-    PBFTInitializer(bcos::tool::NodeConfig::Ptr _nodeConfig,
+    PBFTInitializer(std::string const& _nodeName, std::string const& _genesisConfigPath,
+        std::string const& _iniConfigPath, bcos::tool::NodeConfig::Ptr _nodeConfig,
         ProtocolInitializer::Ptr _protocolInitializer, bcos::txpool::TxPoolInterface::Ptr _txpool,
         std::shared_ptr<bcos::ledger::Ledger> _ledger,
         bcos::scheduler::SchedulerInterface::Ptr _scheduler,
@@ -62,10 +67,56 @@ public:
     bcos::crypto::KeyFactory::Ptr keyFactory() { return m_protocolInitializer->keyFactory(); }
 
 protected:
+    virtual void initChainNodeInfo(std::string const& _nodeName,
+        std::string const& _genesisConfigFilePath, std::string const& _iniConfigPath,
+        bcos::tool::NodeConfig::Ptr _nodeConfig);
     virtual void createSealer();
     virtual void createPBFT();
     virtual void createSync();
     virtual void registerHandlers();
+
+    virtual void reportNodeInfo();
+
+    template <typename T, typename S>
+    void asyncNotifyGroupInfo(
+        std::string const& _serviceName, bcos::group::GroupInfo::Ptr _groupInfo)
+    {
+        auto servicePrx = Application::getCommunicator()->stringToProxy<T>(_serviceName);
+        auto endpointList = servicePrx->getEndpoint4All();
+        if (endpointList.size() == 0)
+        {
+            BCOS_LOG(TRACE) << LOG_DESC("asyncNotifyGroupInfo error for empty connection")
+                            << bcos::group::printGroupInfo(_groupInfo);
+            return;
+        }
+        for (auto const& endPoint : endpointList)
+        {
+            auto endPointStr = endPointToString(_serviceName, endPoint);
+            auto servicePrx = Application::getCommunicator()->stringToProxy<T>(endPointStr);
+            auto serviceClient = std::make_shared<S>(servicePrx);
+            serviceClient->asyncNotifyGroupInfo(
+                _groupInfo, [endPointStr, _groupInfo](Error::Ptr&& _error) {
+                    // TODO: retry when notify failed
+                    if (_error)
+                    {
+                        BCOS_LOG(ERROR) << LOG_DESC("asyncNotifyGroupInfo error")
+                                        << LOG_KV("endPoint", endPointStr)
+                                        << LOG_KV("code", _error->errorCode())
+                                        << LOG_KV("msg", _error->errorMessage());
+                        return;
+                    }
+                    BCOS_LOG(INFO) << LOG_DESC("asyncNotifyGroupInfo success")
+                                   << LOG_KV("endPoint", endPointStr)
+                                   << bcos::group::printGroupInfo(_groupInfo);
+                });
+        }
+    }
+
+    std::string endPointToString(std::string const& _serviceName, TC_Endpoint const& _endPoint)
+    {
+        return _serviceName + "@tcp -h " + _endPoint.getHost() + " -p " +
+               boost::lexical_cast<std::string>(_endPoint.getPort());
+    }
 
 private:
     bcos::tool::NodeConfig::Ptr m_nodeConfig;
@@ -81,6 +132,11 @@ private:
     bcos::sealer::Sealer::Ptr m_sealer;
     bcos::sync::BlockSync::Ptr m_blockSync;
     bcos::consensus::PBFTImpl::Ptr m_pbft;
+
+    std::shared_ptr<bcos::Timer> m_timer;
+    uint64_t m_timerSchedulerInterval = 3000;
+
+    bcos::group::GroupInfo::Ptr m_groupInfo;
 };
 }  // namespace initializer
 }  // namespace bcos

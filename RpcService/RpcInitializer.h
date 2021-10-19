@@ -45,7 +45,7 @@ public:
 
     bcos::rpc::Rpc::Ptr rpc() { return m_rpc; }
     bcos::crypto::KeyFactory::Ptr keyFactory() { return m_keyFactory; }
-    bcos::group::GroupInfoFactory::Ptr groupInfoFactory() {}
+    bcos::group::GroupInfoFactory::Ptr groupInfoFactory() { return m_groupInfoFactory; }
     bcos::group::ChainNodeInfoFactory::Ptr chainNodeInfoFactory() { return m_chainNodeInfoFactory; }
 
 protected:

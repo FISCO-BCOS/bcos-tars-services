@@ -20,10 +20,6 @@
  */
 #pragma once
 #include "../Common/TarsUtils.h"
-#include "../LedgerService/LedgerServiceServer.h"
-#include "../PBFTService/PBFTServiceServer.h"
-#include "../SchedulerService/SchedulerServiceServer.h"
-#include "../TxPoolService/TxPoolServiceServer.h"
 #include "Initializer.h"
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
@@ -61,8 +57,5 @@ private:
 
     bcos::BoostLogInitializer::Ptr m_logInitializer;
     bcos::initializer::Initializer::Ptr m_nodeInitializer;
-
-    TxPoolServiceServer::Ptr m_txpoolServer;
-    PBFTServiceServer::Ptr m_pbftServer;
 };
 }  // namespace bcostars
