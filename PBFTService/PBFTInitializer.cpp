@@ -38,7 +38,7 @@ using namespace bcos::scheduler;
 using namespace bcos::initializer;
 using namespace bcos::group;
 
-PBFTInitializer::PBFTInitializer(std::string const& _nodeName,
+PBFTInitializer::PBFTInitializer(bool _microServiceMode, std::string const& _nodeName,
     std::string const& _genesisConfigPath, std::string const& _iniConfigPath,
     bcos::tool::NodeConfig::Ptr _nodeConfig, ProtocolInitializer::Ptr _protocolInitializer,
     bcos::txpool::TxPoolInterface::Ptr _txpool, std::shared_ptr<bcos::ledger::Ledger> _ledger,
@@ -57,13 +57,14 @@ PBFTInitializer::PBFTInitializer(std::string const& _nodeName,
     createPBFT();
     createSync();
     registerHandlers();
-    initChainNodeInfo(_nodeName, _genesisConfigPath, _iniConfigPath, _nodeConfig);
+    initChainNodeInfo(
+        _microServiceMode, _nodeName, _genesisConfigPath, _iniConfigPath, _nodeConfig);
     m_timer = std::make_shared<Timer>(m_timerSchedulerInterval, "node info report");
 
     m_timer->registerTimeoutHandler(boost::bind(&PBFTInitializer::reportNodeInfo, this));
 }
 
-void PBFTInitializer::initChainNodeInfo(std::string const& _nodeName,
+void PBFTInitializer::initChainNodeInfo(bool _microServiceMode, std::string const& _nodeName,
     std::string const& _genesisConfigPath, std::string const& _iniConfigPath,
     bcos::tool::NodeConfig::Ptr _nodeConfig)
 {
@@ -85,6 +86,7 @@ void PBFTInitializer::initChainNodeInfo(std::string const& _nodeName,
     chainNodeInfo->setIniConfig(*iniConfig);
 
     chainNodeInfo->setStatus((int32_t)(GroupStatus::Started));
+    chainNodeInfo->setMicroService(_microServiceMode);
     m_groupInfo->appendNodeInfo(chainNodeInfo);
 }
 

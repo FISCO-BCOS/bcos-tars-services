@@ -62,7 +62,7 @@ void TxPoolServiceApp::initService()
     // create frontService
     auto frontServiceProxy =
         Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
-            getProxyDesc(bcos::protocol::FRONT_SERVICE_NAME));
+            getProxyDesc(bcos::protocol::FRONT_SERVICE_NAME, bcos::protocol::FRONT_SERVANT_NAME));
     auto frontService = std::make_shared<bcostars::FrontServiceClient>(
         frontServiceProxy, protocolInitializer->keyFactory());
 
@@ -77,8 +77,8 @@ void TxPoolServiceApp::initService()
         std::make_shared<TxPoolInitializer>(nodeConfig, protocolInitializer, frontService, ledger);
 
     // init the txpool
-    auto pbftPrx = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
-        getProxyDesc(bcos::protocol::CONSENSUS_SERVICE_NAME));
+    auto pbftPrx = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(getProxyDesc(
+        bcos::protocol::CONSENSUS_SERVICE_NAME, bcos::protocol::CONSENSUS_SERVANT_NAME));
     auto sealer = std::make_shared<PBFTServiceClient>(pbftPrx);
     m_txpoolInitializer->init(sealer);
     m_txpoolInitializer->start();

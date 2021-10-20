@@ -34,7 +34,7 @@ struct PBFTServiceParam
 {
     bcos::initializer::PBFTInitializer::Ptr pbftInitializer;
 };
-class PBFTServiceServer : public virtual bcostars::PBFTService
+class PBFTServiceServer : public bcostars::PBFTService
 {
 public:
     using Ptr = std::shared_ptr<PBFTServiceServer>;

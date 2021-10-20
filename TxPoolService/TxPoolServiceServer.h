@@ -19,7 +19,7 @@ struct TxPoolServiceParam
 {
     bcos::initializer::TxPoolInitializer::Ptr txPoolInitializer;
 };
-class TxPoolServiceServer : public virtual bcostars::TxPoolService
+class TxPoolServiceServer : public bcostars::TxPoolService
 {
 public:
     using Ptr = std::shared_ptr<TxPoolServiceServer>;

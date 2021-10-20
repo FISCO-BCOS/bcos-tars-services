@@ -83,7 +83,7 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
 
         // build and init the pbft related modules
         m_pbftInitializer =
-            std::make_shared<PBFTInitializer>(ServerConfig::Application, _genesisFile,
+            std::make_shared<PBFTInitializer>(false, ServerConfig::Application, _genesisFile,
                 _configFilePath, m_nodeConfig, m_protocolInitializer, m_txpoolInitializer->txpool(),
                 ledger, m_scheduler, storage, m_frontServiceInitializer->front());
         m_pbftInitializer->init();

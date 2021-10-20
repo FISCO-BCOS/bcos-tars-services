@@ -19,10 +19,10 @@
  * @date 2021-10-18
  */
 #include "NativeNodeApp.h"
-#include "NativeNode.h"
 using namespace bcostars;
 using namespace bcos;
 using namespace bcos::initializer;
+using namespace bcos::protocol;
 
 void NativeNodeApp::initialize()
 {
@@ -50,29 +50,29 @@ void NativeNodeApp::initNodeService()
 
 void NativeNodeApp::initTarsNodeService()
 {
-    NativeNodeParam param;
-
-    // init the txpool param
+    // init the txpool servant
+    auto serviceBaseDesc = ServerConfig::Application + "." + ServerConfig::ServerName + ".";
     TxPoolServiceParam txpoolParam;
     txpoolParam.txPoolInitializer = m_nodeInitializer->txPoolInitializer();
-    param.txpoolParam = txpoolParam;
+    addServantWithParams<TxPoolServiceServer, TxPoolServiceParam>(
+        serviceBaseDesc + TXPOOL_SERVANT_NAME, txpoolParam);
 
-    // init the pbft param
+    // init the pbft servant
     PBFTServiceParam pbftParam;
     pbftParam.pbftInitializer = m_nodeInitializer->pbftInitializer();
-    param.pbftParam = pbftParam;
+    addServantWithParams<PBFTServiceServer, PBFTServiceParam>(
+        serviceBaseDesc + CONSENSUS_SERVANT_NAME, pbftParam);
 
-    // init the param
+    // init the ledger
     LedgerServiceParam ledgerParam;
     ledgerParam.ledger = m_nodeInitializer->ledger();
-    param.ledgerParam = ledgerParam;
+    addServantWithParams<LedgerServiceServer, LedgerServiceParam>(
+        serviceBaseDesc + LEDGER_SERVANT_NAME, ledgerParam);
 
-    // init the scheduler param
+    // init the scheduler
     SchedulerServiceParam schedulerParam;
     schedulerParam.scheduler = m_nodeInitializer->scheduler();
     schedulerParam.cryptoSuite = m_nodeInitializer->protocolInitializer()->cryptoSuite();
-    param.schedulerParam = schedulerParam;
-
-    addServantWithParams<NativeNode, NativeNodeParam>(
-        ServerConfig::Application + "." + ServerConfig::ServerName + "." + "NativeNodeObj", param);
+    addServantWithParams<SchedulerServiceServer, SchedulerServiceParam>(
+        serviceBaseDesc + SCHEDULER_SERVANT_NAME, schedulerParam);
 }

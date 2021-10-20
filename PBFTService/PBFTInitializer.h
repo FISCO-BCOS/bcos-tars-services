@@ -24,7 +24,7 @@
 #include <bcos-framework/interfaces/front/FrontServiceInterface.h>
 #include <bcos-framework/interfaces/gateway/GatewayInterface.h>
 #include <bcos-framework/interfaces/multigroup/GroupInfo.h>
-#include <bcos-framework/interfaces/rpc/RpcInterface.h>
+#include <bcos-framework/interfaces/rpc/RPCInterface.h>
 #include <bcos-framework/libsealer/SealerFactory.h>
 #include <bcos-framework/libutilities/Timer.h>
 #include <bcos-ledger/libledger/Ledger.h>
@@ -40,10 +40,10 @@ class PBFTInitializer
 {
 public:
     using Ptr = std::shared_ptr<PBFTInitializer>;
-    PBFTInitializer(std::string const& _nodeName, std::string const& _genesisConfigPath,
-        std::string const& _iniConfigPath, bcos::tool::NodeConfig::Ptr _nodeConfig,
-        ProtocolInitializer::Ptr _protocolInitializer, bcos::txpool::TxPoolInterface::Ptr _txpool,
-        std::shared_ptr<bcos::ledger::Ledger> _ledger,
+    PBFTInitializer(bool _microServiceMode, std::string const& _nodeName,
+        std::string const& _genesisConfigPath, std::string const& _iniConfigPath,
+        bcos::tool::NodeConfig::Ptr _nodeConfig, ProtocolInitializer::Ptr _protocolInitializer,
+        bcos::txpool::TxPoolInterface::Ptr _txpool, std::shared_ptr<bcos::ledger::Ledger> _ledger,
         bcos::scheduler::SchedulerInterface::Ptr _scheduler,
         bcos::storage::StorageInterface::Ptr _storage,
         std::shared_ptr<bcos::front::FrontServiceInterface> _frontService);
@@ -67,7 +67,7 @@ public:
     bcos::crypto::KeyFactory::Ptr keyFactory() { return m_protocolInitializer->keyFactory(); }
 
 protected:
-    virtual void initChainNodeInfo(std::string const& _nodeName,
+    virtual void initChainNodeInfo(bool _microServiceMode, std::string const& _nodeName,
         std::string const& _genesisConfigFilePath, std::string const& _iniConfigPath,
         bcos::tool::NodeConfig::Ptr _nodeConfig);
     virtual void createSealer();
@@ -105,9 +105,6 @@ protected:
                                         << LOG_KV("msg", _error->errorMessage());
                         return;
                     }
-                    BCOS_LOG(INFO) << LOG_DESC("asyncNotifyGroupInfo success")
-                                   << LOG_KV("endPoint", endPointStr)
-                                   << bcos::group::printGroupInfo(_groupInfo);
                 });
         }
     }

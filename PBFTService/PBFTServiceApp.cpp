@@ -67,7 +67,7 @@ void PBFTServiceApp::initService()
     // create the frontService
     auto frontServiceProxy =
         Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
-            getProxyDesc(bcos::protocol::FRONT_SERVICE_NAME));
+            getProxyDesc(bcos::protocol::FRONT_SERVICE_NAME, bcos::protocol::FRONT_SERVANT_NAME));
     auto frontService =
         std::make_shared<bcostars::FrontServiceClient>(frontServiceProxy, keyFactory);
 
@@ -76,20 +76,20 @@ void PBFTServiceApp::initService()
 
     // create txpool
     auto txpoolProxy = Application::getCommunicator()->stringToProxy<bcostars::TxPoolServicePrx>(
-        getProxyDesc(bcos::protocol::TXPOOL_SERVICE_NAME));
+        getProxyDesc(bcos::protocol::TXPOOL_SERVICE_NAME, bcos::protocol::TXPOOL_SERVANT_NAME));
     auto txpool = std::make_shared<bcostars::TxPoolServiceClient>(
         txpoolProxy, protocolInitializer->cryptoSuite(), blockFactory);
     PBFTSERVICE_LOG(INFO) << LOG_DESC("create TxPool client success");
 
     // create scheduler
     auto schedulerPrx =
-        Application::getCommunicator()->stringToProxy<bcostars::SchedulerServicePrx>(
-            getProxyDesc(bcos::protocol::SCHEDULER_SERVICE_NAME));
+        Application::getCommunicator()->stringToProxy<bcostars::SchedulerServicePrx>(getProxyDesc(
+            bcos::protocol::SCHEDULER_SERVICE_NAME, bcos::protocol::SCHEDULER_SERVANT_NAME));
     auto scheduler = std::make_shared<bcostars::SchedulerServiceClient>(
         schedulerPrx, protocolInitializer->cryptoSuite());
 
     // TODO: create tikv storage
-    m_pbftInitializer = std::make_shared<PBFTInitializer>(ServerConfig::Application,
+    m_pbftInitializer = std::make_shared<PBFTInitializer>(true, ServerConfig::Application,
         m_genesisConfigPath, m_iniConfigPath, nodeConfig, protocolInitializer, txpool, ledger,
         scheduler, nullptr, frontService);
     m_pbftInitializer->init();

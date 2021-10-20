@@ -12,9 +12,9 @@
 
 namespace bcostars
 {
-inline std::string getProxyDesc(const std::string& serviceName)
+inline std::string getProxyDesc(const std::string& serviceName, std::string const& _servantName)
 {
-    std::string desc = ServerConfig::Application + "." + serviceName;
+    std::string desc = ServerConfig::Application + "." + serviceName + "." + _servantName;
     return desc;
 }
 
