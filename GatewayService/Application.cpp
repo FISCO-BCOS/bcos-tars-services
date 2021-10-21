@@ -15,7 +15,7 @@ public:
     void initialize() override
     {
         m_iniConfigPath = ServerConfig::BasePath + "/config.ini";
-        addAppConfig("config.ini");
+        addConfig("config.ini");
         initService(m_iniConfigPath);
         GatewayServiceParam param;
         param.gatewayInitializer = m_gatewayInitializer;
@@ -37,20 +37,20 @@ protected:
 
         auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
         nodeConfig->loadConfig(_configPath);
-        addAppConfig("nodes.json");
+        addConfig("nodes.json");
         if (nodeConfig->smCryptoType())
         {
-            addAppConfig("sm_ca.crt");
-            addAppConfig("sm_ssl.crt");
-            addAppConfig("sm_enssl.crt");
-            addAppConfig("sm_ssl.key");
-            addAppConfig("sm_enssl.key");
+            addConfig("sm_ca.crt");
+            addConfig("sm_ssl.crt");
+            addConfig("sm_enssl.crt");
+            addConfig("sm_ssl.key");
+            addConfig("sm_enssl.key");
         }
         else
         {
-            addAppConfig("ca.crt");
-            addAppConfig("ssl.key");
-            addAppConfig("ssl.crt");
+            addConfig("ca.crt");
+            addConfig("ssl.key");
+            addConfig("ssl.crt");
         }
 
         // init rpc

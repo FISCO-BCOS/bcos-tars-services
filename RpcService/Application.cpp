@@ -15,7 +15,7 @@ public:
     void initialize() override
     {
         m_iniConfigPath = ServerConfig::BasePath + "/config.ini";
-        addAppConfig("config.ini");
+        addConfig("config.ini");
         initService(m_iniConfigPath);
         RpcServiceParam param;
         param.rpcInitializer = m_rpcInitializer;

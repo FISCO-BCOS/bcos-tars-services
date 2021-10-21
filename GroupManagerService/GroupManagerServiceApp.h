@@ -39,7 +39,7 @@ public:
     virtual void initialize() override
     {
         m_iniConfigPath = ServerConfig::BasePath + "/config.ini";
-        addAppConfig("config.ini");
+        addConfig("config.ini");
         initService();
         GroupManagerServiceServerParam param;
         param.groupManager = m_groupManager;

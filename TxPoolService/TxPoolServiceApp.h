@@ -44,8 +44,8 @@ protected:
     {
         m_iniConfigPath = ServerConfig::BasePath + "/config.ini";
         m_privateKeyPath = ServerConfig::BasePath + "/node.pem";
-        addAppConfig("node.pem");
-        addAppConfig("config.ini");
+        addConfig("node.pem");
+        addConfig("config.ini");
     }
 
 private:

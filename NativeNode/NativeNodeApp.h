@@ -46,9 +46,9 @@ protected:
         m_iniConfigPath = ServerConfig::BasePath + "/config.ini";
         m_genesisConfigPath = ServerConfig::BasePath + "/config.genesis";
         m_privateKeyPath = ServerConfig::BasePath + "/node.pem";
-        addAppConfig("node.pem");
-        addAppConfig("config.genesis");
-        addAppConfig("config.ini");
+        addConfig("node.pem");
+        addConfig("config.genesis");
+        addConfig("config.ini");
     }
     virtual void initLog();
     virtual void initNodeService();
