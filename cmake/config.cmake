@@ -1,7 +1,7 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.1-local
-	URL  https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/fd6838236e1f952e46720b9c08d310f9055fee0a.tar.gz
-	SHA1 85b16b418c8b2d799ef44ba5d0442779c1fd5d4d
+	URL  https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/bc671969c254092f0abf95e6f1b04247e0b7671d.tar.gz
+	SHA1 05f88db84a9a01fc27a8416be037194624f35e0a
 	CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
@@ -26,8 +26,8 @@ hunter_config(bcos-tars-protocol
 )
 
 hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/7bfcab8f2f0ed91ff4fe4d201af50f86ee919974.tar.gz
-    SHA1 f5762b63687847c4effef6ec67e6136c8272a64a
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/892165ce45dcfa12d5964d52461760bbb7f1f212.tar.gz
+    SHA1 dbb714f32e4ed61b782763dd952f3dac4f368730
     CMAKE_ARGS URL_BASE=${URL_BASE}  HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
@@ -38,8 +38,8 @@ hunter_config(bcos-pbft VERSION 3.0.0-local-a2a9f7d2
 )
 
 hunter_config(bcos-sync VERSION 3.0.0-local-50e0e264
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/003fc290d24b672416a4c847af8b391e8284d55a.tar.gz
-    SHA1 e4153b88709849e1ad0f87c068b72a9b91d8d8e3
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/c1461c001e39fe7868c5f6ad8ef8686fe05a7684.tar.gz
+    SHA1 9ec552f515709981be8b12e7945c9a21435226ca
     CMAKE_ARGS URL_BASE=${URL_BASE}  HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
@@ -76,8 +76,8 @@ hunter_config(bcos-gateway VERSION 3.0.0-local-1fb592e4
 )
 
 hunter_config(bcos-scheduler VERSION 3.0.0-local-b1c450b95b6f83e6a0cf3bd2f385c2ddef4921b4
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-scheduler/archive/aabc6690560caac82bb5c79705d004c692c4c0d5.tar.gz
-    SHA1 c1438314e409ba1a9da89c155d349944d4872682
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-scheduler/archive/4d03880436f071f902a59414b3bcf1166236f7bf.tar.gz
+    SHA1 20fda86e52c530453b8140b47e45d291d351362c
     CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
