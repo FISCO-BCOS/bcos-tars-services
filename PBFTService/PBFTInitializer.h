@@ -30,6 +30,7 @@
 #include <bcos-ledger/libledger/Ledger.h>
 #include <bcos-pbft/pbft/PBFTFactory.h>
 #include <bcos-sync/BlockSyncFactory.h>
+#include <bcos-tars-protocol/client/RpcServiceClient.h>
 #include <bcos-txpool/TxPoolFactory.h>
 
 namespace bcos
@@ -40,10 +41,10 @@ class PBFTInitializer
 {
 public:
     using Ptr = std::shared_ptr<PBFTInitializer>;
-    PBFTInitializer(bool _microServiceMode, std::string const& _nodeName,
-        std::string const& _genesisConfigPath, std::string const& _iniConfigPath,
-        bcos::tool::NodeConfig::Ptr _nodeConfig, ProtocolInitializer::Ptr _protocolInitializer,
-        bcos::txpool::TxPoolInterface::Ptr _txpool, std::shared_ptr<bcos::ledger::Ledger> _ledger,
+    PBFTInitializer(bool _microServiceMode, std::string const& _genesisConfigPath,
+        std::string const& _iniConfigPath, bcos::tool::NodeConfig::Ptr _nodeConfig,
+        ProtocolInitializer::Ptr _protocolInitializer, bcos::txpool::TxPoolInterface::Ptr _txpool,
+        std::shared_ptr<bcos::ledger::Ledger> _ledger,
         bcos::scheduler::SchedulerInterface::Ptr _scheduler,
         bcos::storage::StorageInterface::Ptr _storage,
         std::shared_ptr<bcos::front::FrontServiceInterface> _frontService);
@@ -67,7 +68,7 @@ public:
     bcos::crypto::KeyFactory::Ptr keyFactory() { return m_protocolInitializer->keyFactory(); }
 
 protected:
-    virtual void initChainNodeInfo(bool _microServiceMode, std::string const& _nodeName,
+    virtual void initChainNodeInfo(bool _microServiceMode,
         std::string const& _genesisConfigFilePath, std::string const& _iniConfigPath,
         bcos::tool::NodeConfig::Ptr _nodeConfig);
     virtual void createSealer();
@@ -82,16 +83,18 @@ protected:
         std::string const& _serviceName, bcos::group::GroupInfo::Ptr _groupInfo)
     {
         auto servicePrx = Application::getCommunicator()->stringToProxy<T>(_serviceName);
-        auto endpointList = servicePrx->getEndpoint4All();
-        if (endpointList.size() == 0)
+        vector<EndpointInfo> activeEndPoints;
+        vector<EndpointInfo> nactiveEndPoints;
+        servicePrx->tars_endpointsAll(activeEndPoints, nactiveEndPoints);
+        if (activeEndPoints.size() == 0)
         {
             BCOS_LOG(TRACE) << LOG_DESC("asyncNotifyGroupInfo error for empty connection")
                             << bcos::group::printGroupInfo(_groupInfo);
             return;
         }
-        for (auto const& endPoint : endpointList)
+        for (auto const& endPoint : activeEndPoints)
         {
-            auto endPointStr = endPointToString(_serviceName, endPoint);
+            auto endPointStr = endPointToString(_serviceName, endPoint.getEndpoint());
             auto servicePrx = Application::getCommunicator()->stringToProxy<T>(endPointStr);
             auto serviceClient = std::make_shared<S>(servicePrx);
             serviceClient->asyncNotifyGroupInfo(
@@ -114,6 +117,9 @@ protected:
         return _serviceName + "@tcp -h " + _endPoint.getHost() + " -p " +
                boost::lexical_cast<std::string>(_endPoint.getPort());
     }
+
+    void notifyBlockNumberToAllRpcNodes(bcostars::RpcServicePrx _rpcPrx,
+        bcos::protocol::BlockNumber _blockNumber, std::function<void(Error::Ptr)> _callback);
 
 private:
     bcos::tool::NodeConfig::Ptr m_nodeConfig;

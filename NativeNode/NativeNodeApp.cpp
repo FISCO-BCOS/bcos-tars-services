@@ -51,28 +51,27 @@ void NativeNodeApp::initNodeService()
 void NativeNodeApp::initTarsNodeService()
 {
     // init the txpool servant
-    auto serviceBaseDesc = ServerConfig::Application + "." + ServerConfig::ServerName + ".";
     TxPoolServiceParam txpoolParam;
     txpoolParam.txPoolInitializer = m_nodeInitializer->txPoolInitializer();
     addServantWithParams<TxPoolServiceServer, TxPoolServiceParam>(
-        serviceBaseDesc + TXPOOL_SERVANT_NAME, txpoolParam);
+        getProxyDesc(TXPOOL_SERVANT_NAME), txpoolParam);
 
     // init the pbft servant
     PBFTServiceParam pbftParam;
     pbftParam.pbftInitializer = m_nodeInitializer->pbftInitializer();
     addServantWithParams<PBFTServiceServer, PBFTServiceParam>(
-        serviceBaseDesc + CONSENSUS_SERVANT_NAME, pbftParam);
+        getProxyDesc(CONSENSUS_SERVANT_NAME), pbftParam);
 
     // init the ledger
     LedgerServiceParam ledgerParam;
     ledgerParam.ledger = m_nodeInitializer->ledger();
     addServantWithParams<LedgerServiceServer, LedgerServiceParam>(
-        serviceBaseDesc + LEDGER_SERVANT_NAME, ledgerParam);
+        getProxyDesc(LEDGER_SERVANT_NAME), ledgerParam);
 
     // init the scheduler
     SchedulerServiceParam schedulerParam;
     schedulerParam.scheduler = m_nodeInitializer->scheduler();
     schedulerParam.cryptoSuite = m_nodeInitializer->protocolInitializer()->cryptoSuite();
     addServantWithParams<SchedulerServiceServer, SchedulerServiceParam>(
-        serviceBaseDesc + SCHEDULER_SERVANT_NAME, schedulerParam);
+        getProxyDesc(SCHEDULER_SERVANT_NAME), schedulerParam);
 }

@@ -22,7 +22,6 @@
 #include "libutilities/KVStorageHelper.h"
 #include <bcos-framework/libutilities/FileUtility.h>
 #include <bcos-tars-protocol/client/GatewayServiceClient.h>
-#include <bcos-tars-protocol/client/RpcServiceClient.h>
 
 using namespace bcos;
 using namespace bcos::tool;
@@ -38,10 +37,10 @@ using namespace bcos::scheduler;
 using namespace bcos::initializer;
 using namespace bcos::group;
 
-PBFTInitializer::PBFTInitializer(bool _microServiceMode, std::string const& _nodeName,
-    std::string const& _genesisConfigPath, std::string const& _iniConfigPath,
-    bcos::tool::NodeConfig::Ptr _nodeConfig, ProtocolInitializer::Ptr _protocolInitializer,
-    bcos::txpool::TxPoolInterface::Ptr _txpool, std::shared_ptr<bcos::ledger::Ledger> _ledger,
+PBFTInitializer::PBFTInitializer(bool _microServiceMode, std::string const& _genesisConfigPath,
+    std::string const& _iniConfigPath, bcos::tool::NodeConfig::Ptr _nodeConfig,
+    ProtocolInitializer::Ptr _protocolInitializer, bcos::txpool::TxPoolInterface::Ptr _txpool,
+    std::shared_ptr<bcos::ledger::Ledger> _ledger,
     bcos::scheduler::SchedulerInterface::Ptr _scheduler,
     bcos::storage::StorageInterface::Ptr _storage,
     std::shared_ptr<bcos::front::FrontServiceInterface> _frontService)
@@ -57,19 +56,17 @@ PBFTInitializer::PBFTInitializer(bool _microServiceMode, std::string const& _nod
     createPBFT();
     createSync();
     registerHandlers();
-    initChainNodeInfo(
-        _microServiceMode, _nodeName, _genesisConfigPath, _iniConfigPath, _nodeConfig);
+    initChainNodeInfo(_microServiceMode, _genesisConfigPath, _iniConfigPath, _nodeConfig);
     m_timer = std::make_shared<Timer>(m_timerSchedulerInterval, "node info report");
 
     m_timer->registerTimeoutHandler(boost::bind(&PBFTInitializer::reportNodeInfo, this));
 }
 
-void PBFTInitializer::initChainNodeInfo(bool _microServiceMode, std::string const& _nodeName,
+void PBFTInitializer::initChainNodeInfo(bool _microServiceMode,
     std::string const& _genesisConfigPath, std::string const& _iniConfigPath,
     bcos::tool::NodeConfig::Ptr _nodeConfig)
 {
     m_groupInfo = std::make_shared<GroupInfo>(_nodeConfig->chainId(), _nodeConfig->groupId());
-    m_groupInfo->setStatus((int32_t)(GroupStatus::Started));
 
     auto genesisConfig = readContentsToString(boost::filesystem::path(_genesisConfigPath));
     m_groupInfo->setGenesisConfig(*genesisConfig);
@@ -79,14 +76,23 @@ void PBFTInitializer::initChainNodeInfo(bool _microServiceMode, std::string cons
     {
         nodeType = bcos::group::NodeType::SM_NODE;
     }
-    auto chainNodeInfo = std::make_shared<ChainNodeInfo>(_nodeName, nodeType);
+    auto chainNodeInfo = std::make_shared<ChainNodeInfo>(_nodeConfig->nodeName(), nodeType);
     chainNodeInfo->setNodeID(m_protocolInitializer->keyPair()->publicKey()->hex());
 
     auto iniConfig = readContentsToString(boost::filesystem::path(_iniConfigPath));
     chainNodeInfo->setIniConfig(*iniConfig);
-
-    chainNodeInfo->setStatus((int32_t)(GroupStatus::Started));
     chainNodeInfo->setMicroService(_microServiceMode);
+
+    auto localNodeServiceName = ServerConfig::Application + "." + ServerConfig::ServerName;
+    chainNodeInfo->appendServiceInfo(
+        SCHEDULER, _microServiceMode ? m_nodeConfig->schedulerServiceName() : localNodeServiceName);
+    chainNodeInfo->appendServiceInfo(LEDGER,
+        _microServiceMode ? bcostars::getProxyDesc(LEDGER_SERVANT_NAME) : localNodeServiceName);
+    chainNodeInfo->appendServiceInfo(
+        FRONT, _microServiceMode ? m_nodeConfig->frontServiceName() : localNodeServiceName);
+    chainNodeInfo->appendServiceInfo(CONSENSUS, localNodeServiceName);
+    chainNodeInfo->appendServiceInfo(
+        TXPOOL, _microServiceMode ? m_nodeConfig->txpoolServiceName() : localNodeServiceName);
     m_groupInfo->appendNodeInfo(chainNodeInfo);
 }
 
@@ -230,17 +236,37 @@ void PBFTInitializer::registerHandlers()
     PBFTSERVICE_LOG(INFO) << LOG_DESC("init rpc client");
     auto rpcServicePrx = Application::getCommunicator()->stringToProxy<bcostars::RpcServicePrx>(
         m_nodeConfig->rpcServiceName());
-    auto rpcClient = std::make_shared<bcostars::RpcServiceClient>(rpcServicePrx);
 
     PBFTSERVICE_LOG(INFO) << LOG_DESC("init rpc client success");
     // register blockNumber notify
     m_ledger->registerCommittedBlockNotifier(
-        [rpcClient, this](bcos::protocol::BlockNumber _blockNumber,
+        [rpcServicePrx, this](bcos::protocol::BlockNumber _blockNumber,
             std::function<void(bcos::Error::Ptr)> _callback) {
-            rpcClient->asyncNotifyBlockNumber(
-                m_nodeConfig->groupId(), ServerConfig::Application, _blockNumber, _callback);
+            notifyBlockNumberToAllRpcNodes(rpcServicePrx, _blockNumber, _callback);
         });
     PBFTSERVICE_LOG(INFO) << LOG_DESC("registerCommittedBlockNotifier success");
+}
+void PBFTInitializer::notifyBlockNumberToAllRpcNodes(bcostars::RpcServicePrx _rpcPrx,
+    bcos::protocol::BlockNumber _blockNumber, std::function<void(Error::Ptr)> _callback)
+{
+    vector<EndpointInfo> activeEndPoints;
+    vector<EndpointInfo> nactiveEndPoints;
+    _rpcPrx->tars_endpointsAll(activeEndPoints, nactiveEndPoints);
+    if (activeEndPoints.size() == 0)
+    {
+        BCOS_LOG(TRACE) << LOG_DESC("notifyBlockNumberToAllRpcNodes error for empty connection")
+                        << LOG_KV("number", _blockNumber);
+        return;
+    }
+    for (auto const& endPoint : activeEndPoints)
+    {
+        auto endPointStr = endPointToString(m_nodeConfig->rpcServiceName(), endPoint.getEndpoint());
+        auto servicePrx =
+            Application::getCommunicator()->stringToProxy<bcostars::RpcServicePrx>(endPointStr);
+        auto serviceClient = std::make_shared<bcostars::RpcServiceClient>(servicePrx);
+        serviceClient->asyncNotifyBlockNumber(
+            m_nodeConfig->groupId(), ServerConfig::Application, _blockNumber, _callback);
+    }
 }
 
 void PBFTInitializer::createSealer()

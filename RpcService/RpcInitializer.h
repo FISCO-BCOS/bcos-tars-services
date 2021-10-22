@@ -21,6 +21,7 @@
 #pragma once
 #include "../Common/TarsUtils.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
+#include <bcos-framework/interfaces/multigroup/GroupInfoFactory.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-rpc/RpcFactory.h>
 #include <memory>

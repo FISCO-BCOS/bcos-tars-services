@@ -21,7 +21,6 @@
 #include "RpcInitializer.h"
 #include "../libinitializer/ProtocolInitializer.h"
 #include <bcos-tars-protocol/client/GatewayServiceClient.h>
-#include <bcos-tars-protocol/client/GroupManagerServiceClient.h>
 using namespace bcos::group;
 using namespace bcostars;
 
@@ -45,10 +44,6 @@ void RpcInitializer::init(std::string const& _configPath)
 
     auto rpc = factory->buildRpc(config);
     m_rpc = rpc;
-
-    RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc");
-    rpc->init();
-    RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc success");
 }
 
 bcos::rpc::RpcFactory::Ptr RpcInitializer::initRpcFactory(bcos::tool::NodeConfig::Ptr _nodeConfig)
@@ -64,14 +59,8 @@ bcos::rpc::RpcFactory::Ptr RpcInitializer::initRpcFactory(bcos::tool::NodeConfig
     auto gateway =
         std::make_shared<GatewayServiceClient>(gatewayPrx, protocolInitializer->keyFactory());
 
-    // get the group manager service client
-    auto groupManagerPrx = Application::getCommunicator()->stringToProxy<GroupManagerServicePrx>(
-        _nodeConfig->groupManagerServiceName());
-    auto groupManagerClient = std::make_shared<GroupManagerServiceClient>(
-        groupManagerPrx, m_chainNodeInfoFactory, m_groupInfoFactory);
-    auto factory =
-        std::make_shared<bcos::rpc::RpcFactory>(_nodeConfig->chainId(), gateway, groupManagerClient,
-            m_groupInfoFactory, m_chainNodeInfoFactory, protocolInitializer->keyFactory());
+    auto factory = std::make_shared<bcos::rpc::RpcFactory>(
+        _nodeConfig->chainId(), gateway, protocolInitializer->keyFactory());
     RPCSERVICE_LOG(INFO) << LOG_DESC("create rpc factory success");
     return factory;
 }

@@ -1,7 +1,7 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-	URL https://${URL_BASE}/cyjseagull/bcos-framework/archive/e8c005f1d4868030f21d23101d41f3b3f408a82b.tar.gz
-	SHA1 f0f85d44f66ff343fddeaa871ce3d15540a4c201
+	URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/b8dcb0547d3dd38380a92cac6a28e1514f3987f4.tar.gz
+	SHA1 bec196b369ff41e1d9560b670cbb235a8947b5d1
 	CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
@@ -20,8 +20,8 @@ hunter_config(bcos-boostssl
 
 hunter_config(bcos-tars-protocol
     VERSION 3.0.0-local
-    URL https://${URL_BASE}/FISCO-BCOS/bcos-tars-protocol/archive/126c8e86e1eec5313d9c8b4f5c5d1e2731a98401.tar.gz
-    SHA1 cb341ff805e78cb91b6d626d8607ff51e733571b
+    URL https://${URL_BASE}/FISCO-BCOS/bcos-tars-protocol/archive/077867b87163f9805d6fb116f3528dda1eaaf368.tar.gz
+    SHA1 89dab12040b706649bee4f5dcbffa32a247a5284
     CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON URL_BASE=${URL_BASE}
 )
 
@@ -70,8 +70,8 @@ hunter_config(bcos-front VERSION 3.0.0-local-2ed687bb
 )
 
 hunter_config(bcos-gateway VERSION 3.0.0-local-1fb592e4
-    URL  https://${URL_BASE}/cyjseagull/bcos-gateway/archive/e891d16c7f1e55732cd7ef086c979b370fdde796.tar.gz
-    SHA1 d4b3bde8de889c1ce60cf4d43af4a65c37cfc262
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-gateway/archive/68cd677633812cfae2c4517366712063a37cb2a3.tar.gz
+    SHA1 3dd40f82f18c070dce16caffb5f9a45ceb83b8ae
     CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
@@ -82,17 +82,10 @@ hunter_config(bcos-scheduler VERSION 3.0.0-local-2903b298
 )
 
 hunter_config(bcos-rpc VERSION 3.0.0-local
-    URL  https://${URL_BASE}/cyjseagull/bcos-rpc/archive/daa99a5d382e8ac7b216199407f180d977f93be4.tar.gz
-    SHA1 0dfdef2d000ba134f38817c4607e421ed02c2f28
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-rpc/archive/fcac47508ea5f0dd4fb994755d1157ec4fae78a5.tar.gz
+    SHA1 ce1111db44011f29d7b86d9d4dfe3150d2ad1a54
     CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
-
-hunter_config(bcos-group-manager VERSION 3.0.0-local
-	URL https://${URL_BASE}/cyjseagull/bcos-group-manager/archive/7b7ca02e73d447f9ededa580c89fbc9f13d93a4d.tar.gz
-	SHA1 94f92bb75a05f97e63cf8413a00dfd0e37dab5e9
-	CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
-)
-
 # hunter_config(bcos-executor VERSION 3.0.0-local-ac6d5d18
 #     URL "https://${URL_BASE}/FISCO-BCOS/bcos-executor/archive/8a2dc4e32fc4de6a9a95ed2fbc83540e7ce589b4.tar.gz"
 #     SHA1 c8254cd8a943ea21ab2bdbacd5e54d50ad20f778

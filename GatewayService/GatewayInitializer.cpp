@@ -24,7 +24,6 @@
 #include <bcos-gateway/GatewayFactory.h>
 
 #include "GatewayInitializer.h"
-#include <bcos-tars-protocol/client/GroupManagerServiceClient.h>
 
 using namespace bcostars;
 
@@ -42,18 +41,12 @@ void GatewayInitializer::init(
     nodeConfig->loadConfig(_configPath);
     GATEWAYSERVICE_LOG(INFO) << LOG_DESC("load nodeConfig success");
 
-    auto groupManagerPrx = Application::getCommunicator()->stringToProxy<GroupManagerServicePrx>(
-        nodeConfig->groupManagerServiceName());
-    auto groupManagerClient = std::make_shared<GroupManagerServiceClient>(
-        groupManagerPrx, m_chainNodeInfoFactory, m_groupInfoFactory);
     GATEWAYSERVICE_LOG(INFO) << LOG_DESC("buildGateWay")
                              << LOG_KV("certPath", gateWayConfig->certPath())
                              << LOG_KV("nodePath", gateWayConfig->nodePath());
 
-    bcos::gateway::GatewayFactory factory(nodeConfig->chainId(), groupManagerClient);
+    bcos::gateway::GatewayFactory factory(nodeConfig->chainId());
     auto gateway = factory.buildGateway(gateWayConfig);
-    // init the gateway
-    gateway->init();
 
     m_gateway = gateway;
     GATEWAYSERVICE_LOG(INFO) << LOG_DESC("buildGateway success");

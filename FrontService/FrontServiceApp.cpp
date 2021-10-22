@@ -35,9 +35,7 @@ void FrontServiceApp::initialize()
     FrontServiceParam param;
     param.frontServiceInitializer = m_frontServiceInitializer;
     addServantWithParams<FrontServiceServer, FrontServiceParam>(
-        ServerConfig::Application + "." + ServerConfig::ServerName + "." +
-            bcos::protocol::FRONT_SERVANT_NAME,
-        param);
+        getProxyDesc(bcos::protocol::FRONT_SERVANT_NAME), param);
 }
 
 void FrontServiceApp::initService()
@@ -58,6 +56,8 @@ void FrontServiceApp::initService()
     auto protocolInitializer = std::make_shared<ProtocolInitializer>();
     protocolInitializer->init(nodeConfig);
     protocolInitializer->loadKeyPair(m_privateKeyPath);
+    nodeConfig->loadNodeServiceConfig(protocolInitializer->keyPair()->publicKey()->hex(), pt);
+    nodeConfig->loadServiceConfig(pt);
 
     // get gateway client
     auto gatewayPrx = Application::getCommunicator()->stringToProxy<bcostars::GatewayServicePrx>(
@@ -69,8 +69,8 @@ void FrontServiceApp::initService()
         std::make_shared<FrontServiceInitializer>(nodeConfig, protocolInitializer, gateWay);
 
     // get pbft client
-    auto pbftPrx = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(getProxyDesc(
-        bcos::protocol::CONSENSUS_SERVICE_NAME, bcos::protocol::CONSENSUS_SERVANT_NAME));
+    auto pbftPrx = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
+        nodeConfig->consensusServiceName());
     auto pbft = std::make_shared<PBFTServiceClient>(pbftPrx);
 
     // get sync client
@@ -78,7 +78,7 @@ void FrontServiceApp::initService()
 
     // get txpool client
     auto txpoolPrx = Application::getCommunicator()->stringToProxy<bcostars::TxPoolServicePrx>(
-        getProxyDesc(bcos::protocol::TXPOOL_SERVICE_NAME, bcos::protocol::TXPOOL_SERVANT_NAME));
+        nodeConfig->txpoolServiceName());
     auto txpoolClient = std::make_shared<bcostars::TxPoolServiceClient>(
         txpoolPrx, protocolInitializer->cryptoSuite(), protocolInitializer->blockFactory());
 

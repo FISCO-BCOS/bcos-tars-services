@@ -49,6 +49,13 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         m_protocolInitializer->init(m_nodeConfig);
         m_protocolInitializer->loadKeyPair(_privateKeyPath);
 
+        // load the service config
+        boost::property_tree::ptree pt;
+        boost::property_tree::read_ini(_configFilePath, pt);
+        m_nodeConfig->loadNodeServiceConfig(
+            m_protocolInitializer->keyPair()->publicKey()->hex(), pt);
+        m_nodeConfig->loadServiceConfig(pt);
+
         // get gateway client
         auto gatewayPrx =
             Application::getCommunicator()->stringToProxy<bcostars::GatewayServicePrx>(
@@ -82,10 +89,9 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
             m_nodeConfig, m_protocolInitializer, m_frontServiceInitializer->front(), ledger);
 
         // build and init the pbft related modules
-        m_pbftInitializer =
-            std::make_shared<PBFTInitializer>(false, ServerConfig::Application, _genesisFile,
-                _configFilePath, m_nodeConfig, m_protocolInitializer, m_txpoolInitializer->txpool(),
-                ledger, m_scheduler, storage, m_frontServiceInitializer->front());
+        m_pbftInitializer = std::make_shared<PBFTInitializer>(false, _genesisFile, _configFilePath,
+            m_nodeConfig, m_protocolInitializer, m_txpoolInitializer->txpool(), ledger, m_scheduler,
+            storage, m_frontServiceInitializer->front());
         m_pbftInitializer->init();
 
         // init the txpool

@@ -20,9 +20,7 @@ public:
         RpcServiceParam param;
         param.rpcInitializer = m_rpcInitializer;
         addServantWithParams<RpcServiceServer, RpcServiceParam>(
-            ServerConfig::Application + "." + ServerConfig::ServerName + "." +
-                bcos::protocol::RPC_SERVANT_NAME,
-            param);
+            getProxyDesc(bcos::protocol::RPC_SERVANT_NAME), param);
     }
     void destroyApp() override {}
 

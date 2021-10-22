@@ -20,9 +20,7 @@ public:
         GatewayServiceParam param;
         param.gatewayInitializer = m_gatewayInitializer;
         addServantWithParams<GatewayServiceServer, GatewayServiceParam>(
-            ServerConfig::Application + "." + ServerConfig::ServerName + "." +
-                bcos::protocol::GATEWAY_SERVANT_NAME,
-            param);
+            getProxyDesc(bcos::protocol::GATEWAY_SERVANT_NAME), param);
     }
 
 protected:

@@ -41,7 +41,6 @@ include(InstallBcosLedgerDependencies)
 include(InstallBcosSyncDependencies)
 include(InstallBcosFrontDependencies)
 include(InstallBcosScheduler)
-include(InstallBcosGroupManager)
 include(ProjectBCOSExecutor)
 
 # copy .clang-format into the project path
@@ -63,7 +62,7 @@ set(SCHEDULER_SERVICE_LIB schedulerServiceLib)
 
 include(BuildInfoGenerator)
 # import services
-list(APPEND SERVICE_LIST GroupManagerService FrontService GatewayService RpcService TxPoolService PBFTService NativeNode)
+list(APPEND SERVICE_LIST FrontService GatewayService RpcService TxPoolService PBFTService NativeNode)
 # TODO:
 # SchedulerService, ExecutorService
 
