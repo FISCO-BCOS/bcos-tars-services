@@ -17,12 +17,20 @@
  * @file Initializer.cpp
  * @author: yujiechen
  * @date 2021-06-11
+
+ * @brief Initializer for all the modules
+ * @file Initializer.cpp
+ * @author: ancelmo
+ * @date 2021-10-23
  */
 #include "Initializer.h"
 #include "ExecutorInitializer.h"
 #include "LedgerInitializer.h"
+#include "ParallelExecutor.h"
 #include "SchedulerInitializer.h"
 #include "StorageInitializer.h"
+#include "_deps/executor_project-src/src/executive/TransactionExecutive.h"
+#include "interfaces/executor/ParallelTransactionExecutorInterface.h"
 #include "interfaces/protocol/ProtocolTypeDef.h"
 #include "interfaces/rpc/RPCInterface.h"
 #include "libexecutor/NativeExecutionMessage.h"
@@ -33,6 +41,7 @@
 #include <bcos-tars-protocol/protocol/BlockHeaderFactoryImpl.h>
 #include <bcos-tars-protocol/protocol/TransactionReceiptFactoryImpl.h>
 #include <bcos-tars-protocol/tars/TransactionReceipt.h>
+#include <memory>
 
 using namespace bcos;
 using namespace bcos::tool;
@@ -87,6 +96,10 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
 
         auto executor = ExecutorInitializer::build(m_pbftInitializer->txpool(), storage,
             executionMessageFactory, m_protocolInitializer->cryptoSuite()->hashImpl(), false);
+
+        auto parallelExecutor = std::make_shared<bcos::initializer::ParallelExecutor>(
+            std::dynamic_pointer_cast<bcos::executor::TransactionExecutor>(executor));
+        // executorManager->addExecutor("default", parallelExecutor);
         executorManager->addExecutor("default", executor);
 
         m_rpcInitializer = std::make_shared<RpcInitializer>();
