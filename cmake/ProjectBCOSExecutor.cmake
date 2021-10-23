@@ -1,7 +1,7 @@
 include(FetchContent)
 FetchContent_Declare(executor_project
     GIT_REPOSITORY https://${URL_BASE}/FISCO-BCOS/bcos-executor.git
-    GIT_TAG        b7a9d3ee720b09e5b7abc47b8ae8f69d40a32b3b
+    GIT_TAG        015990fde590809ce79fb0ae0e8396008618d94b
     # SOURCE_DIR     ${CMAKE_SOURCE_DIR}/deps/src/bcos-executor
 )
 
