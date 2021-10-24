@@ -97,10 +97,9 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         auto executor = ExecutorInitializer::build(m_pbftInitializer->txpool(), storage,
             executionMessageFactory, m_protocolInitializer->cryptoSuite()->hashImpl(), false);
 
-        auto parallelExecutor = std::make_shared<bcos::initializer::ParallelExecutor>(
-            std::dynamic_pointer_cast<bcos::executor::TransactionExecutor>(executor));
-        // executorManager->addExecutor("default", parallelExecutor);
-        executorManager->addExecutor("default", executor);
+        auto parallelExecutor = std::make_shared<bcos::initializer::ParallelExecutor>(executor);
+        executorManager->addExecutor("default", parallelExecutor);
+        // executorManager->addExecutor("default", executor);
 
         m_rpcInitializer = std::make_shared<RpcInitializer>();
         m_rpcInitializer->setNodeID(nodeID);
