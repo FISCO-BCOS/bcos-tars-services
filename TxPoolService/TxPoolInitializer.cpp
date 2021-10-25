@@ -62,6 +62,7 @@ void TxPoolInitializer::init(bcos::sealer::SealerInterface::Ptr _sealer)
                     << LOG_KV("error", boost::diagnostic_information(e));
             }
         });
+    m_txpool->init();
 }
 
 void TxPoolInitializer::start()

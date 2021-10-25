@@ -68,7 +68,6 @@ bcostars::Error RpcServiceServer::asyncNotifyAmopMessage(const vector<tars::Char
 bcostars::Error RpcServiceServer::asyncNotifyGroupInfo(
     const bcostars::GroupInfo& groupInfo, tars::TarsCurrentPtr current)
 {
-    RPCSERVICE_LOG(INFO) << LOG_DESC("receive asyncNotifyGroupInfo");
     current->setResponse(false);
     auto bcosGroupInfo = toBcosGroupInfo(
         m_rpcInitializer->chainNodeInfoFactory(), m_rpcInitializer->groupInfoFactory(), groupInfo);

@@ -31,6 +31,11 @@ void RpcInitializer::init(std::string const& _configPath)
     auto nodeConfig =
         std::make_shared<bcos::tool::NodeConfig>(std::make_shared<bcos::crypto::KeyFactoryImpl>());
     nodeConfig->loadConfig(_configPath);
+
+    boost::property_tree::ptree pt;
+    boost::property_tree::read_ini(_configPath, pt);
+    nodeConfig->loadServiceConfig(pt);
+
     RPCSERVICE_LOG(INFO) << LOG_DESC("init node config success")
                          << LOG_KV("configPath", _configPath);
 
