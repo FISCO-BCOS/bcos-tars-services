@@ -32,13 +32,12 @@ using namespace bcos::initializer;
 
 void PBFTServiceApp::initialize()
 {
+    initConfig();
     initService();
     PBFTServiceParam param;
     param.pbftInitializer = m_pbftInitializer;
     addServantWithParams<PBFTServiceServer, PBFTServiceParam>(
-        ServerConfig::Application + "." + ServerConfig::ServerName + "." +
-            bcos::protocol::CONSENSUS_SERVANT_NAME,
-        param);
+        getProxyDesc(bcos::protocol::CONSENSUS_SERVANT_NAME), param);
 }
 
 void PBFTServiceApp::initService()
@@ -47,6 +46,7 @@ void PBFTServiceApp::initService()
     boost::property_tree::ptree pt;
     boost::property_tree::read_ini(m_iniConfigPath, pt);
     m_logInitializer = std::make_shared<BoostLogInitializer>();
+    m_logInitializer->setLogPath(getLogPath());
     m_logInitializer->initLog(pt);
 
     // load iniConfig
@@ -59,13 +59,15 @@ void PBFTServiceApp::initService()
     auto protocolInitializer = std::make_shared<ProtocolInitializer>();
     protocolInitializer->init(nodeConfig);
     protocolInitializer->loadKeyPair(m_privateKeyPath);
+    nodeConfig->loadNodeServiceConfig(protocolInitializer->keyPair()->publicKey()->hex(), pt);
+    nodeConfig->loadServiceConfig(pt);
 
     auto keyFactory = protocolInitializer->keyFactory();
     auto blockFactory = protocolInitializer->blockFactory();
     // create the frontService
     auto frontServiceProxy =
         Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
-            getProxyDesc(bcos::protocol::FRONT_SERVICE_NAME));
+            nodeConfig->frontServiceName());
     auto frontService =
         std::make_shared<bcostars::FrontServiceClient>(frontServiceProxy, keyFactory);
 
@@ -74,7 +76,7 @@ void PBFTServiceApp::initService()
 
     // create txpool
     auto txpoolProxy = Application::getCommunicator()->stringToProxy<bcostars::TxPoolServicePrx>(
-        getProxyDesc(bcos::protocol::TXPOOL_SERVICE_NAME));
+        nodeConfig->txpoolServiceName());
     auto txpool = std::make_shared<bcostars::TxPoolServiceClient>(
         txpoolProxy, protocolInitializer->cryptoSuite(), blockFactory);
     PBFTSERVICE_LOG(INFO) << LOG_DESC("create TxPool client success");
@@ -82,13 +84,14 @@ void PBFTServiceApp::initService()
     // create scheduler
     auto schedulerPrx =
         Application::getCommunicator()->stringToProxy<bcostars::SchedulerServicePrx>(
-            getProxyDesc(bcos::protocol::SCHEDULER_SERVICE_NAME));
+            nodeConfig->schedulerServiceName());
     auto scheduler = std::make_shared<bcostars::SchedulerServiceClient>(
         schedulerPrx, protocolInitializer->cryptoSuite());
 
     // TODO: create tikv storage
-    m_pbftInitializer = std::make_shared<PBFTInitializer>(
-        nodeConfig, protocolInitializer, txpool, ledger, scheduler, nullptr, frontService);
+    m_pbftInitializer =
+        std::make_shared<PBFTInitializer>(true, m_genesisConfigPath, m_iniConfigPath, nodeConfig,
+            protocolInitializer, txpool, ledger, scheduler, nullptr, frontService);
     m_pbftInitializer->init();
     m_pbftInitializer->start();
 }

@@ -21,6 +21,7 @@
 #pragma once
 #include "../Common/TarsUtils.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
+#include <bcos-framework/interfaces/multigroup/GroupInfoFactory.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-rpc/RpcFactory.h>
 #include <memory>
@@ -45,7 +46,7 @@ public:
 
     bcos::rpc::Rpc::Ptr rpc() { return m_rpc; }
     bcos::crypto::KeyFactory::Ptr keyFactory() { return m_keyFactory; }
-    bcos::group::GroupInfoFactory::Ptr groupInfoFactory() {}
+    bcos::group::GroupInfoFactory::Ptr groupInfoFactory() { return m_groupInfoFactory; }
     bcos::group::ChainNodeInfoFactory::Ptr chainNodeInfoFactory() { return m_chainNodeInfoFactory; }
 
 protected:

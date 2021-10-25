@@ -8,22 +8,19 @@ using namespace bcostars;
 class GatewayServiceApp : public Application
 {
 public:
-    GatewayServiceApp() : m_iniConfigPath(ServerConfig::BasePath + "config.ini")
-    {
-        addAppConfig("config.ini");
-    }
+    GatewayServiceApp() {}
     ~GatewayServiceApp() override{};
 
     void destroyApp() override {}
     void initialize() override
     {
+        m_iniConfigPath = ServerConfig::BasePath + "/config.ini";
+        addConfig("config.ini");
         initService(m_iniConfigPath);
         GatewayServiceParam param;
         param.gatewayInitializer = m_gatewayInitializer;
         addServantWithParams<GatewayServiceServer, GatewayServiceParam>(
-            ServerConfig::Application + "." + ServerConfig::ServerName + "." +
-                bcos::protocol::GATEWAY_SERVANT_NAME,
-            param);
+            getProxyDesc(bcos::protocol::GATEWAY_SERVANT_NAME), param);
     }
 
 protected:
@@ -33,23 +30,25 @@ protected:
         boost::property_tree::ptree pt;
         boost::property_tree::read_ini(_configPath, pt);
         m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
+        m_logInitializer->setLogPath(getLogPath());
         m_logInitializer->initLog(pt);
 
         auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
         nodeConfig->loadConfig(_configPath);
+        addConfig("nodes.json");
         if (nodeConfig->smCryptoType())
         {
-            addAppConfig("sm_ca.crt");
-            addAppConfig("sm_ssl.crt");
-            addAppConfig("sm_enssl.crt");
-            addAppConfig("sm_ssl.key");
-            addAppConfig("sm_enssl.key");
+            addConfig("sm_ca.crt");
+            addConfig("sm_ssl.crt");
+            addConfig("sm_enssl.crt");
+            addConfig("sm_ssl.key");
+            addConfig("sm_enssl.key");
         }
         else
         {
-            addAppConfig("ca.crt");
-            addAppConfig("ssl.key");
-            addAppConfig("ssl.crt");
+            addConfig("ca.crt");
+            addConfig("ssl.key");
+            addConfig("ssl.crt");
         }
 
         // init rpc

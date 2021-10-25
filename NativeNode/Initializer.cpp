@@ -33,7 +33,8 @@ using namespace bcos;
 using namespace bcos::tool;
 using namespace bcos::initializer;
 
-void Initializer::init(std::string const& _configFilePath, std::string const& _genesisFile)
+void Initializer::init(std::string const& _configFilePath, std::string const& _genesisFile,
+    std::string const& _privateKeyPath)
 {
     try
     {
@@ -46,7 +47,14 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         // init the protocol
         m_protocolInitializer = std::make_shared<ProtocolInitializer>();
         m_protocolInitializer->init(m_nodeConfig);
-        m_protocolInitializer->loadKeyPair(m_nodeConfig->privateKeyPath());
+        m_protocolInitializer->loadKeyPair(_privateKeyPath);
+
+        // load the service config
+        boost::property_tree::ptree pt;
+        boost::property_tree::read_ini(_configFilePath, pt);
+        m_nodeConfig->loadNodeServiceConfig(
+            m_protocolInitializer->keyPair()->publicKey()->hex(), pt);
+        m_nodeConfig->loadServiceConfig(pt);
 
         // get gateway client
         auto gatewayPrx =
@@ -60,7 +68,10 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
             std::make_shared<FrontServiceInitializer>(m_nodeConfig, m_protocolInitializer, gateWay);
 
         // build the storage
-        auto storage = StorageInitializer::build(m_nodeConfig);
+        auto storagePath = ServerConfig::BasePath + "../" + m_nodeConfig->groupId() + "/" +
+                           m_nodeConfig->storagePath();
+        auto storage = StorageInitializer::build(storagePath);
+
         // build ledger
         auto ledger =
             LedgerInitializer::build(m_protocolInitializer->blockFactory(), storage, m_nodeConfig);
@@ -78,9 +89,9 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
             m_nodeConfig, m_protocolInitializer, m_frontServiceInitializer->front(), ledger);
 
         // build and init the pbft related modules
-        m_pbftInitializer = std::make_shared<PBFTInitializer>(m_nodeConfig, m_protocolInitializer,
-            m_txpoolInitializer->txpool(), ledger, m_scheduler, storage,
-            m_frontServiceInitializer->front());
+        m_pbftInitializer = std::make_shared<PBFTInitializer>(false, _genesisFile, _configFilePath,
+            m_nodeConfig, m_protocolInitializer, m_txpoolInitializer->txpool(), ledger, m_scheduler,
+            storage, m_frontServiceInitializer->front());
         m_pbftInitializer->init();
 
         // init the txpool

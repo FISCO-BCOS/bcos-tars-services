@@ -83,6 +83,10 @@ void ProtocolInitializer::createSMCryptoSuite()
 void ProtocolInitializer::loadKeyPair(std::string const& _privateKeyPath)
 {
     auto privateKeyData = loadPrivateKey(_privateKeyPath);
+    if (!privateKeyData)
+    {
+        throw std::runtime_error("loadKeyPair failed, keyPair path: " + _privateKeyPath);
+    }
     auto privateKey = m_keyFactory->createKey(*privateKeyData);
     m_keyPair = m_cryptoSuite->signatureImpl()->createKeyPair(privateKey);
 

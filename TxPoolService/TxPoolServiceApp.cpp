@@ -30,13 +30,12 @@ using namespace bcos::tool;
 
 void TxPoolServiceApp::initialize()
 {
+    initConfig();
     initService();
     TxPoolServiceParam param;
     param.txPoolInitializer = m_txpoolInitializer;
     addServantWithParams<TxPoolServiceServer, TxPoolServiceParam>(
-        ServerConfig::Application + "." + ServerConfig::ServerName + "." +
-            bcos::protocol::TXPOOL_SERVICE_NAME,
-        param);
+        getProxyDesc(bcos::protocol::TXPOOL_SERVANT_NAME), param);
 }
 
 void TxPoolServiceApp::initService()
@@ -45,6 +44,7 @@ void TxPoolServiceApp::initService()
     boost::property_tree::ptree pt;
     boost::property_tree::read_ini(m_iniConfigPath, pt);
     m_logInitializer = std::make_shared<BoostLogInitializer>();
+    m_logInitializer->setLogPath(getLogPath());
     m_logInitializer->initLog(pt);
 
     // load iniConfig
@@ -56,11 +56,12 @@ void TxPoolServiceApp::initService()
     auto protocolInitializer = std::make_shared<ProtocolInitializer>();
     protocolInitializer->init(nodeConfig);
     protocolInitializer->loadKeyPair(m_privateKeyPath);
-
+    nodeConfig->loadNodeServiceConfig(protocolInitializer->keyPair()->publicKey()->hex(), pt);
+    nodeConfig->loadServiceConfig(pt);
     // create frontService
     auto frontServiceProxy =
         Application::getCommunicator()->stringToProxy<bcostars::FrontServicePrx>(
-            getProxyDesc(bcos::protocol::FRONT_SERVICE_NAME));
+            nodeConfig->frontServiceName());
     auto frontService = std::make_shared<bcostars::FrontServiceClient>(
         frontServiceProxy, protocolInitializer->keyFactory());
 
@@ -76,7 +77,7 @@ void TxPoolServiceApp::initService()
 
     // init the txpool
     auto pbftPrx = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
-        getProxyDesc(bcos::protocol::CONSENSUS_SERVICE_NAME));
+        nodeConfig->consensusServiceName());
     auto sealer = std::make_shared<PBFTServiceClient>(pbftPrx);
     m_txpoolInitializer->init(sealer);
     m_txpoolInitializer->start();

@@ -58,8 +58,6 @@ jobs:
         run: CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake . -DTEST=ON
       - name: compile
         run: make -j4 && make tar
-      - name: run test
-        run: CTEST_OUTPUT_ON_FAILURE=TRUE make test
   build_with_gcc:
     name: build_with_gcc
     runs-on: ${{ matrix.os }}
@@ -94,8 +92,6 @@ jobs:
         run: cmake . -DTEST=ON
       - name: compile
         run: make -j4
-      - name: run test
-        run: CTEST_OUTPUT_ON_FAILURE=TRUE make test
   ubuntu18_04_build_with_gcc:
     name: ubuntu18_04_build_with_gcc
     runs-on: ${{ matrix.os }}
@@ -130,8 +126,6 @@ jobs:
         run: cmake . -DTEST=ON -DTESTS=OFF
       - name: compile
         run: make -j4
-      - name: run test
-        run: CTEST_OUTPUT_ON_FAILURE=TRUE make test
   build_with_centos:
     name: build_with_centos
     runs-on: ubuntu-latest
@@ -175,4 +169,3 @@ jobs:
           cmake3 . -DTEST=ON
           make -j4
           make tar
-          CTEST_OUTPUT_ON_FAILURE=TRUE make test

@@ -30,13 +30,12 @@ using namespace bcos::initializer;
 
 void FrontServiceApp::initialize()
 {
+    initConfig();
     initService();
     FrontServiceParam param;
     param.frontServiceInitializer = m_frontServiceInitializer;
     addServantWithParams<FrontServiceServer, FrontServiceParam>(
-        ServerConfig::Application + "." + ServerConfig::ServerName + "." +
-            bcos::protocol::FRONT_SERVANT_NAME,
-        param);
+        getProxyDesc(bcos::protocol::FRONT_SERVANT_NAME), param);
 }
 
 void FrontServiceApp::initService()
@@ -45,6 +44,7 @@ void FrontServiceApp::initService()
     boost::property_tree::ptree pt;
     boost::property_tree::read_ini(m_iniConfigPath, pt);
     m_logInitializer = std::make_shared<BoostLogInitializer>();
+    m_logInitializer->setLogPath(getLogPath());
     m_logInitializer->initLog(pt);
 
     // load iniConfig
@@ -56,6 +56,8 @@ void FrontServiceApp::initService()
     auto protocolInitializer = std::make_shared<ProtocolInitializer>();
     protocolInitializer->init(nodeConfig);
     protocolInitializer->loadKeyPair(m_privateKeyPath);
+    nodeConfig->loadNodeServiceConfig(protocolInitializer->keyPair()->publicKey()->hex(), pt);
+    nodeConfig->loadServiceConfig(pt);
 
     // get gateway client
     auto gatewayPrx = Application::getCommunicator()->stringToProxy<bcostars::GatewayServicePrx>(
@@ -68,7 +70,7 @@ void FrontServiceApp::initService()
 
     // get pbft client
     auto pbftPrx = Application::getCommunicator()->stringToProxy<PBFTServicePrx>(
-        getProxyDesc(bcos::protocol::CONSENSUS_SERVICE_NAME));
+        nodeConfig->consensusServiceName());
     auto pbft = std::make_shared<PBFTServiceClient>(pbftPrx);
 
     // get sync client
@@ -76,7 +78,7 @@ void FrontServiceApp::initService()
 
     // get txpool client
     auto txpoolPrx = Application::getCommunicator()->stringToProxy<bcostars::TxPoolServicePrx>(
-        getProxyDesc(bcos::protocol::TXPOOL_SERVICE_NAME));
+        nodeConfig->txpoolServiceName());
     auto txpoolClient = std::make_shared<bcostars::TxPoolServiceClient>(
         txpoolPrx, protocolInitializer->cryptoSuite(), protocolInitializer->blockFactory());
 

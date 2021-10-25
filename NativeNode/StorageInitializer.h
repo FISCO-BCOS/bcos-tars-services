@@ -23,18 +23,19 @@
  * @date 2021-10-14
  */
 #pragma once
+#include "boost/filesystem.hpp"
 #include <bcos-framework/interfaces/storage/StorageInterface.h>
-#include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-storage/RocksDBStorage.h>
 #include <rocksdb/write_batch.h>
+
 namespace bcos::initializer
 {
 class StorageInitializer
 {
 public:
-    static bcos::storage::TransactionalStorageInterface::Ptr build(
-        bcos::tool::NodeConfig::Ptr _nodeConfig)
+    static bcos::storage::TransactionalStorageInterface::Ptr build(std::string const& _storagePath)
     {
+        boost::filesystem::create_directories(_storagePath);
         rocksdb::DB* db;
         rocksdb::Options options;
         // Optimize RocksDB. This is the easiest way to get RocksDB to perform well
@@ -44,7 +45,7 @@ public:
         options.create_if_missing = true;
 
         // open DB
-        rocksdb::Status s = rocksdb::DB::Open(options, _nodeConfig->storagePath(), &db);
+        rocksdb::Status s = rocksdb::DB::Open(options, _storagePath, &db);
 
         return std::make_shared<bcos::storage::RocksDBStorage>(std::unique_ptr<rocksdb::DB>(db));
     }
