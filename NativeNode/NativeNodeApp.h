@@ -20,6 +20,7 @@
  */
 #pragma once
 #include "../Common/TarsUtils.h"
+#include "../FrontService/FrontServiceServer.h"
 #include "../LedgerService/LedgerServiceServer.h"
 #include "../PBFTService/PBFTServiceServer.h"
 #include "../SchedulerService/SchedulerServiceServer.h"

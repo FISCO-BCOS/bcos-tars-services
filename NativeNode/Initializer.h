@@ -52,6 +52,8 @@ public:
     bcos::ledger::LedgerInterface::Ptr ledger() { return m_ledger; }
     bcos::scheduler::SchedulerInterface::Ptr scheduler() { return m_scheduler; }
 
+    FrontServiceInitializer::Ptr frontService() { return m_frontServiceInitializer; }
+
 private:
     BoostLogInitializer::Ptr m_logInitializer;
     bcos::tool::NodeConfig::Ptr m_nodeConfig;

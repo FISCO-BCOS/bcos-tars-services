@@ -74,4 +74,10 @@ void NativeNodeApp::initTarsNodeService()
     schedulerParam.cryptoSuite = m_nodeInitializer->protocolInitializer()->cryptoSuite();
     addServantWithParams<SchedulerServiceServer, SchedulerServiceParam>(
         getProxyDesc(SCHEDULER_SERVANT_NAME), schedulerParam);
+
+    // init the frontService, for the gateway to access the frontService
+    FrontServiceParam frontServiceParam;
+    frontServiceParam.frontServiceInitializer = m_nodeInitializer->frontService();
+    addServantWithParams<FrontServiceServer, FrontServiceParam>(
+        getProxyDesc(FRONT_SERVANT_NAME), frontServiceParam);
 }
