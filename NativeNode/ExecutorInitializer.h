@@ -13,7 +13,7 @@ public:
         bcos::crypto::Hash::Ptr hashImpl, bool isWasm)
     {
         return std::make_shared<executor::TransactionExecutor>(
-            txpool, storage, executionMessageFactory, hashImpl, isWasm);
+            txpool, nullptr, storage, executionMessageFactory, hashImpl, isWasm);
     }
 };
 }  // namespace bcos::initializer
