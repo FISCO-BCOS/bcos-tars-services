@@ -17,22 +17,35 @@
  * @file Initializer.cpp
  * @author: yujiechen
  * @date 2021-06-11
+
+ * @brief Initializer for all the modules
+ * @file Initializer.cpp
+ * @author: ancelmo
+ * @date 2021-10-23
  */
 #include "Initializer.h"
 #include "ExecutorInitializer.h"
 #include "LedgerInitializer.h"
+#include "ParallelExecutor.h"
 #include "SchedulerInitializer.h"
 #include "StorageInitializer.h"
+#include "_deps/executor_project-src/src/executive/TransactionExecutive.h"
+#include "interfaces/crypto/CommonType.h"
+#include "interfaces/executor/ParallelTransactionExecutorInterface.h"
 #include "interfaces/protocol/ProtocolTypeDef.h"
 #include "interfaces/rpc/RPCInterface.h"
 #include "libexecutor/NativeExecutionMessage.h"
+#include "libprotocol/TransactionSubmitResultFactoryImpl.h"
+#include "libprotocol/TransactionSubmitResultImpl.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-gateway/Gateway.h>
 #include <bcos-scheduler/ExecutorManager.h>
+#include <bcos-scheduler/SchedulerImpl.h>
 #include <bcos-tars-protocol/protocol/BlockHeaderFactoryImpl.h>
 #include <bcos-tars-protocol/protocol/TransactionReceiptFactoryImpl.h>
 #include <bcos-tars-protocol/tars/TransactionReceipt.h>
+#include <memory>
 
 using namespace bcos;
 using namespace bcos::tool;
@@ -76,9 +89,12 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
             m_protocolInitializer->cryptoSuite());
         auto executorManager = std::make_shared<bcos::scheduler::ExecutorManager>();
 
+        auto transactionSubmitResultFactory =
+            std::make_shared<bcos::protocol::TransactionSubmitResultFactoryImpl>();
+
         auto scheduler = SchedulerInitializer::build(executorManager, ledger, storage,
             executionMessageFactory, m_protocolInitializer->blockFactory(),
-            m_protocolInitializer->cryptoSuite()->hashImpl());
+            transactionSubmitResultFactory, m_protocolInitializer->cryptoSuite()->hashImpl());
 
         // init the pbft related modules
         m_pbftInitializer = std::make_shared<PBFTInitializer>();
@@ -87,16 +103,18 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
 
         auto executor = ExecutorInitializer::build(m_pbftInitializer->txpool(), storage,
             executionMessageFactory, m_protocolInitializer->cryptoSuite()->hashImpl(), false);
-        executorManager->addExecutor("default", executor);
+
+        auto parallelExecutor = std::make_shared<bcos::initializer::ParallelExecutor>(executor);
+        executorManager->addExecutor("default", parallelExecutor);
 
         m_rpcInitializer = std::make_shared<RpcInitializer>();
         m_rpcInitializer->setNodeID(nodeID);
         m_rpcInitializer->setNetworkInitializer(m_networkInitializer);
         m_rpcInitializer->setNodeConfig(m_nodeConfig);
         m_rpcInitializer->setFrontService(m_networkInitializer->frontService());
+        m_rpcInitializer->setScheduler(scheduler);
         m_rpcInitializer->setLedger(ledger);
         m_rpcInitializer->setTxPoolInterface(m_pbftInitializer->txpool());
-        m_rpcInitializer->setScheduler(scheduler);
         m_rpcInitializer->setConsensusInterface(m_pbftInitializer->pbft());
         m_rpcInitializer->setBlockSyncInterface(m_pbftInitializer->blockSync());
         m_rpcInitializer->setGatewayInterface(m_networkInitializer->gateway());
@@ -105,9 +123,16 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         m_rpcInitializer->init(m_nodeConfig, _configFilePath);
 
         scheduler->registerBlockNumberReceiver(
-            [rpc = m_rpcInitializer->rpcInterface()](bcos::protocol::BlockNumber number) {
+            [rpc = m_rpcInitializer->rpcInterface(), nodeConfig = m_nodeConfig](
+                bcos::protocol::BlockNumber number) {
                 BCOS_LOG(INFO) << "Notify blocknumber: " << number;
-                rpc->asyncNotifyBlockNumber({}, {}, number, [](Error::Ptr) {});
+                rpc->asyncNotifyBlockNumber(nodeConfig->groupId(), {}, number, [](Error::Ptr) {});
+            });
+
+        std::dynamic_pointer_cast<scheduler::SchedulerImpl>(scheduler)->registerTransactionNotifier(
+            [rpc = m_rpcInitializer->rpcInterface()](bcos::crypto::HashType txHash,
+                bcos::protocol::TransactionSubmitResult::Ptr result) {
+                rpc->asyncNotifyTransactionResult("", txHash, std::move(result));
             });
     }
     catch (std::exception const& e)
