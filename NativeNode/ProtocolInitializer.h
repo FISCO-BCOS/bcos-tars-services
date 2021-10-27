@@ -25,6 +25,7 @@
 #include <bcos-framework/interfaces/protocol/BlockFactory.h>
 #include <bcos-framework/interfaces/protocol/TransactionSubmitResultFactory.h>
 #include <bcos-framework/libtool/NodeConfig.h>
+#include <libprotocol/TransactionSubmitResultFactoryImpl.h>
 
 namespace bcos
 {
