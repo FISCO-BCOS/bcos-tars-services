@@ -17,13 +17,26 @@
  * @file Initializer.cpp
  * @author: yujiechen
  * @date 2021-06-11
+
+ * @brief Initializer for all the modules
+ * @file Initializer.cpp
+ * @author: ancelmo
+ * @date 2021-10-23
  */
 #include "Initializer.h"
 #include "ExecutorInitializer.h"
 #include "LedgerInitializer.h"
+#include "ParallelExecutor.h"
 #include "SchedulerInitializer.h"
 #include "StorageInitializer.h"
+#include "_deps/executor_project-src/src/executive/TransactionExecutive.h"
+#include "interfaces/crypto/CommonType.h"
+#include "interfaces/executor/ParallelTransactionExecutorInterface.h"
+#include "interfaces/protocol/ProtocolTypeDef.h"
+#include "interfaces/rpc/RPCInterface.h"
 #include "libexecutor/NativeExecutionMessage.h"
+#include "libprotocol/TransactionSubmitResultFactoryImpl.h"
+#include "libprotocol/TransactionSubmitResultImpl.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-scheduler/ExecutorManager.h>
@@ -80,9 +93,12 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         auto executionMessageFactory = std::make_shared<executor::NativeExecutionMessageFactory>();
         auto executorManager = std::make_shared<bcos::scheduler::ExecutorManager>();
 
+        auto transactionSubmitResultFactory =
+            std::make_shared<bcos::protocol::TransactionSubmitResultFactoryImpl>();
+
         m_scheduler = SchedulerInitializer::build(executorManager, ledger, storage,
             executionMessageFactory, m_protocolInitializer->blockFactory(),
-            m_protocolInitializer->cryptoSuite()->hashImpl());
+            transactionSubmitResultFactory, m_protocolInitializer->cryptoSuite()->hashImpl());
 
         // init the txpool
         m_txpoolInitializer = std::make_shared<TxPoolInitializer>(
@@ -103,7 +119,8 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
 
         auto executor = ExecutorInitializer::build(m_txpoolInitializer->txpool(), storage,
             executionMessageFactory, m_protocolInitializer->cryptoSuite()->hashImpl(), false);
-        executorManager->addExecutor("default", executor);
+        auto parallelExecutor = std::make_shared<bcos::initializer::ParallelExecutor>(executor);
+        executorManager->addExecutor("default", parallelExecutor);
     }
     catch (std::exception const& e)
     {
