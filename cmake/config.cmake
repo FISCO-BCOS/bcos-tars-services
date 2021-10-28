@@ -1,8 +1,8 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
-hunter_config(bcos-framework VERSION 3.0.0-local
-	URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/b8dcb0547d3dd38380a92cac6a28e1514f3987f4.tar.gz
-	SHA1 bec196b369ff41e1d9560b670cbb235a8947b5d1
-	CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON HUNTER_KEEP_PACKAGE_SOURCES=ON
+hunter_config(bcos-framework VERSION 3.0.0-33486b94
+	URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/31185b68ebde9c03803f5711a546c83186945ff0.tar.gz
+	SHA1 f7b25fd567c9303a68c6d47942670a1f443d390a
+	CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON
 )
 
 hunter_config(bcos-crypto
@@ -14,8 +14,8 @@ hunter_config(bcos-crypto
 
 hunter_config(bcos-boostssl
 	VERSION 3.0.0-local
-	URL "https://${URL_BASE}/FISCO-BCOS/bcos-boostssl/archive/1b972a6734ef49ac4ca56184d31fe54a08a97e82.tar.gz"
-	SHA1 6d35d940eacb7f41db779fb8182cbebf50535574
+	URL "https://${URL_BASE}/FISCO-BCOS/bcos-boostssl/archive/176dbb74c41a0efaf38bd8725908929b708bdf14.tar.gz"
+	SHA1 ab851a11610fab6df520730a3bcbf8bd08a87065
 )
 
 hunter_config(bcos-tars-protocol
@@ -82,8 +82,8 @@ hunter_config(bcos-scheduler VERSION 3.0.0-local-2903b298
 )
 
 hunter_config(bcos-rpc VERSION 3.0.0-local
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-rpc/archive/9ca3342c407356efec88850a2f58195e78401653.tar.gz
-    SHA1 3c961c95c1bcf2b1af463a31be1a8dde9498cc3f
+    URL  https://${URL_BASE}/ywy2090/bcos-rpc/archive/c4f2067dab9039441613c4194e9b6fee99b7d405.tar.gz
+    SHA1 7d07fe51474c6b136d5b37b5ed4921c3ada0c728
     CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 # hunter_config(bcos-executor VERSION 3.0.0-local-ac6d5d18
