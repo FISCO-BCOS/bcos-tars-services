@@ -110,12 +110,22 @@ void PBFTInitializer::start()
     m_sealer->start();
     m_blockSync->start();
     m_pbft->start();
-    m_timer->start();
+}
+
+void PBFTInitializer::startReport()
+{
+    if (m_timer)
+    {
+        m_timer->start();
+    }
 }
 
 void PBFTInitializer::stop()
 {
-    m_timer->stop();
+    if (m_timer)
+    {
+        m_timer->stop();
+    }
     m_sealer->stop();
     m_blockSync->stop();
     m_pbft->stop();
@@ -231,42 +241,6 @@ void PBFTInitializer::registerHandlers()
                                          << LOG_KV("error", boost::diagnostic_information(e));
             }
         });
-
-    // register block number notify
-    PBFTSERVICE_LOG(INFO) << LOG_DESC("init rpc client");
-    auto rpcServicePrx = Application::getCommunicator()->stringToProxy<bcostars::RpcServicePrx>(
-        m_nodeConfig->rpcServiceName());
-
-    PBFTSERVICE_LOG(INFO) << LOG_DESC("init rpc client success");
-    // register blockNumber notify
-    m_ledger->registerCommittedBlockNotifier(
-        [rpcServicePrx, this](bcos::protocol::BlockNumber _blockNumber,
-            std::function<void(bcos::Error::Ptr)> _callback) {
-            notifyBlockNumberToAllRpcNodes(rpcServicePrx, _blockNumber, _callback);
-        });
-    PBFTSERVICE_LOG(INFO) << LOG_DESC("registerCommittedBlockNotifier success");
-}
-void PBFTInitializer::notifyBlockNumberToAllRpcNodes(bcostars::RpcServicePrx _rpcPrx,
-    bcos::protocol::BlockNumber _blockNumber, std::function<void(Error::Ptr)> _callback)
-{
-    vector<EndpointInfo> activeEndPoints;
-    vector<EndpointInfo> nactiveEndPoints;
-    _rpcPrx->tars_endpointsAll(activeEndPoints, nactiveEndPoints);
-    if (activeEndPoints.size() == 0)
-    {
-        BCOS_LOG(TRACE) << LOG_DESC("notifyBlockNumberToAllRpcNodes error for empty connection")
-                        << LOG_KV("number", _blockNumber);
-        return;
-    }
-    for (auto const& endPoint : activeEndPoints)
-    {
-        auto endPointStr = endPointToString(m_nodeConfig->rpcServiceName(), endPoint.getEndpoint());
-        auto servicePrx =
-            Application::getCommunicator()->stringToProxy<bcostars::RpcServicePrx>(endPointStr);
-        auto serviceClient = std::make_shared<bcostars::RpcServiceClient>(servicePrx);
-        serviceClient->asyncNotifyBlockNumber(
-            m_nodeConfig->groupId(), ServerConfig::Application, _blockNumber, _callback);
-    }
 }
 
 void PBFTInitializer::createSealer()

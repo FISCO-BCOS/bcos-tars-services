@@ -32,11 +32,11 @@ class RpcInitializer
 {
 public:
     using Ptr = std::shared_ptr<RpcInitializer>;
-    RpcInitializer(std::string const& _configPath)
+    RpcInitializer(std::string const& _configPath, std::string const& _clientID)
       : m_groupInfoFactory(std::make_shared<bcos::group::GroupInfoFactory>()),
         m_chainNodeInfoFactory(std::make_shared<bcos::group::ChainNodeInfoFactory>())
     {
-        init(_configPath);
+        init(_configPath, _clientID);
     }
     virtual ~RpcInitializer() { stop(); }
 
@@ -50,7 +50,7 @@ public:
     bcos::group::ChainNodeInfoFactory::Ptr chainNodeInfoFactory() { return m_chainNodeInfoFactory; }
 
 protected:
-    virtual void init(std::string const& _configPath);
+    virtual void init(std::string const& _configPath, std::string const& _clientID);
     bcos::rpc::RpcFactory::Ptr initRpcFactory(bcos::tool::NodeConfig::Ptr _nodeConfig);
 
 private:

@@ -56,6 +56,8 @@ public:
     virtual void start();
     virtual void stop();
 
+    virtual void startReport();
+
     bcos::txpool::TxPoolInterface::Ptr txpool() { return m_txpool; }
     bcos::sync::BlockSync::Ptr blockSync() { return m_blockSync; }
     bcos::consensus::PBFTImpl::Ptr pbft() { return m_pbft; }
@@ -66,6 +68,8 @@ public:
         return m_protocolInitializer->blockFactory();
     }
     bcos::crypto::KeyFactory::Ptr keyFactory() { return m_protocolInitializer->keyFactory(); }
+
+    bcos::group::GroupInfo::Ptr groupInfo() { return m_groupInfo; }
 
 protected:
     virtual void initChainNodeInfo(bool _microServiceMode,
@@ -94,7 +98,7 @@ protected:
         }
         for (auto const& endPoint : activeEndPoints)
         {
-            auto endPointStr = endPointToString(_serviceName, endPoint.getEndpoint());
+            auto endPointStr = bcostars::endPointToString(_serviceName, endPoint.getEndpoint());
             auto servicePrx = Application::getCommunicator()->stringToProxy<T>(endPointStr);
             auto serviceClient = std::make_shared<S>(servicePrx);
             serviceClient->asyncNotifyGroupInfo(
@@ -111,15 +115,6 @@ protected:
                 });
         }
     }
-
-    std::string endPointToString(std::string const& _serviceName, TC_Endpoint const& _endPoint)
-    {
-        return _serviceName + "@tcp -h " + _endPoint.getHost() + " -p " +
-               boost::lexical_cast<std::string>(_endPoint.getPort());
-    }
-
-    void notifyBlockNumberToAllRpcNodes(bcostars::RpcServicePrx _rpcPrx,
-        bcos::protocol::BlockNumber _blockNumber, std::function<void(Error::Ptr)> _callback);
 
 private:
     bcos::tool::NodeConfig::Ptr m_nodeConfig;

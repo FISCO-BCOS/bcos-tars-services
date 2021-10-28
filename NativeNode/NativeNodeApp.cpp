@@ -44,8 +44,11 @@ void NativeNodeApp::initLog()
 void NativeNodeApp::initNodeService()
 {
     m_nodeInitializer = std::make_shared<Initializer>();
-    m_nodeInitializer->init(m_iniConfigPath, m_genesisConfigPath, m_privateKeyPath);
+    m_nodeInitializer->initMicroServiceNode(m_iniConfigPath, m_genesisConfigPath, m_privateKeyPath);
     m_nodeInitializer->start();
+    initHandler();
+    // the node report its info to the rpc/gateway periodly
+    m_nodeInitializer->pbftInitializer()->startReport();
 }
 
 void NativeNodeApp::initTarsNodeService()
@@ -80,4 +83,41 @@ void NativeNodeApp::initTarsNodeService()
     frontServiceParam.frontServiceInitializer = m_nodeInitializer->frontService();
     addServantWithParams<FrontServiceServer, FrontServiceParam>(
         getProxyDesc(FRONT_SERVANT_NAME), frontServiceParam);
+}
+
+void NativeNodeApp::initHandler()
+{
+    auto scheduler = m_nodeInitializer->scheduler();
+    auto rpcServicePrx = Application::getCommunicator()->stringToProxy<bcostars::RpcServicePrx>(
+        m_nodeInitializer->nodeConfig()->rpcServiceName());
+
+    scheduler->registerBlockNumberReceiver(
+        [rpcServicePrx, this](bcos::protocol::BlockNumber _blockNumber) {
+            BCOS_LOG(INFO) << "Notify blocknumber: " << _blockNumber;
+            notifyBlockNumberToAllRpcNodes(rpcServicePrx, _blockNumber, [](bcos::Error::Ptr) {});
+        });
+}
+
+void NativeNodeApp::notifyBlockNumberToAllRpcNodes(bcostars::RpcServicePrx _rpcPrx,
+    bcos::protocol::BlockNumber _blockNumber, std::function<void(bcos::Error::Ptr)> _callback)
+{
+    vector<EndpointInfo> activeEndPoints;
+    vector<EndpointInfo> nactiveEndPoints;
+    _rpcPrx->tars_endpointsAll(activeEndPoints, nactiveEndPoints);
+    if (activeEndPoints.size() == 0)
+    {
+        BCOS_LOG(TRACE) << LOG_DESC("notifyBlockNumberToAllRpcNodes error for empty connection")
+                        << LOG_KV("number", _blockNumber);
+        return;
+    }
+    for (auto const& endPoint : activeEndPoints)
+    {
+        auto endPointStr = endPointToString(
+            m_nodeInitializer->nodeConfig()->rpcServiceName(), endPoint.getEndpoint());
+        auto servicePrx =
+            Application::getCommunicator()->stringToProxy<bcostars::RpcServicePrx>(endPointStr);
+        auto serviceClient = std::make_shared<bcostars::RpcServiceClient>(servicePrx);
+        serviceClient->asyncNotifyBlockNumber(m_nodeInitializer->nodeConfig()->groupId(),
+            ServerConfig::Application, _blockNumber, _callback);
+    }
 }

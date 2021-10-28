@@ -80,7 +80,7 @@ endforeach()
 
 add_subdirectory(LedgerService)
 add_subdirectory(SchedulerService)
-
+add_subdirectory(fisco-bcos)
 add_custom_target(tar DEPENDS ${SERVICE_TAR_LIST})
 
 if(TEST)

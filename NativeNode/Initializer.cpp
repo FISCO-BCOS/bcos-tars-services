@@ -29,7 +29,6 @@
 #include "ParallelExecutor.h"
 #include "SchedulerInitializer.h"
 #include "StorageInitializer.h"
-#include "_deps/executor_project-src/src/executive/TransactionExecutive.h"
 #include "interfaces/crypto/CommonType.h"
 #include "interfaces/executor/ParallelTransactionExecutorInterface.h"
 #include "interfaces/protocol/ProtocolTypeDef.h"
@@ -46,8 +45,20 @@ using namespace bcos;
 using namespace bcos::tool;
 using namespace bcos::initializer;
 
+void Initializer::initMicroServiceNode(std::string const& _configFilePath,
+    std::string const& _genesisFile, std::string const& _privateKeyPath)
+{
+    // get gateway client
+    auto keyFactory = std::make_shared<bcos::crypto::KeyFactoryImpl>();
+    auto gatewayPrx = Application::getCommunicator()->stringToProxy<bcostars::GatewayServicePrx>(
+        m_nodeConfig->gatewayServiceName());
+    auto gateWay = std::make_shared<bcostars::GatewayServiceClient>(gatewayPrx, keyFactory);
+    init(_configFilePath, _genesisFile, _privateKeyPath, gateWay, false);
+}
+
 void Initializer::init(std::string const& _configFilePath, std::string const& _genesisFile,
-    std::string const& _privateKeyPath)
+    std::string const& _privateKeyPath, bcos::gateway::GatewayInterface::Ptr _gateway,
+    bool _localMode)
 {
     try
     {
@@ -60,29 +71,35 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         // init the protocol
         m_protocolInitializer = std::make_shared<ProtocolInitializer>();
         m_protocolInitializer->init(m_nodeConfig);
-        m_protocolInitializer->loadKeyPair(_privateKeyPath);
+        auto privateKeyPath = m_nodeConfig->privateKeyPath();
+        if (!_localMode)
+        {
+            privateKeyPath = _privateKeyPath;
+        }
+        m_protocolInitializer->loadKeyPair(privateKeyPath);
 
-        // load the service config
-        boost::property_tree::ptree pt;
-        boost::property_tree::read_ini(_configFilePath, pt);
-        m_nodeConfig->loadNodeServiceConfig(
-            m_protocolInitializer->keyPair()->publicKey()->hex(), pt);
-        m_nodeConfig->loadServiceConfig(pt);
+        if (!_localMode)
+        {
+            // load the service config
+            boost::property_tree::ptree pt;
+            boost::property_tree::read_ini(_configFilePath, pt);
+            m_nodeConfig->loadNodeServiceConfig(
+                m_protocolInitializer->keyPair()->publicKey()->hex(), pt);
+            m_nodeConfig->loadServiceConfig(pt);
+        }
 
-        // get gateway client
-        auto gatewayPrx =
-            Application::getCommunicator()->stringToProxy<bcostars::GatewayServicePrx>(
-                m_nodeConfig->gatewayServiceName());
-        auto gateWay = std::make_shared<bcostars::GatewayServiceClient>(
-            gatewayPrx, m_protocolInitializer->cryptoSuite()->keyFactory());
 
         // build the front service
-        m_frontServiceInitializer =
-            std::make_shared<FrontServiceInitializer>(m_nodeConfig, m_protocolInitializer, gateWay);
+        m_frontServiceInitializer = std::make_shared<FrontServiceInitializer>(
+            m_nodeConfig, m_protocolInitializer, _gateway);
 
         // build the storage
-        auto storagePath = ServerConfig::BasePath + "../" + m_nodeConfig->groupId() + "/" +
-                           m_nodeConfig->storagePath();
+        auto storagePath = m_nodeConfig->storagePath();
+        if (!_localMode)
+        {
+            ServerConfig::BasePath + "../" + m_nodeConfig->groupId() + "/" +
+                m_nodeConfig->storagePath();
+        }
         auto storage = StorageInitializer::build(storagePath);
 
         // build ledger

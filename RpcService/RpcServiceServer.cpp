@@ -22,49 +22,6 @@ bcostars::Error RpcServiceServer::asyncNotifyBlockNumber(const std::string& _gro
     return bcostars::Error();
 }
 
-bcostars::Error RpcServiceServer::asyncNotifyAmopNodeIDs(
-    const vector<vector<tars::Char> >& _nodeIDs, tars::TarsCurrentPtr current)
-{
-    current->setResponse(false);
-    std::shared_ptr<bcos::crypto::NodeIDs> nodeIDs = std::make_shared<bcos::crypto::NodeIDs>();
-    for (const auto& nodeID : _nodeIDs)
-    {
-        auto nodeIDPtr = m_rpcInitializer->keyFactory()->createKey(
-            bcos::bytesConstRef((const bcos::byte*)nodeID.data(), nodeID.size()));
-        nodeIDs->push_back(nodeIDPtr);
-    }
-
-    m_rpcInitializer->rpc()->asyncNotifyAmopNodeIDs(
-        nodeIDs, [current, nodeIDs](bcos::Error::Ptr _error) {
-            RPCSERVICE_LOG(DEBUG) << LOG_BADGE("asyncNotifyAmopNodeIDs")
-                                  << LOG_KV("nodeIDs size", nodeIDs->size())
-                                  << LOG_KV("errorCode", _error ? _error->errorCode() : 0)
-                                  << LOG_KV("errorMessage", _error ? _error->errorMessage() : "");
-            async_response_asyncNotifyAmopNodeIDs(current, toTarsError(_error));
-        });
-
-    return bcostars::Error();
-}
-
-bcostars::Error RpcServiceServer::asyncNotifyAmopMessage(const vector<tars::Char>& _nodeID,
-    const std::string& _uuid, const vector<tars::Char>& _data, tars::TarsCurrentPtr current)
-{
-    current->setResponse(false);
-    auto nodeIDPtr = m_rpcInitializer->keyFactory()->createKey(
-        bcos::bytesConstRef((const bcos::byte*)_nodeID.data(), _nodeID.size()));
-    m_rpcInitializer->rpc()->asyncNotifyAmopMessage(nodeIDPtr, _uuid,
-        bcos::bytesConstRef((bcos::byte*)_data.data(), _data.size()),
-        [current, nodeIDPtr](bcos::Error::Ptr _error) {
-            RPCSERVICE_LOG(TRACE) << LOG_BADGE("asyncNotifyAmopMessage")
-                                  << LOG_KV("nodeID", nodeIDPtr->hex())
-                                  << LOG_KV("errorCode", _error ? _error->errorCode() : 0)
-                                  << LOG_KV("errorMessage", _error ? _error->errorMessage() : "");
-            async_response_asyncNotifyAmopMessage(current, toTarsError(_error));
-        });
-
-    return bcostars::Error();
-}
-
 bcostars::Error RpcServiceServer::asyncNotifyGroupInfo(
     const bcostars::GroupInfo& groupInfo, tars::TarsCurrentPtr current)
 {

@@ -34,9 +34,15 @@ protected:
         m_logInitializer->setLogPath(getLogPath());
         m_logInitializer->initLog(pt);
         // init rpc
-        m_rpcInitializer = std::make_shared<RpcInitializer>(_configPath);
+        auto adapter = Application::getEpollServer()->getBindAdapter(
+            getProxyDesc(bcos::protocol::RPC_SERVANT_NAME));
+        std::string clientID = endPointToString(
+            getProxyDesc(bcos::protocol::RPC_SERVANT_NAME), adapter->getEndpoint());
+        BCOS_LOG(INFO) << LOG_DESC("begin init rpc") << LOG_KV("rpcID", clientID);
+        m_rpcInitializer = std::make_shared<RpcInitializer>(_configPath, clientID);
         m_rpcInitializer->start();
     }
+
 
 private:
     std::string m_iniConfigPath;

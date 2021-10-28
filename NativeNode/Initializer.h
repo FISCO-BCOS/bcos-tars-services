@@ -26,6 +26,8 @@
 #include "StorageInitializer.h"
 #include "TxPoolService/TxPoolInitializer.h"
 #include "libinitializer/ProtocolInitializer.h"
+#include <bcos-framework/interfaces/gateway/GatewayInterface.h>
+#include <bcos-framework/interfaces/rpc/RPCInterface.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <memory>
 
@@ -38,8 +40,6 @@ public:
     Initializer() = default;
     virtual ~Initializer() { stop(); }
 
-    virtual void init(std::string const& _configFilePath, std::string const& _genesisFile,
-        std::string const& _privateKeyPath);
 
     virtual void start();
     virtual void stop();
@@ -53,6 +53,19 @@ public:
     bcos::scheduler::SchedulerInterface::Ptr scheduler() { return m_scheduler; }
 
     FrontServiceInitializer::Ptr frontService() { return m_frontServiceInitializer; }
+
+    void initLocalNode(std::string const& _configFilePath, std::string const& _genesisFile,
+        bcos::gateway::GatewayInterface::Ptr _gateway)
+    {
+        init(_configFilePath, _genesisFile, "", _gateway, true);
+    }
+    void initMicroServiceNode(std::string const& _configFilePath, std::string const& _genesisFile,
+        std::string const& _privateKeyPath);
+
+protected:
+    virtual void init(std::string const& _configFilePath, std::string const& _genesisFile,
+        std::string const& _privateKeyPath, bcos::gateway::GatewayInterface::Ptr _gateway,
+        bool _localMode);
 
 private:
     BoostLogInitializer::Ptr m_logInitializer;

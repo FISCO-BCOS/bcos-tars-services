@@ -50,7 +50,7 @@ void GatewayInitializer::init(
                              << LOG_KV("nodePath", gateWayConfig->nodePath());
 
     bcos::gateway::GatewayFactory factory(nodeConfig->chainId());
-    auto gateway = factory.buildGateway(gateWayConfig);
+    auto gateway = factory.buildGateway(gateWayConfig, false);
 
     m_gateway = gateway;
     GATEWAYSERVICE_LOG(INFO) << LOG_DESC("buildGateway success");
