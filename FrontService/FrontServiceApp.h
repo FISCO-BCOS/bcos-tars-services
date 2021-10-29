@@ -20,7 +20,7 @@
  */
 #pragma once
 #include "../Common/TarsUtils.h"
-#include "FrontServiceInitializer.h"
+#include "libinitializer/FrontServiceInitializer.h"
 #include "FrontServiceServer.h"
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <tarscpp/servant/Application.h>

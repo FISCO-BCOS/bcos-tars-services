@@ -52,13 +52,16 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 include(CompilerSettings)
 
-add_subdirectory(libinitializer)
+set(INIT_LIB initializer)
+set(PROTOCOL_INIT_LIB protocolInitializer)
+set(PBFT_INIT_LIB pbftInitializer)
+set(TXPOOL_INIT_LIB txPoolInitializer)
+set(FRONTSERVICE_INIT_LIB frontInitializer)
 
-set(PBFT_SERVICE_LIB pbftServiceLib)
-set(TXPOOL_SERVICE_LIB txPoolServiceLib)
-set(FRONT_SERVICE_LIB frontServiceLib)
 set(LEDGER_SERVICE_LIB ledgerServiceLib)
 set(SCHEDULER_SERVICE_LIB schedulerServiceLib)
+
+add_subdirectory(libinitializer)
 
 include(BuildInfoGenerator)
 # import services

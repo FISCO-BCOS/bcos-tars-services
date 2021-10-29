@@ -25,7 +25,7 @@
 #include "../PBFTService/PBFTServiceServer.h"
 #include "../SchedulerService/SchedulerServiceServer.h"
 #include "../TxPoolService/TxPoolServiceServer.h"
-#include "Initializer.h"
+#include "libinitializer/Initializer.h"
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <tarscpp/servant/Application.h>

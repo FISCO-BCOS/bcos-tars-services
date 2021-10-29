@@ -20,7 +20,7 @@
  */
 #pragma once
 #include "../Common/TarsUtils.h"
-#include "TxPoolInitializer.h"
+#include "libinitializer/TxPoolInitializer.h"
 #include "TxPoolServiceServer.h"
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>

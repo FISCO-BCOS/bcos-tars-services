@@ -2,7 +2,7 @@
 
 #include "../Common/TarsUtils.h"
 #include "../libinitializer/ProtocolInitializer.h"
-#include "FrontServiceInitializer.h"
+#include "libinitializer/FrontServiceInitializer.h"
 #include "libutilities/Common.h"
 #include <bcos-framework/interfaces/protocol/Protocol.h>
 #include <bcos-tars-protocol/ErrorConverter.h>

@@ -19,13 +19,13 @@
  * @date 2021-06-11
  */
 #pragma once
-#include "FrontService/FrontServiceInitializer.h"
+#include "FrontServiceInitializer.h"
 #include "LedgerInitializer.h"
-#include "PBFTService/PBFTInitializer.h"
+#include "PBFTInitializer.h"
+#include "ProtocolInitializer.h"
 #include "SchedulerInitializer.h"
 #include "StorageInitializer.h"
-#include "TxPoolService/TxPoolInitializer.h"
-#include "libinitializer/ProtocolInitializer.h"
+#include "TxPoolInitializer.h"
 #include <bcos-framework/interfaces/gateway/GatewayInterface.h>
 #include <bcos-framework/interfaces/rpc/RPCInterface.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
