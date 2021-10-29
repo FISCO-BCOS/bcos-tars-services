@@ -13,57 +13,45 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- * @brief Application for the NativeNode
- * @file NativeNodeApp.h
+ * @brief application for TxPoolService
+ * @file TxPoolServiceApp.h
  * @author: yujiechen
- * @date 2021-10-18
+ * @date 2021-10-17
  */
 #pragma once
-#include "../Common/TarsUtils.h"
-#include "../FrontService/FrontServiceServer.h"
-#include "../LedgerService/LedgerServiceServer.h"
-#include "../PBFTService/PBFTServiceServer.h"
-#include "../SchedulerService/SchedulerServiceServer.h"
-#include "../TxPoolService/TxPoolServiceServer.h"
-#include "libinitializer/Initializer.h"
+#include "Common/TarsUtils.h"
+#include "TxPoolService/TxPoolServiceServer.h"
+#include "libinitializer/TxPoolInitializer.h"
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <tarscpp/servant/Application.h>
 
 namespace bcostars
 {
-class NativeNodeApp : public Application
+class TxPoolServiceApp : public Application
 {
 public:
-    NativeNodeApp() {}
-    ~NativeNodeApp() override {}
+    TxPoolServiceApp() {}
 
-    void initialize() override;
-    void destroyApp() override { m_nodeInitializer->stop(); }
+    ~TxPoolServiceApp() override{};
+
+    virtual void initialize() override;
+    virtual void destroyApp() override {}
 
 protected:
+    virtual void initService();
     virtual void initConfig()
     {
         m_iniConfigPath = ServerConfig::BasePath + "/config.ini";
-        m_genesisConfigPath = ServerConfig::BasePath + "/config.genesis";
         m_privateKeyPath = ServerConfig::BasePath + "/node.pem";
         addConfig("node.pem");
-        addConfig("config.genesis");
         addConfig("config.ini");
     }
-    virtual void initLog();
-    virtual void initNodeService();
-    virtual void initTarsNodeService();
-    void initHandler();
-    void notifyBlockNumberToAllRpcNodes(bcostars::RpcServicePrx _rpcPrx,
-        bcos::protocol::BlockNumber _blockNumber, std::function<void(bcos::Error::Ptr)> _callback);
 
 private:
     std::string m_iniConfigPath;
-    std::string m_genesisConfigPath;
     std::string m_privateKeyPath;
-
     bcos::BoostLogInitializer::Ptr m_logInitializer;
-    bcos::initializer::Initializer::Ptr m_nodeInitializer;
+    bcos::initializer::TxPoolInitializer::Ptr m_txpoolInitializer;
 };
 }  // namespace bcostars

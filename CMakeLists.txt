@@ -70,7 +70,7 @@ list(APPEND SERVICE_LIST FrontService GatewayService RpcService TxPoolService PB
 # SchedulerService, ExecutorService
 
 foreach(SERVICE ${SERVICE_LIST})
-    add_subdirectory(${SERVICE})
+    add_subdirectory(${SERVICE}/main)
 
     add_custom_command(OUTPUT ${SERVICE}.tgz
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}

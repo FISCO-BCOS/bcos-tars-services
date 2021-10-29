@@ -43,6 +43,9 @@ void LocalNodeInitializer::init(std::string const& _configFilePath, std::string 
 
     // create the node
     initLocalNode(_configFilePath, _genesisFile, m_gateway);
+    auto nodeID = m_nodeInitializer->protocolInitializer()->keyPair()->publicKey();
+    gateway->registerFrontService(
+        nodeConfig->groupId(), nodeID, m_nodeInitializer->frontService()->front());
 
     auto pbftInitializer = m_nodeInitializer->pbftInitializer();
     auto groupInfo = m_nodeInitializer->pbftInitializer()->groupInfo();

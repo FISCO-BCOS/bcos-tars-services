@@ -41,11 +41,17 @@ protected:
     virtual void initLocalNode(std::string const& _configFilePath, std::string const& _genesisFile,
         bcos::gateway::GatewayInterface::Ptr _gateway)
     {
+        boost::property_tree::ptree pt;
+        boost::property_tree::read_ini(_configFilePath, pt);
+        m_logInitializer = std::make_shared<BoostLogInitializer>();
+        m_logInitializer->initLog(pt);
+
         m_nodeInitializer = std::make_shared<bcos::initializer::Initializer>();
         m_nodeInitializer->initLocalNode(_configFilePath, _genesisFile, _gateway);
     }
 
 private:
+    BoostLogInitializer::Ptr m_logInitializer;
     bcos::initializer::Initializer::Ptr m_nodeInitializer;
 
     bcos::gateway::GatewayInterface::Ptr m_gateway;

@@ -19,7 +19,7 @@
  * @date 2021-10-15
  */
 #include "RpcInitializer.h"
-#include "../libinitializer/ProtocolInitializer.h"
+#include "libinitializer/ProtocolInitializer.h"
 #include <bcos-tars-protocol/client/GatewayServiceClient.h>
 using namespace bcos::group;
 using namespace bcostars;

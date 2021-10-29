@@ -19,7 +19,7 @@
  * @date 2021-10-15
  */
 #pragma once
-#include "../Common/TarsUtils.h"
+#include "Common/TarsUtils.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
 #include <bcos-framework/interfaces/multigroup/GroupInfoFactory.h>
 #include <bcos-framework/libtool/NodeConfig.h>

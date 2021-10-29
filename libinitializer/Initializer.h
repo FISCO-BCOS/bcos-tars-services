@@ -68,7 +68,6 @@ protected:
         bool _localMode);
 
 private:
-    BoostLogInitializer::Ptr m_logInitializer;
     bcos::tool::NodeConfig::Ptr m_nodeConfig;
     ProtocolInitializer::Ptr m_protocolInitializer;
     FrontServiceInitializer::Ptr m_frontServiceInitializer;

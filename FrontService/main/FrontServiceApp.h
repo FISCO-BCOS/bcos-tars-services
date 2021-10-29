@@ -19,9 +19,9 @@
  * @date 2021-10-17
  */
 #pragma once
-#include "../Common/TarsUtils.h"
+#include "Common/TarsUtils.h"
+#include "FrontService/FrontServiceServer.h"
 #include "libinitializer/FrontServiceInitializer.h"
-#include "FrontServiceServer.h"
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <tarscpp/servant/Application.h>
 

@@ -19,7 +19,7 @@
  * @date 2021-06-10
  */
 #pragma once
-#include "../Common/TarsUtils.h"
+#include "Common/TarsUtils.h"
 #include "libinitializer/ProtocolInitializer.h"
 #include <bcos-framework/interfaces/front/FrontServiceInterface.h>
 #include <bcos-framework/interfaces/gateway/GatewayInterface.h>

@@ -1,6 +1,6 @@
 #pragma once
-#include "../Common/TarsUtils.h"
-#include "RpcInitializer.h"
+#include "Common/TarsUtils.h"
+#include "RpcService/RpcInitializer.h"
 #include <bcos-tars-protocol/tars/RpcService.h>
 namespace bcostars
 {

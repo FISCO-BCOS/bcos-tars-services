@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Common/TarsUtils.h"
-#include "../libinitializer/ProtocolInitializer.h"
-#include "GatewayInitializer.h"
+#include "Common/TarsUtils.h"
+#include "GatewayService/GatewayInitializer.h"
+#include "libinitializer/ProtocolInitializer.h"
 #include <bcos-tars-protocol/ErrorConverter.h>
 #include <bcos-tars-protocol/tars/GatewayService.h>
 #include <chrono>

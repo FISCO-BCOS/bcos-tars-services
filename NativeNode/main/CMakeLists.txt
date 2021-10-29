@@ -4,11 +4,11 @@ file(GLOB HEADERS "*.h")
 set(BINARY_NAME NativeNode)
 
 aux_source_directory(. SRC_LIST)
-aux_source_directory(../FrontService SRC_LIST)
-aux_source_directory(../LedgerService SRC_LIST)
-aux_source_directory(../SchedulerService SRC_LIST)
-aux_source_directory(../TxPoolService SRC_LIST)
-aux_source_directory(../PBFTService SRC_LIST)
+aux_source_directory(../../FrontService SRC_LIST)
+aux_source_directory(../../LedgerService SRC_LIST)
+aux_source_directory(../../SchedulerService SRC_LIST)
+aux_source_directory(../../TxPoolService SRC_LIST)
+aux_source_directory(../../PBFTService SRC_LIST)
 
 add_executable(${BINARY_NAME} ${SRC_LIST} ${HEADERS})
 
