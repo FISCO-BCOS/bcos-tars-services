@@ -34,3 +34,21 @@ bcostars::Error RpcServiceServer::asyncNotifyGroupInfo(
         });
     return bcostars::Error();
 }
+
+bcostars::Error RpcServiceServer::asyncNotifyAMOPMessage(tars::Int32 _type,
+    const std::string& _topic, const vector<tars::Char>& _requestData, vector<tars::Char>&,
+    tars::TarsCurrentPtr current)
+{
+    current->setResponse(false);
+    m_rpcInitializer->rpc()->asyncNotifyAMOPMessage(_type, _topic,
+        bcos::bytesConstRef((const bcos::byte*)_requestData.data(), _requestData.size()),
+        [current](bcos::Error::Ptr&& _error, bcos::bytesPointer _responseData) {
+            vector<tars::Char> response;
+            if (_responseData)
+            {
+                response.assign(_responseData->begin(), _responseData->end());
+            }
+            async_response_asyncNotifyAMOPMessage(current, toTarsError(_error), response);
+        });
+    return bcostars::Error();
+}

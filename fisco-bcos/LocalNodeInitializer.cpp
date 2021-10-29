@@ -21,6 +21,7 @@
 #include "LocalNodeInitializer.h"
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-gateway/GatewayFactory.h>
+#include <bcos-gateway/libamop/LocalTopicManager.h>
 #include <bcos-rpc/RpcFactory.h>
 using namespace bcos::node;
 using namespace bcos::initializer;
@@ -56,7 +57,9 @@ void LocalNodeInitializer::init(std::string const& _configFilePath, std::string 
     // create rpc
     RpcFactory rpcFactory(nodeConfig->chainId(), m_gateway, keyFactory);
     m_rpc = rpcFactory.buildLocalRpc(_configFilePath, groupInfo, nodeService);
-    // gateway->init(m_rpc);
+    auto topicManager =
+        std::dynamic_pointer_cast<bcos::amop::LocalTopicManager>(gateway->amop()->topicManager());
+    topicManager->setLocalClient(m_rpc);
 
     // init handlers
     auto schedulerImpl =

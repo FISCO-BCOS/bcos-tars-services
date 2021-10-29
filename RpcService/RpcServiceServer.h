@@ -27,8 +27,7 @@ public:
     // TODO: implement this
     bcostars::Error asyncNotifyAMOPMessage(tars::Int32 _type, const std::string& _topic,
         const vector<tars::Char>& _requestData, vector<tars::Char>& _responseData,
-        tars::TarsCurrentPtr current) override
-    {}
+        tars::TarsCurrentPtr current) override;
 
 private:
     RpcInitializer::Ptr m_rpcInitializer;
