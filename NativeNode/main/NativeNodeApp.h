@@ -19,13 +19,13 @@
  * @date 2021-10-18
  */
 #pragma once
-#include "../Common/TarsUtils.h"
-#include "../FrontService/FrontServiceServer.h"
-#include "../LedgerService/LedgerServiceServer.h"
-#include "../PBFTService/PBFTServiceServer.h"
-#include "../SchedulerService/SchedulerServiceServer.h"
-#include "../TxPoolService/TxPoolServiceServer.h"
-#include "Initializer.h"
+#include "Common/TarsUtils.h"
+#include "FrontService/FrontServiceServer.h"
+#include "LedgerService/LedgerServiceServer.h"
+#include "PBFTService/PBFTServiceServer.h"
+#include "SchedulerService/SchedulerServiceServer.h"
+#include "TxPoolService/TxPoolServiceServer.h"
+#include "libinitializer/Initializer.h"
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <tarscpp/servant/Application.h>
@@ -54,6 +54,9 @@ protected:
     virtual void initLog();
     virtual void initNodeService();
     virtual void initTarsNodeService();
+    void initHandler();
+    void notifyBlockNumberToAllRpcNodes(bcostars::RpcServicePrx _rpcPrx,
+        bcos::protocol::BlockNumber _blockNumber, std::function<void(bcos::Error::Ptr)> _callback);
 
 private:
     std::string m_iniConfigPath;

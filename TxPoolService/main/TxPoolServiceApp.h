@@ -19,9 +19,9 @@
  * @date 2021-10-17
  */
 #pragma once
-#include "../Common/TarsUtils.h"
-#include "TxPoolInitializer.h"
-#include "TxPoolServiceServer.h"
+#include "Common/TarsUtils.h"
+#include "TxPoolService/TxPoolServiceServer.h"
+#include "libinitializer/TxPoolInitializer.h"
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <tarscpp/servant/Application.h>

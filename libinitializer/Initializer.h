@@ -19,13 +19,15 @@
  * @date 2021-06-11
  */
 #pragma once
-#include "FrontService/FrontServiceInitializer.h"
+#include "FrontServiceInitializer.h"
 #include "LedgerInitializer.h"
-#include "PBFTService/PBFTInitializer.h"
+#include "PBFTInitializer.h"
+#include "ProtocolInitializer.h"
 #include "SchedulerInitializer.h"
 #include "StorageInitializer.h"
-#include "TxPoolService/TxPoolInitializer.h"
-#include "libinitializer/ProtocolInitializer.h"
+#include "TxPoolInitializer.h"
+#include <bcos-framework/interfaces/gateway/GatewayInterface.h>
+#include <bcos-framework/interfaces/rpc/RPCInterface.h>
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <memory>
 
@@ -38,8 +40,6 @@ public:
     Initializer() = default;
     virtual ~Initializer() { stop(); }
 
-    virtual void init(std::string const& _configFilePath, std::string const& _genesisFile,
-        std::string const& _privateKeyPath);
 
     virtual void start();
     virtual void stop();
@@ -54,8 +54,20 @@ public:
 
     FrontServiceInitializer::Ptr frontService() { return m_frontServiceInitializer; }
 
+    void initLocalNode(std::string const& _configFilePath, std::string const& _genesisFile,
+        bcos::gateway::GatewayInterface::Ptr _gateway)
+    {
+        init(_configFilePath, _genesisFile, "", _gateway, true);
+    }
+    void initMicroServiceNode(std::string const& _configFilePath, std::string const& _genesisFile,
+        std::string const& _privateKeyPath);
+
+protected:
+    virtual void init(std::string const& _configFilePath, std::string const& _genesisFile,
+        std::string const& _privateKeyPath, bcos::gateway::GatewayInterface::Ptr _gateway,
+        bool _localMode);
+
 private:
-    BoostLogInitializer::Ptr m_logInitializer;
     bcos::tool::NodeConfig::Ptr m_nodeConfig;
     ProtocolInitializer::Ptr m_protocolInitializer;
     FrontServiceInitializer::Ptr m_frontServiceInitializer;

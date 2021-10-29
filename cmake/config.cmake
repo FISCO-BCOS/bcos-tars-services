@@ -1,7 +1,7 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
-hunter_config(bcos-framework VERSION 3.0.0-33486b94
-	URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/31185b68ebde9c03803f5711a546c83186945ff0.tar.gz
-	SHA1 f7b25fd567c9303a68c6d47942670a1f443d390a
+hunter_config(bcos-framework VERSION 3.0.0-local
+	URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/e1c95020a8a0ab919fee0bc76adcde9f7b76c911.tar.gz
+    SHA1 6cb40b8e85f2cd29049819777efa383ee0e6f88f
 	CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON
 )
 
@@ -20,14 +20,14 @@ hunter_config(bcos-boostssl
 
 hunter_config(bcos-tars-protocol
     VERSION 3.0.0-local
-    URL https://${URL_BASE}/FISCO-BCOS/bcos-tars-protocol/archive/077867b87163f9805d6fb116f3528dda1eaaf368.tar.gz
-    SHA1 89dab12040b706649bee4f5dcbffa32a247a5284
+    URL https://${URL_BASE}/FISCO-BCOS/bcos-tars-protocol/archive/81a32da0968a3d4a97cd412af255dedc9b85a4a2.tar.gz
+    SHA1 aa34e527968b0db250b487462219d68a87ba489d
     CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON URL_BASE=${URL_BASE}
 )
 
 hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/892165ce45dcfa12d5964d52461760bbb7f1f212.tar.gz
-    SHA1 dbb714f32e4ed61b782763dd952f3dac4f368730
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/920adb0aee63d315e186968c552d27b16279891d.tar.gz
+    SHA1 bff1a20ed0be20a61dbbc0b2591f299c22c99b9a
     CMAKE_ARGS URL_BASE=${URL_BASE}  HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
@@ -58,8 +58,8 @@ hunter_config(bcos-storage VERSION 3.0.0-local-900836da
 
 hunter_config(bcos-ledger
     VERSION 3.0.0-local-1956c515f
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-ledger/archive/d437169dad1323b750bf888b72548f1ae067ec58.tar.gz
-    SHA1 ec23e1d341baa183b598ac18ecb6a952d2a0abbb
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-ledger/archive/e501909b59a674f78965245d8778bb15ffba1c8d.tar.gz
+    SHA1 44fa4ad0594907a4b4d6942fbff084b1dfa1d666
     CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
@@ -70,20 +70,20 @@ hunter_config(bcos-front VERSION 3.0.0-local-2ed687bb
 )
 
 hunter_config(bcos-gateway VERSION 3.0.0-local-1fb592e4
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-gateway/archive/a5dae5289bb75c3f55d4af88dc3f7e717f1625d4.tar.gz
-    SHA1 f18e51fc323c1e5fa649915c4dae986255e09b79
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-gateway/archive/63b0239a40cb22a79e46c4d8ae985f03aa64c22b.tar.gz
+    SHA1 423edd42514e82facb8c7ef6bd95c9d925502c0a
     CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
 hunter_config(bcos-scheduler VERSION 3.0.0-local-b1c450b95b6f83e6a0cf3bd2f385c2ddef4921b4
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-scheduler/archive/fd306f9f1ce73c61f2abf1a4e7d2b8a1c7206b06.tar.gz
-    SHA1 7d9e843d14d407a3facf82da0d2e65999a64381b
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-scheduler/archive/81695fbb45c04c6dff04f3e732b73087184f14dd.tar.gz
+    SHA1 496765d856325454151b502740f8e3e9783768ba
     CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
 hunter_config(bcos-rpc VERSION 3.0.0-local
-    URL  https://${URL_BASE}/ywy2090/bcos-rpc/archive/c4f2067dab9039441613c4194e9b6fee99b7d405.tar.gz
-    SHA1 7d07fe51474c6b136d5b37b5ed4921c3ada0c728
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-rpc/archive/32498273935ea093909b11f8d228a6700391da27.tar.gz
+    SHA1 e21984ca46dcc0955758067ea4c3492cd1d59191
     CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 

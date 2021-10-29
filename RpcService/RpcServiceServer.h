@@ -1,6 +1,6 @@
 #pragma once
-#include "../Common/TarsUtils.h"
-#include "RpcInitializer.h"
+#include "Common/TarsUtils.h"
+#include "RpcService/RpcInitializer.h"
 #include <bcos-tars-protocol/tars/RpcService.h>
 namespace bcostars
 {
@@ -20,14 +20,15 @@ public:
     bcostars::Error asyncNotifyBlockNumber(const std::string& _groupID,
         const std::string& _nodeName, tars::Int64 blockNumber,
         tars::TarsCurrentPtr current) override;
-    bcostars::Error asyncNotifyAmopNodeIDs(
-        const vector<vector<tars::Char> >& _nodeIDs, tars::TarsCurrentPtr current) override;
-    bcostars::Error asyncNotifyAmopMessage(const vector<tars::Char>& _nodeID,
-        const std::string& _uuid, const vector<tars::Char>& _data,
-        tars::TarsCurrentPtr current) override;
     bcostars::Error asyncNotifyGroupInfo(
         const bcostars::GroupInfo& groupInfo, tars::TarsCurrentPtr current) override;
     bcos::rpc::RpcFactory::Ptr initRpcFactory(bcos::tool::NodeConfig::Ptr nodeConfig);
+
+    // TODO: implement this
+    bcostars::Error asyncNotifyAMOPMessage(tars::Int32 _type, const std::string& _topic,
+        const vector<tars::Char>& _requestData, vector<tars::Char>& _responseData,
+        tars::TarsCurrentPtr current) override
+    {}
 
 private:
     RpcInitializer::Ptr m_rpcInitializer;

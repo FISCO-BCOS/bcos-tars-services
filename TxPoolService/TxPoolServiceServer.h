@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Common/TarsUtils.h"
-#include "../libinitializer/ProtocolInitializer.h"
-#include "TxPoolInitializer.h"
+#include "Common/TarsUtils.h"
+#include "libinitializer/ProtocolInitializer.h"
+#include "libinitializer/TxPoolInitializer.h"
 #include <bcos-framework/interfaces/consensus/ConsensusNode.h>
 #include <bcos-framework/libutilities/Common.h>
 #include <bcos-framework/libutilities/FixedBytes.h>

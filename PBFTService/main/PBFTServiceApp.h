@@ -13,43 +13,46 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- * @brief application for FrontService
- * @file FrontServiceApp.h
+ * @brief application for PBFTService
+ * @file PBFTServiceApp.h
  * @author: yujiechen
- * @date 2021-10-17
+ * @date 2021-10-15
  */
 #pragma once
-#include "../Common/TarsUtils.h"
-#include "FrontServiceInitializer.h"
-#include "FrontServiceServer.h"
+#include "Common/TarsUtils.h"
+#include "PBFTService/PBFTServiceServer.h"
+#include "libinitializer/PBFTInitializer.h"
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <tarscpp/servant/Application.h>
 
 namespace bcostars
 {
-class FrontServiceApp : public Application
+class PBFTServiceApp : public Application
 {
 public:
-    FrontServiceApp() {}
-    virtual ~FrontServiceApp() override{};
+    PBFTServiceApp() {}
+    virtual ~PBFTServiceApp() override{};
 
-    virtual void initialize() override;
-    virtual void destroyApp() override {}
+    void initialize() override;
+    void destroyApp() override {}
 
 protected:
-    virtual void initService();
     virtual void initConfig()
     {
         m_iniConfigPath = ServerConfig::BasePath + "/config.ini";
+        m_genesisConfigPath = ServerConfig::BasePath + "/config.genesis";
         m_privateKeyPath = ServerConfig::BasePath + "/node.pem";
         addConfig("node.pem");
+        addConfig("config.genesis");
         addConfig("config.ini");
     }
+    virtual void initService();
 
 private:
     std::string m_iniConfigPath;
+    std::string m_genesisConfigPath;
     std::string m_privateKeyPath;
     bcos::BoostLogInitializer::Ptr m_logInitializer;
-    bcos::initializer::FrontServiceInitializer::Ptr m_frontServiceInitializer;
+    bcos::initializer::PBFTInitializer::Ptr m_pbftInitializer;
 };
 }  // namespace bcostars

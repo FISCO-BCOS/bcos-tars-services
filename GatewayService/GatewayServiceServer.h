@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Common/TarsUtils.h"
-#include "../libinitializer/ProtocolInitializer.h"
-#include "GatewayInitializer.h"
+#include "Common/TarsUtils.h"
+#include "GatewayService/GatewayInitializer.h"
+#include "libinitializer/ProtocolInitializer.h"
 #include <bcos-tars-protocol/ErrorConverter.h>
 #include <bcos-tars-protocol/tars/GatewayService.h>
 #include <chrono>
@@ -125,8 +125,23 @@ public:
         return bcostars::Error();
     }
 
+    // TODO: implement this
     bcostars::Error asyncNotifyGroupInfo(
         const bcostars::GroupInfo& groupInfo, tars::TarsCurrentPtr current) override;
+
+    bcostars::Error asyncSendMessageByTopic(const std::string& _topic,
+        const vector<tars::Char>& _data, tars::Int32& _type, vector<tars::Char>& _responseData,
+        tars::TarsCurrentPtr current) override
+    {}
+    bcostars::Error asyncSubscribeTopic(const std::string& _clientID, const std::string& _topicInfo,
+        tars::TarsCurrentPtr current) override
+    {}
+    bcostars::Error asyncSendBroadbastMessageByTopic(const std::string& _topic,
+        const vector<tars::Char>& _data, tars::TarsCurrentPtr current) override
+    {}
+    bcostars::Error asyncRemoveTopic(const std::string& _clientID,
+        const vector<std::string>& _topicList, tars::TarsCurrentPtr current) override
+    {}
 
 private:
     GatewayInitializer::Ptr m_gatewayInitializer;

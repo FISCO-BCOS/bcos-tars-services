@@ -20,7 +20,7 @@
  */
 
 #pragma once
-#include "PBFTInitializer.h"
+#include "libinitializer/PBFTInitializer.h"
 #include <bcos-tars-protocol/ErrorConverter.h>
 #include <bcos-tars-protocol/protocol/BlockImpl.h>
 #include <bcos-tars-protocol/tars/PBFTService.h>

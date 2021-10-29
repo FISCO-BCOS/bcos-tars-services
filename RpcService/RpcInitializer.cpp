@@ -19,12 +19,12 @@
  * @date 2021-10-15
  */
 #include "RpcInitializer.h"
-#include "../libinitializer/ProtocolInitializer.h"
+#include "libinitializer/ProtocolInitializer.h"
 #include <bcos-tars-protocol/client/GatewayServiceClient.h>
 using namespace bcos::group;
 using namespace bcostars;
 
-void RpcInitializer::init(std::string const& _configPath)
+void RpcInitializer::init(std::string const& _configPath, std::string const& _clientID)
 {
     // init node config
     RPCSERVICE_LOG(INFO) << LOG_DESC("init node config");
@@ -43,11 +43,7 @@ void RpcInitializer::init(std::string const& _configPath)
     RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc factory");
     auto factory = initRpcFactory(nodeConfig);
     RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc factory success");
-
-    auto config = factory->initConfig(_configPath);
-    RPCSERVICE_LOG(INFO) << LOG_DESC("load rpc config success");
-
-    auto rpc = factory->buildRpc(config);
+    auto rpc = factory->buildRpc(_configPath, _clientID, nodeConfig->gatewayServiceName());
     m_rpc = rpc;
 }
 
