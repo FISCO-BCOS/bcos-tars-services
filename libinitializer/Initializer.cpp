@@ -78,6 +78,11 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         }
         m_protocolInitializer->loadKeyPair(privateKeyPath);
 
+        boost::property_tree::ptree pt;
+        boost::property_tree::read_ini(_configFilePath, pt);
+        m_nodeConfig->loadNodeServiceConfig(
+            m_protocolInitializer->keyPair()->publicKey()->hex(), pt);
+
         if (!_localMode)
         {
             // load the service config
