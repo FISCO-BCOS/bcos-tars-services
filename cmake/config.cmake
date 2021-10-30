@@ -32,14 +32,14 @@ hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
 )
 
 hunter_config(bcos-pbft VERSION 3.0.0-local-a2a9f7d2
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/4d99f7ac75e185685e7fafd470866bec0ee9b847.tar.gz
-    SHA1 dd518c3ba6f550c8e81d9c8ded371f65763ff448
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/5277bdfd876568650387e2cc3ff2b029913e0268.tar.gz
+    SHA1 d8a01293a5698af97c4ec49cfc129b9fee4db46d
     CMAKE_ARGS URL_BASE=${URL_BASE}  HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
 hunter_config(bcos-sync VERSION 3.0.0-local-50e0e264
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/8a5eb75a6633247347e67ba51ae38ace5ddffeb6.tar.gz
-    SHA1 9c29e0ec556f6f54a87356e51f6a64977c4659ea
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/2366b7c2a7c5354c2e644be4325b34d986fa479e.tar.gz
+    SHA1 da131507ef49765d314cffd3c7634fba1ca4c5f7
     CMAKE_ARGS URL_BASE=${URL_BASE}  HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
