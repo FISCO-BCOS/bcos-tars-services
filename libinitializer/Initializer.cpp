@@ -48,46 +48,46 @@ using namespace bcos::initializer;
 void Initializer::initMicroServiceNode(std::string const& _configFilePath,
     std::string const& _genesisFile, std::string const& _privateKeyPath)
 {
+    initConfig(_configFilePath, _genesisFile, _privateKeyPath, false);
     // get gateway client
     auto keyFactory = std::make_shared<bcos::crypto::KeyFactoryImpl>();
     auto gatewayPrx = Application::getCommunicator()->stringToProxy<bcostars::GatewayServicePrx>(
         m_nodeConfig->gatewayServiceName());
     auto gateWay = std::make_shared<bcostars::GatewayServiceClient>(gatewayPrx, keyFactory);
-    init(_configFilePath, _genesisFile, _privateKeyPath, gateWay, false);
+    init(_configFilePath, _genesisFile, gateWay, false);
+}
+void Initializer::initConfig(std::string const& _configFilePath, std::string const& _genesisFile,
+    std::string const& _privateKeyPath, bool _localMode)
+{
+    // loadConfig
+    m_nodeConfig = std::make_shared<NodeConfig>(std::make_shared<bcos::crypto::KeyFactoryImpl>());
+    m_nodeConfig->loadConfig(_configFilePath);
+    m_nodeConfig->loadGenesisConfig(_genesisFile);
+
+    // init the protocol
+    m_protocolInitializer = std::make_shared<ProtocolInitializer>();
+    m_protocolInitializer->init(m_nodeConfig);
+    auto privateKeyPath = m_nodeConfig->privateKeyPath();
+    if (!_localMode)
+    {
+        privateKeyPath = _privateKeyPath;
+    }
+    m_protocolInitializer->loadKeyPair(privateKeyPath);
+    boost::property_tree::ptree pt;
+    boost::property_tree::read_ini(_configFilePath, pt);
+    m_nodeConfig->loadNodeServiceConfig(m_protocolInitializer->keyPair()->publicKey()->hex(), pt);
+    if (!_localMode)
+    {
+        // load the service config
+        m_nodeConfig->loadServiceConfig(pt);
+    }
 }
 
 void Initializer::init(std::string const& _configFilePath, std::string const& _genesisFile,
-    std::string const& _privateKeyPath, bcos::gateway::GatewayInterface::Ptr _gateway,
-    bool _localMode)
+    bcos::gateway::GatewayInterface::Ptr _gateway, bool _localMode)
 {
     try
     {
-        // loadConfig
-        m_nodeConfig =
-            std::make_shared<NodeConfig>(std::make_shared<bcos::crypto::KeyFactoryImpl>());
-        m_nodeConfig->loadConfig(_configFilePath);
-        m_nodeConfig->loadGenesisConfig(_genesisFile);
-
-        // init the protocol
-        m_protocolInitializer = std::make_shared<ProtocolInitializer>();
-        m_protocolInitializer->init(m_nodeConfig);
-        auto privateKeyPath = m_nodeConfig->privateKeyPath();
-        if (!_localMode)
-        {
-            privateKeyPath = _privateKeyPath;
-        }
-        m_protocolInitializer->loadKeyPair(privateKeyPath);
-        boost::property_tree::ptree pt;
-        boost::property_tree::read_ini(_configFilePath, pt);
-        m_nodeConfig->loadNodeServiceConfig(
-            m_protocolInitializer->keyPair()->publicKey()->hex(), pt);
-        if (!_localMode)
-        {
-            // load the service config
-            m_nodeConfig->loadServiceConfig(pt);
-        }
-
-
         // build the front service
         m_frontServiceInitializer = std::make_shared<FrontServiceInitializer>(
             m_nodeConfig, m_protocolInitializer, _gateway);
@@ -96,9 +96,10 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         auto storagePath = m_nodeConfig->storagePath();
         if (!_localMode)
         {
-            ServerConfig::BasePath + "../" + m_nodeConfig->groupId() + "/" +
-                m_nodeConfig->storagePath();
+            storagePath = ServerConfig::BasePath + "../" + m_nodeConfig->groupId() + "/" +
+                          m_nodeConfig->storagePath();
         }
+        BCOS_LOG(INFO) << LOG_DESC("initNode") << LOG_KV("storagePath", storagePath);
         auto storage = StorageInitializer::build(storagePath);
 
         // build ledger
@@ -112,9 +113,10 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
         auto transactionSubmitResultFactory =
             std::make_shared<bcos::protocol::TransactionSubmitResultFactoryImpl>();
 
-        m_scheduler = SchedulerInitializer::build(executorManager, ledger, storage,
-            executionMessageFactory, m_protocolInitializer->blockFactory(),
-            transactionSubmitResultFactory, m_protocolInitializer->cryptoSuite()->hashImpl());
+        m_scheduler =
+            SchedulerInitializer::build(executorManager, ledger, storage, executionMessageFactory,
+                m_protocolInitializer->blockFactory(), m_protocolInitializer->txResultFactory(),
+                m_protocolInitializer->cryptoSuite()->hashImpl());
 
         // init the txpool
         m_txpoolInitializer = std::make_shared<TxPoolInitializer>(

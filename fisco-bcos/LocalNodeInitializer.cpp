@@ -70,10 +70,12 @@ void LocalNodeInitializer::init(std::string const& _configFilePath, std::string 
             rpc->asyncNotifyBlockNumber(nodeConfig->groupId(), {}, number, [](bcos::Error::Ptr) {});
         });
 
+    auto txpool = m_nodeInitializer->txPoolInitializer()->txpool();
     schedulerImpl->registerTransactionNotifier(
-        [rpc = m_rpc](
-            bcos::crypto::HashType txHash, bcos::protocol::TransactionSubmitResult::Ptr result) {
-            rpc->asyncNotifyTransactionResult("", txHash, std::move(result));
+        [txpool](bcos::protocol::BlockNumber _blockNumber,
+            bcos::protocol::TransactionSubmitResultsPtr _result,
+            std::function<void(bcos::Error::Ptr)> _callback) {
+            txpool->asyncNotifyBlockResult(_blockNumber, _result, _callback);
         });
 }
 

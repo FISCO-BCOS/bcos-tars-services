@@ -1,6 +1,7 @@
 #include "RpcServiceServer.h"
 #include <bcos-tars-protocol/Common.h>
 #include <bcos-tars-protocol/ErrorConverter.h>
+#include <bcos-tars-protocol/protocol/TransactionSubmitResultImpl.h>
 #include <tarscpp/servant/Servant.h>
 #include <memory>
 
@@ -50,5 +51,26 @@ bcostars::Error RpcServiceServer::asyncNotifyAMOPMessage(tars::Int32 _type,
             }
             async_response_asyncNotifyAMOPMessage(current, toTarsError(_error), response);
         });
+    return bcostars::Error();
+}
+
+bcostars::Error RpcServiceServer::asyncNotifyTransactionResult(const std::string& _rpcID,
+    const std::string& _groupID, const vector<tars::Char>& _txHash,
+    const bcostars::TransactionSubmitResult& _result, tars::TarsCurrentPtr current)
+{
+    current->setResponse(false);
+    bcos::crypto::HashType hash = bcos::crypto::HashType();
+    if (_txHash.size() >= bcos::crypto::HashType::size)
+    {
+        hash = bcos::crypto::HashType(
+            reinterpret_cast<const bcos::byte*>(_txHash.data()), bcos::crypto::HashType::size);
+    }
+    // TODO: remove this
+    auto bcosResult = std::make_shared<bcostars::protocol::TransactionSubmitResultImpl>(nullptr,
+        [inner = std::move(const_cast<bcostars::TransactionSubmitResult&>(_result))]() mutable {
+            return &inner;
+        });
+    m_rpcInitializer->rpc()->asyncNotifyTransactionResult(_rpcID, _groupID, hash, bcosResult);
+    async_response_asyncNotifyTransactionResult(current, toTarsError(nullptr));
     return bcostars::Error();
 }

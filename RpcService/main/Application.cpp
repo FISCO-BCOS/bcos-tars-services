@@ -21,6 +21,16 @@ public:
         param.rpcInitializer = m_rpcInitializer;
         addServantWithParams<RpcServiceServer, RpcServiceParam>(
             getProxyDesc(bcos::protocol::RPC_SERVANT_NAME), param);
+        // init rpc
+        auto adapters = Application::getEpollServer()->getBindAdapters();
+        if (adapters.size() == 0)
+        {
+            BCOS_LOG(WARNING) << LOG_DESC("empty bind adapter");
+        }
+        std::string clientID = endPointToString(
+            getProxyDesc(bcos::protocol::RPC_SERVANT_NAME), (adapters[0])->getEndpoint());
+        BCOS_LOG(INFO) << LOG_DESC("begin init rpc") << LOG_KV("rpcID", clientID);
+        param.rpcInitializer->setClientID(clientID);
     }
     void destroyApp() override {}
 
@@ -33,16 +43,9 @@ protected:
         m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
         m_logInitializer->setLogPath(getLogPath());
         m_logInitializer->initLog(pt);
-        // init rpc
-        auto adapter = Application::getEpollServer()->getBindAdapter(
-            getProxyDesc(bcos::protocol::RPC_SERVANT_NAME));
-        std::string clientID = endPointToString(
-            getProxyDesc(bcos::protocol::RPC_SERVANT_NAME), adapter->getEndpoint());
-        BCOS_LOG(INFO) << LOG_DESC("begin init rpc") << LOG_KV("rpcID", clientID);
-        m_rpcInitializer = std::make_shared<RpcInitializer>(_configPath, clientID);
+        m_rpcInitializer = std::make_shared<RpcInitializer>(_configPath);
         m_rpcInitializer->start();
     }
-
 
 private:
     std::string m_iniConfigPath;

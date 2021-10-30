@@ -9,7 +9,7 @@ set(BCOS_CMAKE_SCRIPTS_DIR ${CMAKE_CURRENT_BINARY_DIR}/bcos-cmake-scripts)
 include(FetchContent)
 FetchContent_Declare(bcos-cmake-scripts
     GIT_REPOSITORY https://${URL_BASE}/FISCO-BCOS/bcos-cmake-scripts.git
-    GIT_TAG dev
+    GIT_TAG 397f904f335bdc2be909565edad4545e2e5fa876
     SOURCE_DIR ${BCOS_CMAKE_SCRIPTS_DIR}
 )
 FetchContent_MakeAvailable(bcos-cmake-scripts)
@@ -74,7 +74,8 @@ foreach(SERVICE ${SERVICE_LIST})
 
     add_custom_command(OUTPUT ${SERVICE}.tgz
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR} tar czfv ${SERVICE}.tgz ${SERVICE}/${SERVICE}
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/${SERVICE}/main/${SERVICE} ${CMAKE_BINARY_DIR}/${SERVICE}/${SERVICE}
+    COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR} tar czfv ${SERVICE}.tgz ${SERVICE}/${SERVICE}                              
     COMMENT "Compressing ${SERVICE}...")
     add_custom_target(${SERVICE}-tar DEPENDS ${SERVICE}.tgz ${SERVICE})
 
