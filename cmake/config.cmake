@@ -1,7 +1,7 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-	URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/e1c95020a8a0ab919fee0bc76adcde9f7b76c911.tar.gz
-    SHA1 6cb40b8e85f2cd29049819777efa383ee0e6f88f
+	URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/737d65613cfd7e23cf0df96de81731270220d93b.tar.gz
+    SHA1 02fda935b88f057f62651ab36c364b7a1e0a8ced
 	CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON
 )
 
@@ -20,14 +20,14 @@ hunter_config(bcos-boostssl
 
 hunter_config(bcos-tars-protocol
     VERSION 3.0.0-local
-    URL https://${URL_BASE}/FISCO-BCOS/bcos-tars-protocol/archive/81a32da0968a3d4a97cd412af255dedc9b85a4a2.tar.gz
-    SHA1 aa34e527968b0db250b487462219d68a87ba489d
+    URL https://${URL_BASE}/FISCO-BCOS/bcos-tars-protocol/archive/bc17a0f4a7e38a240fde10bedd6b7ffe3d7e58de.tar.gz
+    SHA1 e6c5a3f49188d1b2fd1c075c1f5d88290aa9487e
     CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON URL_BASE=${URL_BASE}
 )
 
 hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/920adb0aee63d315e186968c552d27b16279891d.tar.gz
-    SHA1 bff1a20ed0be20a61dbbc0b2591f299c22c99b9a
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/ec8f5acbf40477c7a614e8ccc662afef3fc19e0f.tar.gz
+    SHA1 0f77d444b6613f2acbc7d0bbee62834716895636
     CMAKE_ARGS URL_BASE=${URL_BASE}  HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
@@ -76,8 +76,8 @@ hunter_config(bcos-gateway VERSION 3.0.0-local-1fb592e4
 )
 
 hunter_config(bcos-scheduler VERSION 3.0.0-local-b1c450b95b6f83e6a0cf3bd2f385c2ddef4921b4
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-scheduler/archive/81695fbb45c04c6dff04f3e732b73087184f14dd.tar.gz
-    SHA1 496765d856325454151b502740f8e3e9783768ba
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-scheduler/archive/559c935143f42dfeb43e6763538f9d5ddb08ccb4.tar.gz
+    SHA1 30dcba54c0705c7622d8d0eaada9294ff255c805
     CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
