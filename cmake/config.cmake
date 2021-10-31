@@ -76,8 +76,8 @@ hunter_config(bcos-gateway VERSION 3.0.0-local-1fb592e4
 )
 
 hunter_config(bcos-scheduler VERSION 3.0.0-local-b1c450b95b6f83e6a0cf3bd2f385c2ddef4921b4
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-scheduler/archive/f8ebbe387f89d91fdd70b81e1682b165cd466102.tar.gz
-    SHA1 d5a1d4805a6a0343db0cd4ad05507f1e6044ff0b
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-scheduler/archive/76a75c14cf027c04ff5fa589c7c539af6e996453.tar.gz
+    SHA1 0054fd707b991d95854221c942d5d87c8ae809e0
     CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
