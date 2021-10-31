@@ -128,13 +128,12 @@ bcostars::Error TxPoolServiceServer::asyncSealTxs(tars::Int64 txsLimit,
     return bcostars::Error();
 }
 
-bcostars::Error TxPoolServiceServer::asyncSubmit(std::string const& _source,
-    const vector<tars::Char>& tx, bcostars::TransactionSubmitResult& result,
-    tars::TarsCurrentPtr current)
+bcostars::Error TxPoolServiceServer::asyncSubmit(const vector<tars::Char>& tx,
+    bcostars::TransactionSubmitResult& result, tars::TarsCurrentPtr current)
 {
     current->setResponse(false);
     auto dataPtr = std::make_shared<bcos::bytes>(tx.begin(), tx.end());
-    m_txpoolInitializer->txpool()->asyncSubmit(_source, dataPtr,
+    m_txpoolInitializer->txpool()->asyncSubmit(dataPtr,
         [current](bcos::Error::Ptr error, bcos::protocol::TransactionSubmitResult::Ptr result) {
             async_response_asyncSubmit(current, toTarsError(error),
                 std::dynamic_pointer_cast<bcostars::protocol::TransactionSubmitResultImpl>(result)

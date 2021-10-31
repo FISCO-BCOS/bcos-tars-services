@@ -11,4 +11,5 @@ find_package(bcos-boostssl CONFIG REQUIRED)
 aux_source_directory(../ SRC_LIST)
 add_executable(${BINARY_NAME} ${SRC_LIST} ${HEADERS})
 target_compile_options(${BINARY_NAME} PRIVATE -Wno-error -Wno-unused-parameter -Wno-variadic-macros -Wno-return-type -Wno-pedantic)
-target_link_libraries(${BINARY_NAME} ${PROTOCOL_INIT_LIB} bcos-rpc::rpc tarscpp::tarsservant tarscpp::tarsutil bcos-framework::storage bcos-framework::tool OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries(${BINARY_NAME} ${PROTOCOL_INIT_LIB} bcos-rpc::rpc tarscpp::tarsservant tarscpp::tarsutil bcos-framework::storage bcos-framework::tool
+bcos-boostssl::boostssl-websocket bcos-boostssl::boostssl-httpserver bcos-boostssl::boostssl-context)

@@ -13,6 +13,7 @@
 #include <bcos-tars-protocol/tars/TxPoolService.h>
 #include <tarscpp/servant/Servant.h>
 #include <memory>
+
 namespace bcostars
 {
 struct TxPoolServiceParam
@@ -50,7 +51,7 @@ public:
         bcostars::Block& txsList, bcostars::Block& sysTxsList,
         tars::TarsCurrentPtr current) override;
 
-    bcostars::Error asyncSubmit(std::string const& _source, const vector<tars::Char>& tx,
+    bcostars::Error asyncSubmit(const vector<tars::Char>& tx,
         bcostars::TransactionSubmitResult& result, tars::TarsCurrentPtr current) override;
 
     bcostars::Error asyncVerifyBlock(const vector<tars::Char>& generatedNodeID,
