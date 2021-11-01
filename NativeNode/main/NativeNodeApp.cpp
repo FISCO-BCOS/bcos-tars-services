@@ -90,11 +90,18 @@ void NativeNodeApp::initHandler()
     auto scheduler = m_nodeInitializer->scheduler();
     auto rpcServicePrx = Application::getCommunicator()->stringToProxy<bcostars::RpcServicePrx>(
         m_nodeInitializer->nodeConfig()->rpcServiceName());
-
     scheduler->registerBlockNumberReceiver(
         [rpcServicePrx, this](bcos::protocol::BlockNumber _blockNumber) {
             BCOS_LOG(INFO) << "Notify blocknumber: " << _blockNumber;
             notifyBlockNumberToAllRpcNodes(rpcServicePrx, _blockNumber, [](bcos::Error::Ptr) {});
+        });
+    auto schedulerImpl = std::dynamic_pointer_cast<scheduler::SchedulerImpl>(scheduler);
+    auto txpool = m_nodeInitializer->txPoolInitializer()->txpool();
+    schedulerImpl->registerTransactionNotifier(
+        [txpool](bcos::protocol::BlockNumber _blockNumber,
+            bcos::protocol::TransactionSubmitResultsPtr _result,
+            std::function<void(bcos::Error::Ptr)> _callback) {
+            txpool->asyncNotifyBlockResult(_blockNumber, _result, _callback);
         });
 }
 
@@ -118,6 +125,6 @@ void NativeNodeApp::notifyBlockNumberToAllRpcNodes(bcostars::RpcServicePrx _rpcP
             Application::getCommunicator()->stringToProxy<bcostars::RpcServicePrx>(endPointStr);
         auto serviceClient = std::make_shared<bcostars::RpcServiceClient>(servicePrx);
         serviceClient->asyncNotifyBlockNumber(m_nodeInitializer->nodeConfig()->groupId(),
-            ServerConfig::Application, _blockNumber, _callback);
+            m_nodeInitializer->nodeConfig()->nodeName(), _blockNumber, _callback);
     }
 }
