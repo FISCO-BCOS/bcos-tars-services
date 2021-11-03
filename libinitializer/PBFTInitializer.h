@@ -41,10 +41,10 @@ class PBFTInitializer
 {
 public:
     using Ptr = std::shared_ptr<PBFTInitializer>;
-    PBFTInitializer(bool _microServiceMode, std::string const& _genesisConfigPath,
-        std::string const& _iniConfigPath, bcos::tool::NodeConfig::Ptr _nodeConfig,
-        ProtocolInitializer::Ptr _protocolInitializer, bcos::txpool::TxPoolInterface::Ptr _txpool,
-        std::shared_ptr<bcos::ledger::Ledger> _ledger,
+    PBFTInitializer(bcos::initializer::NodeArchitectureType _nodeArchType,
+        std::string const& _genesisConfigPath, std::string const& _iniConfigPath,
+        bcos::tool::NodeConfig::Ptr _nodeConfig, ProtocolInitializer::Ptr _protocolInitializer,
+        bcos::txpool::TxPoolInterface::Ptr _txpool, std::shared_ptr<bcos::ledger::Ledger> _ledger,
         bcos::scheduler::SchedulerInterface::Ptr _scheduler,
         bcos::storage::StorageInterface::Ptr _storage,
         std::shared_ptr<bcos::front::FrontServiceInterface> _frontService);
@@ -72,7 +72,7 @@ public:
     bcos::group::GroupInfo::Ptr groupInfo() { return m_groupInfo; }
 
 protected:
-    virtual void initChainNodeInfo(bool _microServiceMode,
+    virtual void initChainNodeInfo(bcos::initializer::NodeArchitectureType _nodeArchType,
         std::string const& _genesisConfigFilePath, std::string const& _iniConfigPath,
         bcos::tool::NodeConfig::Ptr _nodeConfig);
     virtual void createSealer();

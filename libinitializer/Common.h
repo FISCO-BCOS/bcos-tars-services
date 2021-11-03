@@ -38,6 +38,12 @@ namespace bcos
 {
 namespace initializer
 {
+enum NodeArchitectureType
+{
+    AIR = 0,
+    PRO = 1,
+    MAX = 2,
+};
 inline std::shared_ptr<bytes> loadPrivateKey(std::string const& _keyPath)
 {
     auto keyContent = readContents(boost::filesystem::path(_keyPath));

@@ -58,15 +58,16 @@ public:
         bcos::gateway::GatewayInterface::Ptr _gateway)
     {
         initConfig(_configFilePath, _genesisFile, "", true);
-        init(false, _configFilePath, _genesisFile, _gateway, true);
+        init(bcos::initializer::NodeArchitectureType::AIR, _configFilePath, _genesisFile, _gateway,
+            true);
     }
     void initMicroServiceNode(std::string const& _configFilePath, std::string const& _genesisFile,
         std::string const& _privateKeyPath);
 
 protected:
-    virtual void init(bool _microServiceMode, std::string const& _configFilePath,
-        std::string const& _genesisFile, bcos::gateway::GatewayInterface::Ptr _gateway,
-        bool _localMode);
+    virtual void init(bcos::initializer::NodeArchitectureType _nodeArchType,
+        std::string const& _configFilePath, std::string const& _genesisFile,
+        bcos::gateway::GatewayInterface::Ptr _gateway, bool _localMode);
 
     virtual void initConfig(std::string const& _configFilePath, std::string const& _genesisFile,
         std::string const& _privateKeyPath, bool _localMode);
