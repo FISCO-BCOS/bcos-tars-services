@@ -37,10 +37,10 @@ using namespace bcos::scheduler;
 using namespace bcos::initializer;
 using namespace bcos::group;
 
-PBFTInitializer::PBFTInitializer(bool _microServiceMode, std::string const& _genesisConfigPath,
-    std::string const& _iniConfigPath, bcos::tool::NodeConfig::Ptr _nodeConfig,
-    ProtocolInitializer::Ptr _protocolInitializer, bcos::txpool::TxPoolInterface::Ptr _txpool,
-    std::shared_ptr<bcos::ledger::Ledger> _ledger,
+PBFTInitializer::PBFTInitializer(bcos::initializer::NodeArchitectureType _nodeArchType,
+    std::string const& _genesisConfigPath, std::string const& _iniConfigPath,
+    bcos::tool::NodeConfig::Ptr _nodeConfig, ProtocolInitializer::Ptr _protocolInitializer,
+    bcos::txpool::TxPoolInterface::Ptr _txpool, std::shared_ptr<bcos::ledger::Ledger> _ledger,
     bcos::scheduler::SchedulerInterface::Ptr _scheduler,
     bcos::storage::StorageInterface::Ptr _storage,
     std::shared_ptr<bcos::front::FrontServiceInterface> _frontService)
@@ -56,13 +56,13 @@ PBFTInitializer::PBFTInitializer(bool _microServiceMode, std::string const& _gen
     createPBFT();
     createSync();
     registerHandlers();
-    initChainNodeInfo(_microServiceMode, _genesisConfigPath, _iniConfigPath, _nodeConfig);
+    initChainNodeInfo(_nodeArchType, _genesisConfigPath, _iniConfigPath, _nodeConfig);
     m_timer = std::make_shared<Timer>(m_timerSchedulerInterval, "node info report");
 
     m_timer->registerTimeoutHandler(boost::bind(&PBFTInitializer::reportNodeInfo, this));
 }
 
-void PBFTInitializer::initChainNodeInfo(bool _microServiceMode,
+void PBFTInitializer::initChainNodeInfo(bcos::initializer::NodeArchitectureType _nodeArchType,
     std::string const& _genesisConfigPath, std::string const& _iniConfigPath,
     bcos::tool::NodeConfig::Ptr _nodeConfig)
 {
@@ -76,23 +76,33 @@ void PBFTInitializer::initChainNodeInfo(bool _microServiceMode,
     {
         nodeType = bcos::group::NodeType::SM_NODE;
     }
+    bool microServiceMode = true;
+    if (_nodeArchType == bcos::initializer::NodeArchitectureType::AIR)
+    {
+        microServiceMode = false;
+    }
     auto chainNodeInfo = std::make_shared<ChainNodeInfo>(_nodeConfig->nodeName(), nodeType);
     chainNodeInfo->setNodeID(m_protocolInitializer->keyPair()->publicKey()->hex());
 
     auto iniConfig = readContentsToString(boost::filesystem::path(_iniConfigPath));
     chainNodeInfo->setIniConfig(*iniConfig);
-    chainNodeInfo->setMicroService(_microServiceMode);
+    chainNodeInfo->setMicroService(microServiceMode);
 
+    bool useConfigServiceName = false;
+    if (_nodeArchType == bcos::initializer::NodeArchitectureType::MAX)
+    {
+        useConfigServiceName = true;
+    }
     auto localNodeServiceName = ServerConfig::Application + "." + ServerConfig::ServerName;
-    chainNodeInfo->appendServiceInfo(
-        SCHEDULER, _microServiceMode ? m_nodeConfig->schedulerServiceName() : localNodeServiceName);
+    chainNodeInfo->appendServiceInfo(SCHEDULER,
+        useConfigServiceName ? m_nodeConfig->schedulerServiceName() : localNodeServiceName);
     chainNodeInfo->appendServiceInfo(LEDGER,
-        _microServiceMode ? bcostars::getProxyDesc(LEDGER_SERVANT_NAME) : localNodeServiceName);
+        useConfigServiceName ? bcostars::getProxyDesc(LEDGER_SERVANT_NAME) : localNodeServiceName);
     chainNodeInfo->appendServiceInfo(
-        FRONT, _microServiceMode ? m_nodeConfig->frontServiceName() : localNodeServiceName);
+        FRONT, useConfigServiceName ? m_nodeConfig->frontServiceName() : localNodeServiceName);
     chainNodeInfo->appendServiceInfo(CONSENSUS, localNodeServiceName);
     chainNodeInfo->appendServiceInfo(
-        TXPOOL, _microServiceMode ? m_nodeConfig->txpoolServiceName() : localNodeServiceName);
+        TXPOOL, useConfigServiceName ? m_nodeConfig->txpoolServiceName() : localNodeServiceName);
     m_groupInfo->appendNodeInfo(chainNodeInfo);
 }
 
@@ -100,7 +110,7 @@ void PBFTInitializer::reportNodeInfo()
 {
     asyncNotifyGroupInfo<bcostars::RpcServicePrx, bcostars::RpcServiceClient>(
         m_nodeConfig->rpcServiceName(), m_groupInfo);
-    asyncNotifyGroupInfo<bcostars::RpcServicePrx, bcostars::RpcServiceClient>(
+    asyncNotifyGroupInfo<bcostars::GatewayServicePrx, bcostars::GatewayServiceClient>(
         m_nodeConfig->gatewayServiceName(), m_groupInfo);
     m_timer->restart();
 }
