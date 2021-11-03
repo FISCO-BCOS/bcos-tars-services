@@ -31,6 +31,11 @@ using namespace bcos::tool;
 
 void LocalNodeInitializer::init(std::string const& _configFilePath, std::string const& _genesisFile)
 {
+    boost::property_tree::ptree pt;
+    boost::property_tree::read_ini(_configFilePath, pt);
+    m_logInitializer = std::make_shared<BoostLogInitializer>();
+    m_logInitializer->initLog(pt);
+
     // load nodeConfig
     auto keyFactory = std::make_shared<bcos::crypto::KeyFactoryImpl>();
     auto nodeConfig = std::make_shared<NodeConfig>(keyFactory);

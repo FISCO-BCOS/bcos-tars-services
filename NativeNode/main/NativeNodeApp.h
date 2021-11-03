@@ -59,11 +59,10 @@ protected:
         bcos::protocol::BlockNumber _blockNumber, std::function<void(bcos::Error::Ptr)> _callback);
 
 private:
+    bcos::BoostLogInitializer::Ptr m_logInitializer;
     std::string m_iniConfigPath;
     std::string m_genesisConfigPath;
     std::string m_privateKeyPath;
-
-    bcos::BoostLogInitializer::Ptr m_logInitializer;
     bcos::initializer::Initializer::Ptr m_nodeInitializer;
 };
 }  // namespace bcostars
