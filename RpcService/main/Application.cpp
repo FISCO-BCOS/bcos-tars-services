@@ -25,10 +25,23 @@ public:
         auto adapters = Application::getEpollServer()->getBindAdapters();
         if (adapters.size() == 0)
         {
-            BCOS_LOG(WARNING) << LOG_DESC("empty bind adapter");
+            throw std::runtime_error("load endpoint information failed");
         }
-        std::string clientID = endPointToString(
-            getProxyDesc(bcos::protocol::RPC_SERVANT_NAME), (adapters[0])->getEndpoint());
+        auto rpcAdapterName = getProxyDesc(bcos::protocol::RPC_SERVANT_NAME) + "Adapter";
+        std::string clientID = "";
+        for (auto const& adapter : adapters)
+        {
+            if (adapter->getName() == rpcAdapterName)
+            {
+                BCOS_LOG(INFO) << LOG_DESC("found adapter") << LOG_KV("name", adapter->getName())
+                               << LOG_KV("endPoint", adapter->getEndpoint().toString())
+                               << LOG_KV("host", adapter->getEndpoint().getHost())
+                               << LOG_KV("port", adapter->getEndpoint().getPort());
+                clientID = endPointToString(
+                    getProxyDesc(bcos::protocol::RPC_SERVANT_NAME), adapter->getEndpoint());
+                break;
+            }
+        }
         BCOS_LOG(INFO) << LOG_DESC("begin init rpc") << LOG_KV("rpcID", clientID);
         param.rpcInitializer->setClientID(clientID);
     }

@@ -54,7 +54,7 @@ void Initializer::initMicroServiceNode(std::string const& _configFilePath,
     auto gatewayPrx = Application::getCommunicator()->stringToProxy<bcostars::GatewayServicePrx>(
         m_nodeConfig->gatewayServiceName());
     auto gateWay = std::make_shared<bcostars::GatewayServiceClient>(gatewayPrx, keyFactory);
-    init(_configFilePath, _genesisFile, gateWay, false);
+    init(true, _configFilePath, _genesisFile, gateWay, false);
 }
 void Initializer::initConfig(std::string const& _configFilePath, std::string const& _genesisFile,
     std::string const& _privateKeyPath, bool _localMode)
@@ -83,8 +83,8 @@ void Initializer::initConfig(std::string const& _configFilePath, std::string con
     }
 }
 
-void Initializer::init(std::string const& _configFilePath, std::string const& _genesisFile,
-    bcos::gateway::GatewayInterface::Ptr _gateway, bool _localMode)
+void Initializer::init(bool _microServiceMode, std::string const& _configFilePath,
+    std::string const& _genesisFile, bcos::gateway::GatewayInterface::Ptr _gateway, bool _localMode)
 {
     try
     {
@@ -123,9 +123,9 @@ void Initializer::init(std::string const& _configFilePath, std::string const& _g
             m_nodeConfig, m_protocolInitializer, m_frontServiceInitializer->front(), ledger);
 
         // build and init the pbft related modules
-        m_pbftInitializer = std::make_shared<PBFTInitializer>(false, _genesisFile, _configFilePath,
-            m_nodeConfig, m_protocolInitializer, m_txpoolInitializer->txpool(), ledger, m_scheduler,
-            storage, m_frontServiceInitializer->front());
+        m_pbftInitializer = std::make_shared<PBFTInitializer>(_microServiceMode, _genesisFile,
+            _configFilePath, m_nodeConfig, m_protocolInitializer, m_txpoolInitializer->txpool(),
+            ledger, m_scheduler, storage, m_frontServiceInitializer->front());
         m_pbftInitializer->init();
 
         // init the txpool
