@@ -44,7 +44,8 @@ enum NodeArchitectureType
     PRO = 1,
     MAX = 2,
 };
-inline std::shared_ptr<bytes> loadPrivateKey(std::string const& _keyPath)
+inline std::shared_ptr<bytes> loadPrivateKey(
+    std::string const& _keyPath, unsigned _hexedPrivateKeySize)
 {
     auto keyContent = readContents(boost::filesystem::path(_keyPath));
     if (keyContent->empty())
@@ -80,6 +81,14 @@ inline std::shared_ptr<bytes> loadPrivateKey(std::string const& _keyPath)
     std::shared_ptr<char> privateKeyData(
         BN_bn2hex(ecPrivateKey.get()), [](char* p) { OPENSSL_free(p); });
     std::string keyHex(privateKeyData.get());
+    if (keyHex.size() >= _hexedPrivateKeySize)
+    {
+        return fromHexString(keyHex);
+    }
+    for (size_t i = keyHex.size(); i < _hexedPrivateKeySize; i++)
+    {
+        keyHex = '0' + keyHex;
+    }
     return fromHexString(keyHex);
 }
 
