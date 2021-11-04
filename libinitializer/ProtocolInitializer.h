@@ -61,6 +61,7 @@ private:
     bcos::protocol::BlockFactory::Ptr m_blockFactory;
     bcos::protocol::TransactionSubmitResultFactory::Ptr m_txResultFactory;
     bcos::crypto::KeyPairInterface::Ptr m_keyPair;
+    size_t c_hexedPrivateKeySize = 64;
 };
 }  // namespace initializer
 }  // namespace bcos
