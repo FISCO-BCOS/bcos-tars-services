@@ -42,8 +42,9 @@ void RpcInitializer::init(std::string const& _configPath)
     // init rpc config
     RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc factory");
     auto factory = initRpcFactory(nodeConfig);
+    factory->setNodeConfig(nodeConfig);
     RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc factory success");
-    auto rpc = factory->buildRpc(_configPath, nodeConfig->gatewayServiceName());
+    auto rpc = factory->buildRpc(nodeConfig->gatewayServiceName());
     m_rpc = rpc;
 }
 
