@@ -1,7 +1,7 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-	URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/1860a92ab9de53e27b9a2ba16f81ba338691da1a.tar.gz
-    SHA1 2843e53a6c5f7991028a6fe1810e8afdf5e810bd
+	URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/5cc940605a339c1d1c463996ce2d4ddc1c370265.tar.gz
+    SHA1 076f3494ed7d3510f6b9bcdeaa62a61e59d90f74
 	CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON
 )
 
