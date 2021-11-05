@@ -24,27 +24,31 @@
 using namespace bcos::group;
 using namespace bcostars;
 
-void RpcInitializer::init(std::string const& _configPath)
+void RpcInitializer::init(std::string const& _configDir)
 {
     // init node config
-    RPCSERVICE_LOG(INFO) << LOG_DESC("init node config");
-    auto nodeConfig =
-        std::make_shared<bcos::tool::NodeConfig>(std::make_shared<bcos::crypto::KeyFactoryImpl>());
-    nodeConfig->loadConfig(_configPath);
+    RPCSERVICE_LOG(INFO) << LOG_DESC("init node config") << LOG_KV("configDir", _configDir);
 
-    boost::property_tree::ptree pt;
-    boost::property_tree::read_ini(_configPath, pt);
-    nodeConfig->loadServiceConfig(pt);
-
-    RPCSERVICE_LOG(INFO) << LOG_DESC("init node config success")
-                         << LOG_KV("configPath", _configPath);
+    if (!m_nodeConfig->rpcSmSsl())
+    {
+        m_nodeConfig->setCaCert(_configDir + "/" + "ca.crt");
+        m_nodeConfig->setNodeCert(_configDir + "/" + "ssl.crt");
+        m_nodeConfig->setNodeKey(_configDir + "/" + "ssl.key");
+    }
+    else
+    {
+        m_nodeConfig->setSmCaCert(_configDir + "/" + "sm_ca.crt");
+        m_nodeConfig->setNodeCert(_configDir + "/" + "sm_ssl.crt");
+        m_nodeConfig->setNodeKey(_configDir + "/" + "sm_ssl.key");
+        m_nodeConfig->setSmNodeCert(_configDir + "/" + "sm_enssl.crt");
+        m_nodeConfig->setSmNodeKey(_configDir + "/" + "sm_enssl.key");
+    }
 
     // init rpc config
     RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc factory");
-    auto factory = initRpcFactory(nodeConfig);
-    factory->setNodeConfig(nodeConfig);
+    auto factory = initRpcFactory(m_nodeConfig);
     RPCSERVICE_LOG(INFO) << LOG_DESC("init rpc factory success");
-    auto rpc = factory->buildRpc(nodeConfig->gatewayServiceName());
+    auto rpc = factory->buildRpc(m_nodeConfig->gatewayServiceName());
     m_rpc = rpc;
 }
 
@@ -63,6 +67,7 @@ bcos::rpc::RpcFactory::Ptr RpcInitializer::initRpcFactory(bcos::tool::NodeConfig
 
     auto factory = std::make_shared<bcos::rpc::RpcFactory>(
         _nodeConfig->chainId(), gateway, protocolInitializer->keyFactory());
+    factory->setNodeConfig(_nodeConfig);
     RPCSERVICE_LOG(INFO) << LOG_DESC("create rpc factory success");
     return factory;
 }
