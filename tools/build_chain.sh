@@ -604,6 +604,8 @@ generate_config_ini() {
     listen_ip=${listen_ip}
     listen_port=${rpc_listen_port}
     thread_count=4
+    ; ssl or sm ssl
+    sm_ssl=false
     ; ssl connection switch, if disable the ssl connection, default: false
     ;disableSsl=true
 
@@ -680,6 +682,8 @@ generate_sm_config_ini() {
     listen_ip=${listen_ip}
     listen_port=${rpc_listen_port}
     thread_count=16
+    ; ssl or sm ssl
+    sm_ssl=true
     ;ssl connection switch, if disable the ssl connection, default: false
     ;disableSsl=true
 
