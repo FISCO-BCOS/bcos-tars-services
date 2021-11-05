@@ -607,7 +607,7 @@ generate_config_ini() {
     ; ssl or sm ssl
     sm_ssl=false
     ; ssl connection switch, if disable the ssl connection, default: false
-    ;disableSsl=true
+    ;disable_ssl=true
 
 [cert]
     ; directory the certificates located in
@@ -685,7 +685,7 @@ generate_sm_config_ini() {
     ; ssl or sm ssl
     sm_ssl=true
     ;ssl connection switch, if disable the ssl connection, default: false
-    ;disableSsl=true
+    ;disable_ssl=true
 
 [cert]
     ; directory the certificates located in
