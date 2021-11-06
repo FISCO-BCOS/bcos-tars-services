@@ -51,8 +51,8 @@ hunter_config(rocksdb VERSION 6.20.3
 )
 
 hunter_config(bcos-storage VERSION 3.0.0-local-900836da
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-storage/archive/6c34b28b581a92c2f77c8e0b527995118751a0ef.tar.gz
-    SHA1 5e91a08e8d17bd40f06f8c6db8d7d4c45b2509af
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-storage/archive/4779f7d7c1f89b2a9974495dab950601e547ebdf.tar.gz
+    SHA1 2a84dd92c940a400d6686fb06d4b2cb49f681653
     CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
@@ -76,8 +76,8 @@ hunter_config(bcos-gateway VERSION 3.0.0-local-1fb592e4
 )
 
 hunter_config(bcos-scheduler VERSION 3.0.0-local-b1c450b95b6f83e6a0cf3bd2f385c2ddef4921b4
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-scheduler/archive/8e5038b675a82360c9cf3eb1410e015c1c2e27b0.tar.gz
-    SHA1 a15055808d628149099643c4fc905efda4b9f4e0
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-scheduler/archive/396d69e4c0f157ae66969bd2d2411baa7448797c.tar.gz
+    SHA1 433c82d55cd7b7cf2d2f82436c32d2e5cdb47cc9
     CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
