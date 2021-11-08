@@ -14,9 +14,14 @@ public:
 
     void initialize() override
     {
-        m_iniConfigPath = ServerConfig::BasePath + "/config.ini";
+        auto configDir = ServerConfig::BasePath;
+        m_iniConfigPath = configDir + "/config.ini";
         addConfig("config.ini");
-        initService(m_iniConfigPath);
+
+        BCOS_LOG(INFO) << LOG_BADGE("[Rpc][Application]") << LOG_DESC("add config.ini")
+                       << LOG_KV("configDir", configDir);
+
+        initService(configDir);
         RpcServiceParam param;
         param.rpcInitializer = m_rpcInitializer;
         addServantWithParams<RpcServiceServer, RpcServiceParam>(
@@ -48,15 +53,37 @@ public:
     void destroyApp() override {}
 
 protected:
-    virtual void initService(std::string const& _configPath)
+    virtual void initService(std::string const& _configDir)
     {
+        // !!! Notice:
+        auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>(
+            std::make_shared<bcos::crypto::KeyFactoryImpl>());
+        nodeConfig->loadConfig(m_iniConfigPath);
+        if (nodeConfig->rpcSmSsl())
+        {
+            addConfig("sm_ca.crt");
+            addConfig("sm_ssl.crt");
+            addConfig("sm_enssl.crt");
+            addConfig("sm_ssl.key");
+            addConfig("sm_enssl.key");
+        }
+        else
+        {
+            addConfig("ca.crt");
+            addConfig("ssl.key");
+            addConfig("ssl.crt");
+        }
+
         // init the log
         boost::property_tree::ptree pt;
-        boost::property_tree::read_ini(_configPath, pt);
+        boost::property_tree::read_ini(m_iniConfigPath, pt);
         m_logInitializer = std::make_shared<bcos::BoostLogInitializer>();
         m_logInitializer->setLogPath(getLogPath());
         m_logInitializer->initLog(pt);
-        m_rpcInitializer = std::make_shared<RpcInitializer>(_configPath);
+
+        nodeConfig->loadServiceConfig(pt);
+
+        m_rpcInitializer = std::make_shared<RpcInitializer>(_configDir, nodeConfig);
         m_rpcInitializer->start();
     }
 
