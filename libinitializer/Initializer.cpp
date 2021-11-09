@@ -37,6 +37,7 @@
 #include "libprotocol/TransactionSubmitResultFactoryImpl.h"
 #include "libprotocol/TransactionSubmitResultImpl.h"
 #include <bcos-crypto/signature/key/KeyFactoryImpl.h>
+#include <bcos-executor/LRUStorage.h>
 #include <bcos-framework/libtool/NodeConfig.h>
 #include <bcos-scheduler/ExecutorManager.h>
 #include <bcos-tars-protocol/client/GatewayServiceClient.h>
@@ -137,9 +138,12 @@ void Initializer::init(bcos::initializer::NodeArchitectureType _nodeArchType,
         m_frontServiceInitializer->init(m_pbftInitializer->pbft(), m_pbftInitializer->blockSync(),
             m_txpoolInitializer->txpool());
 
-        auto executor = ExecutorInitializer::build(m_txpoolInitializer->txpool(), storage,
-            executionMessageFactory, m_protocolInitializer->cryptoSuite()->hashImpl(),
-            m_nodeConfig->isWasm());
+        // auto cache = std::make_shared<bcos::executor::LRUStorage>(storage);
+        // cache->start();
+
+        // Disable the lru storage for now
+        auto executor = ExecutorInitializer::build(m_txpoolInitializer->txpool(), nullptr, storage,
+            executionMessageFactory, m_protocolInitializer->cryptoSuite()->hashImpl(), false);
         auto parallelExecutor = std::make_shared<bcos::initializer::ParallelExecutor>(executor);
         executorManager->addExecutor("default", parallelExecutor);
     }
