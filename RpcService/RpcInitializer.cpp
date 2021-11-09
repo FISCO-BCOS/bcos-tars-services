@@ -38,10 +38,10 @@ void RpcInitializer::init(std::string const& _configDir)
     else
     {
         m_nodeConfig->setSmCaCert(_configDir + "/" + "sm_ca.crt");
-        m_nodeConfig->setNodeCert(_configDir + "/" + "sm_ssl.crt");
-        m_nodeConfig->setNodeKey(_configDir + "/" + "sm_ssl.key");
-        m_nodeConfig->setSmNodeCert(_configDir + "/" + "sm_enssl.crt");
-        m_nodeConfig->setSmNodeKey(_configDir + "/" + "sm_enssl.key");
+        m_nodeConfig->setSmNodeCert(_configDir + "/" + "sm_ssl.crt");
+        m_nodeConfig->setSmNodeKey(_configDir + "/" + "sm_ssl.key");
+        m_nodeConfig->setEnSmNodeCert(_configDir + "/" + "sm_enssl.crt");
+        m_nodeConfig->setEnSmNodeKey(_configDir + "/" + "sm_enssl.key");
     }
 
     // init rpc config
