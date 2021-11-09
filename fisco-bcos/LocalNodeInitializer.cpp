@@ -61,7 +61,8 @@ void LocalNodeInitializer::init(std::string const& _configFilePath, std::string 
             pbftInitializer->blockSync(), m_nodeInitializer->protocolInitializer()->blockFactory());
     // create rpc
     RpcFactory rpcFactory(nodeConfig->chainId(), m_gateway, keyFactory);
-    m_rpc = rpcFactory.buildLocalRpc(_configFilePath, groupInfo, nodeService);
+    rpcFactory.setNodeConfig(nodeConfig);
+    m_rpc = rpcFactory.buildLocalRpc(groupInfo, nodeService);
     auto topicManager =
         std::dynamic_pointer_cast<bcos::amop::LocalTopicManager>(gateway->amop()->topicManager());
     topicManager->setLocalClient(m_rpc);
