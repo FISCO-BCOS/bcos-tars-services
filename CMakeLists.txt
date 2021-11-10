@@ -66,6 +66,7 @@ add_subdirectory(libinitializer)
 include(BuildInfoGenerator)
 # import services
 list(APPEND SERVICE_LIST FrontService GatewayService RpcService TxPoolService PBFTService NativeNode)
+# list(APPEND SERVICE_LIST GatewayService RpcService NativeNode)
 # TODO:
 # SchedulerService, ExecutorService
 
@@ -82,8 +83,6 @@ foreach(SERVICE ${SERVICE_LIST})
     list(APPEND SERVICE_TAR_LIST ${SERVICE}-tar)
 endforeach()
 
-add_subdirectory(LedgerService)
-add_subdirectory(SchedulerService)
 add_subdirectory(fisco-bcos)
 add_custom_target(tar DEPENDS ${SERVICE_TAR_LIST})
 
