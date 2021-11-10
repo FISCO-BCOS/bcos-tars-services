@@ -32,8 +32,8 @@ hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
 )
 
 hunter_config(bcos-pbft VERSION 3.0.0-local-a2a9f7d2
-    URL  https://${URL_BASE}/cyjseagull/bcos-pbft/archive/d7adcf9bafaecb60945df60262ad72f5f8c66962.tar.gz
-    SHA1 12aeaee675714e2cf4c619ac6079e47f083d0d74
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-pbft/archive/2b37b7b6818cfcd5a4b5bd4fca243e3443bf9195.tar.gz
+    SHA1 8d86774daf48f99e1f3649454659838c3f19be48
     CMAKE_ARGS URL_BASE=${URL_BASE}  HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
