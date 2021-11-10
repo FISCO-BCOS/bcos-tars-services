@@ -20,7 +20,6 @@
  */
 #include "FrontServiceInitializer.h"
 
-
 using namespace bcos;
 using namespace bcos::initializer;
 using namespace bcos::front;
@@ -148,6 +147,15 @@ void FrontServiceInitializer::initMsgHandlers(bcos::consensus::ConsensusInterfac
             FRONTSERVICE_LOG(DEBUG) << LOG_DESC("BlockSync: notifyConnectedNodes")
                                     << LOG_KV("connectedNodeSize", nodeIdSet.size());
         });
+
     FRONTSERVICE_LOG(INFO) << LOG_DESC(
         "registerModuleNodeIDsDispatcher for the BlockSync module success");
+    m_front->registerModuleNodeIDsDispatcher(bcos::protocol::ModuleID::PBFT,
+        [_pbft](std::shared_ptr<const bcos::crypto::NodeIDs> _nodeIDs,
+            bcos::front::ReceiveMsgFunc _receiveMsgCallback) {
+            auto nodeIdSet = bcos::crypto::NodeIDSet(_nodeIDs->begin(), _nodeIDs->end());
+            _pbft->notifyConnectedNodes(nodeIdSet, _receiveMsgCallback);
+            FRONTSERVICE_LOG(DEBUG) << LOG_DESC("PBFT: notifyConnectedNodes")
+                                    << LOG_KV("connectedNodeSize", nodeIdSet.size());
+        });
 }

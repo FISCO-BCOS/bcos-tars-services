@@ -125,13 +125,23 @@ Error PBFTServiceServer::asyncSubmitProposal(bool _containSysTxs,
     return bcostars::Error();
 }
 
-bcostars::Error PBFTServiceServer::asyncGetSyncInfo(
-    std::string& _syncInfo, tars::TarsCurrentPtr _current)
+bcostars::Error PBFTServiceServer::asyncGetSyncInfo(std::string&, tars::TarsCurrentPtr _current)
 {
     _current->setResponse(false);
     m_pbftInitializer->blockSync()->asyncGetSyncInfo(
         [_current](bcos::Error::Ptr _error, std::string const& _syncInfo) {
             async_response_asyncGetSyncInfo(_current, toTarsError(_error), _syncInfo);
+        });
+    return bcostars::Error();
+}
+
+bcostars::Error PBFTServiceServer::asyncGetConsensusStatus(
+    std::string&, tars::TarsCurrentPtr _current)
+{
+    _current->setResponse(false);
+    m_pbftInitializer->pbft()->asyncGetConsensusStatus(
+        [_current](bcos::Error::Ptr _error, std::string _consensusStatus) {
+            async_response_asyncGetConsensusStatus(_current, toTarsError(_error), _consensusStatus);
         });
     return bcostars::Error();
 }

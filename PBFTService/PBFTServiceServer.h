@@ -86,14 +86,17 @@ public:
             bcosNodeIDSet.insert(m_pbftInitializer->keyFactory()->createKey(
                 bcos::bytesConstRef((const bcos::byte*)it.data(), it.size())));
         }
-
         m_pbftInitializer->blockSync()->notifyConnectedNodes(
             bcosNodeIDSet, [current](bcos::Error::Ptr error) {
                 async_response_asyncNotifyConnectedNodes(current, bcostars::toTarsError(error));
             });
-
+        m_pbftInitializer->pbft()->notifyConnectedNodes(
+            bcosNodeIDSet, [](bcos::Error::Ptr error) {});
         return bcostars::Error();
     }
+
+    bcostars::Error asyncGetConsensusStatus(
+        std::string& _consensusStatus, tars::TarsCurrentPtr current) override;
 
 private:
     bcos::initializer::PBFTInitializer::Ptr m_pbftInitializer;
