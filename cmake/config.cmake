@@ -64,8 +64,8 @@ hunter_config(bcos-ledger
 )
 
 hunter_config(bcos-front VERSION 3.0.0-local-2ed687bb
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-front/archive/10880d313161ae12e6e5d5bc63876fd274c4bb7c.tar.gz
-    SHA1 e9c0cd550f411a5f577f9e2e97ad395d502b2fb3
+    URL  https://${URL_BASE}/cyjseagull/bcos-front/archive/0117fe5b42f533327d32700781b65575152fdaa0.tar.gz
+    SHA1 2117292a6b89d6e6fafc8dae365b6462f668acbb
     CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
