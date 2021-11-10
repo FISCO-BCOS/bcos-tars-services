@@ -1,7 +1,7 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-	URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/125363ba92ea75117ff3fefd57842d470105a82d.tar.gz
-    SHA1 2de0ea3d308cbf75a80ca588976eeebb1ef1e4b6
+	URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/e4b2da37e26d269c7ab64f2896ef81d85c1a04bf.tar.gz
+    SHA1 4f895c96da870e127962dd34ebef6c90afc6d29e
 	CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON
 )
 
@@ -20,8 +20,8 @@ hunter_config(bcos-boostssl
 
 hunter_config(bcos-tars-protocol
     VERSION 3.0.0-local
-    URL https://${URL_BASE}/FISCO-BCOS/bcos-tars-protocol/archive/d7da6514a9a070bb2a055c2ab76c01ac8e035c3f.tar.gz
-    SHA1 5daae2b9a999ceeb8b7c70948035e43a32776fb7
+    URL https://${URL_BASE}/FISCO-BCOS/bcos-tars-protocol/archive/a44c56e4312aed7d5d7ca074493bac37c9f2f811.tar.gz
+    SHA1 f3d55b11360b1e0db04539d5e20ee92608f8b11a
     CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON URL_BASE=${URL_BASE}
 )
 
@@ -58,8 +58,8 @@ hunter_config(bcos-storage VERSION 3.0.0-local-900836da
 
 hunter_config(bcos-ledger
     VERSION 3.0.0-local-1956c515f
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-ledger/archive/086478da478084394d3ee44252e0eb757cfc8766.tar.gz
-    SHA1 6862386e861125c9a4609263583c21d2284b650c
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-ledger/archive/f2ba3ace3d31c9b2af3f59d09e6d004c012b5780.tar.gz
+    SHA1 b9fce286e87be01f310cf3a5ab311fe7fdabc540
     CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
