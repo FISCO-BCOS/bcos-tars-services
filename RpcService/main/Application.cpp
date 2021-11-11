@@ -1,9 +1,9 @@
 #include "Common/TarsUtils.h"
 #include "RpcService/RpcInitializer.h"
 #include "RpcService/RpcServiceServer.h"
+#include "libinitializer/Common.h"
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
 #include <tarscpp/servant/Application.h>
-
 using namespace bcostars;
 class RpcServiceApp : public Application
 {
@@ -97,6 +97,7 @@ int main(int argc, char* argv[])
 {
     try
     {
+        bcos::initializer::initCommandLine(argc, argv);
         RpcServiceApp app;
         app.main(argc, argv);
         app.waitForShutdown();
