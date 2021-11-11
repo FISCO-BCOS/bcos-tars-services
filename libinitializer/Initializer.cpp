@@ -143,7 +143,8 @@ void Initializer::init(bcos::initializer::NodeArchitectureType _nodeArchType,
 
         // Disable the lru storage for now
         auto executor = ExecutorInitializer::build(m_txpoolInitializer->txpool(), nullptr, storage,
-            executionMessageFactory, m_protocolInitializer->cryptoSuite()->hashImpl(), false);
+            executionMessageFactory, m_protocolInitializer->cryptoSuite()->hashImpl(),
+            m_nodeConfig->isWasm());
         auto parallelExecutor = std::make_shared<bcos::initializer::ParallelExecutor>(executor);
         executorManager->addExecutor("default", parallelExecutor);
     }
