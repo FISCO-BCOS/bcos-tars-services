@@ -3,6 +3,7 @@
 #include "Common/TarsUtils.h"
 #include "GatewayService/GatewayInitializer.h"
 #include "libinitializer/ProtocolInitializer.h"
+#include <bcos-tars-protocol/Common.h>
 #include <bcos-tars-protocol/ErrorConverter.h>
 #include <bcos-tars-protocol/tars/GatewayService.h>
 #include <chrono>
@@ -40,18 +41,25 @@ public:
         return bcostars::Error();
     }
 
-    bcostars::Error asyncGetPeers(std::string&, tars::TarsCurrentPtr current) override
+    bcostars::Error asyncGetPeers(bcostars::GatewayInfo&, std::vector<bcostars::GatewayInfo>&,
+        tars::TarsCurrentPtr current) override
     {
-        auto t1 = std::chrono::high_resolution_clock::now();
         GATEWAYSERVICE_LOG(DEBUG) << LOG_DESC("asyncGetPeers") << LOG_DESC("request");
         current->setResponse(false);
         m_gatewayInitializer->gateway()->asyncGetPeers(
-            [current, t1](const bcos::Error::Ptr _error, std::string const& peers) {
-                auto t2 = std::chrono::high_resolution_clock::now();
-                auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-                GATEWAYSERVICE_LOG(DEBUG) << LOG_DESC("asyncGetPeers") << LOG_KV("response", peers)
-                                          << LOG_KV("cost", cost.count());
-                async_response_asyncGetPeers(current, toTarsError(_error), peers);
+            [current](const bcos::Error::Ptr _error, bcos::gateway::GatewayInfo::Ptr _localP2pInfo,
+                bcos::gateway::GatewayInfosPtr _peers) {
+                auto localtarsP2pInfo = toTarsGatewayInfo(_localP2pInfo);
+                std::vector<bcostars::GatewayInfo> peersInfo;
+                if (_peers)
+                {
+                    for (auto const& peer : *_peers)
+                    {
+                        peersInfo.emplace_back(toTarsGatewayInfo(peer));
+                    }
+                }
+                async_response_asyncGetPeers(
+                    current, toTarsError(_error), localtarsP2pInfo, peersInfo);
             });
         return bcostars::Error();
     }
