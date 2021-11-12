@@ -26,8 +26,8 @@ hunter_config(bcos-tars-protocol
 )
 
 hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/f0edf0808f5947f28cff807e74c5b0acfc6913f7.tar.gz
-    SHA1 bdeda6a7c3571db3f9c84c8f4b4329d34c3b7c9e
+    URL  https://${URL_BASE}/cyjseagull/bcos-txpool/archive/0e84c3b912372968b55434526bb03b4db9629a65.tar.gz
+    SHA1 393c12105e513ccb01428e846cfe843b898650ff
     CMAKE_ARGS URL_BASE=${URL_BASE}  HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
@@ -38,8 +38,8 @@ hunter_config(bcos-pbft VERSION 3.0.0-local-a2a9f7d2
 )
 
 hunter_config(bcos-sync VERSION 3.0.0-local-50e0e264
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-sync/archive/1a8227cebb3bb3037e1ed07520561a88a199edb5.tar.gz
-    SHA1 8289fd0b772975778eec9168b0c5aa6e6d2f0ffe
+    URL  https://${URL_BASE}/cyjseagull/bcos-sync/archive/91850f016b1e505eda748d79d7b9558f7de4a314.tar.gz
+    SHA1 5545e09934169f4ab440c69b55b93b6e2a270c39
     CMAKE_ARGS URL_BASE=${URL_BASE}  HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
