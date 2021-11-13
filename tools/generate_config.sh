@@ -327,7 +327,7 @@ gen_sm_chain_cert() {
     dir_must_exists "$chaindir"
 
     "$OPENSSL_CMD" genpkey -paramfile "${sm2_params}" -out "$chaindir/sm_ca.key"
-    "$OPENSSL_CMD" req -config sm_cert.cnf -x509 -days "${days}" -subj "/CN=FISCO-BCOS/O=FISCO-BCOS/OU=chain" -key "$chaindir/sm_ca.key" -extensions v3_ca -out "$chaindir/sm_ca.crt"
+    "$OPENSSL_CMD" req -config sm_cert.cnf -x509 -days "${days}" -subj "/CN=FISCO-BCOS/O=FISCO-BCOS/OU=chain" -key "$chaindir/sm_ca.key" -extensions v3_ca -out "$chaindir/sm_ca.crt" 2>/dev/null
     cp "${sm_cert_conf}" "${chaindir}"
     cp "${sm2_params}" "${chaindir}"
 }
@@ -348,7 +348,7 @@ gen_sm_node_cert_with_ext() {
     "$OPENSSL_CMD" genpkey -paramfile "$capath/${sm2_params}" -out "$certpath/sm_${type}.key"
     "$OPENSSL_CMD" req -new -subj "/CN=$name/O=fisco-bcos/OU=${type}" -key "$certpath/sm_${type}.key" -config "$capath/sm_cert.cnf" -out "$certpath/sm_${type}.csr"
 
-    echo "not use $(basename "$capath") to sign $(basename $certpath) ${type}" >>"${logfile}"
+    # echo "not use $(basename "$capath") to sign $(basename $certpath) ${type}" >>"${logfile}"
     "$OPENSSL_CMD" x509 -sm3 -req -CA "$capath/sm_ca.crt" -CAkey "$capath/sm_ca.key" -days "${days}" -CAcreateserial -in "$certpath/sm_${type}.csr" -out "$certpath/sm_${type}.crt" -extfile "$capath/sm_cert.cnf" -extensions "$extensions"
 
     rm -f "$certpath/sm_${type}.csr"
