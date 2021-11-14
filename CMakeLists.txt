@@ -23,7 +23,7 @@ HunterGate(
     FILEPATH "${BCOS_TARS_CMAKE_DIR}/config.cmake"
 )
 
-project(Bcos-Tars-Service)
+project(Bcos-Tars-Service VERSION "3.0.0")
 
 # import dependencies
 include(InstallBcosFrameworkDependencies)
