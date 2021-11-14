@@ -2,6 +2,7 @@
 #include "GatewayService/GatewayInitializer.h"
 #include "GatewayService/GatewayServiceServer.h"
 #include <bcos-framework/libutilities/BoostLogInitializer.h>
+#include <bcos-gateway/GatewayConfig.h>
 #include <tarscpp/servant/Application.h>
 using namespace bcostars;
 
@@ -33,10 +34,15 @@ protected:
         m_logInitializer->setLogPath(getLogPath());
         m_logInitializer->initLog(pt);
 
+        auto gatewayConfig = std::make_shared<bcos::gateway::GatewayConfig>();
+        gatewayConfig->setCertPath(ServerConfig::BasePath);
+        gatewayConfig->setNodePath(ServerConfig::BasePath);
+        gatewayConfig->initConfig(_configPath);
+
         auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
         nodeConfig->loadConfig(_configPath);
         addConfig("nodes.json");
-        if (nodeConfig->smCryptoType())
+        if (gatewayConfig->smSSL())
         {
             addConfig("sm_ca.crt");
             addConfig("sm_ssl.crt");
@@ -52,8 +58,7 @@ protected:
         }
 
         // init rpc
-        m_gatewayInitializer = std::make_shared<GatewayInitializer>(
-            _configPath, ServerConfig::BasePath, ServerConfig::BasePath);
+        m_gatewayInitializer = std::make_shared<GatewayInitializer>(_configPath, gatewayConfig);
         m_gatewayInitializer->start();
     }
 
