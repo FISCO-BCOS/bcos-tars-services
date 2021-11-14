@@ -42,7 +42,6 @@ class PBFTInitializer
 public:
     using Ptr = std::shared_ptr<PBFTInitializer>;
     PBFTInitializer(bcos::initializer::NodeArchitectureType _nodeArchType,
-        std::string const& _genesisConfigPath, std::string const& _iniConfigPath,
         bcos::tool::NodeConfig::Ptr _nodeConfig, ProtocolInitializer::Ptr _protocolInitializer,
         bcos::txpool::TxPoolInterface::Ptr _txpool, std::shared_ptr<bcos::ledger::Ledger> _ledger,
         bcos::scheduler::SchedulerInterface::Ptr _scheduler,
@@ -73,7 +72,6 @@ public:
 
 protected:
     virtual void initChainNodeInfo(bcos::initializer::NodeArchitectureType _nodeArchType,
-        std::string const& _genesisConfigFilePath, std::string const& _iniConfigPath,
         bcos::tool::NodeConfig::Ptr _nodeConfig);
     virtual void createSealer();
     virtual void createPBFT();
@@ -115,6 +113,9 @@ protected:
                 });
         }
     }
+
+    std::string generateGenesisConfig(bcos::tool::NodeConfig::Ptr _nodeConfig);
+    std::string generateIniConfig(bcos::tool::NodeConfig::Ptr _nodeConfig);
 
 private:
     bcos::tool::NodeConfig::Ptr m_nodeConfig;

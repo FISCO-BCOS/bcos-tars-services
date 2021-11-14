@@ -126,9 +126,9 @@ void Initializer::init(bcos::initializer::NodeArchitectureType _nodeArchType,
             m_nodeConfig, m_protocolInitializer, m_frontServiceInitializer->front(), ledger);
 
         // build and init the pbft related modules
-        m_pbftInitializer = std::make_shared<PBFTInitializer>(_nodeArchType, _genesisFile,
-            _configFilePath, m_nodeConfig, m_protocolInitializer, m_txpoolInitializer->txpool(),
-            ledger, m_scheduler, storage, m_frontServiceInitializer->front());
+        m_pbftInitializer = std::make_shared<PBFTInitializer>(_nodeArchType, m_nodeConfig,
+            m_protocolInitializer, m_txpoolInitializer->txpool(), ledger, m_scheduler, storage,
+            m_frontServiceInitializer->front());
         m_pbftInitializer->init();
 
         // init the txpool

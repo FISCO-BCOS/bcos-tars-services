@@ -22,6 +22,8 @@
 #include "libutilities/KVStorageHelper.h"
 #include <bcos-framework/libutilities/FileUtility.h>
 #include <bcos-tars-protocol/client/GatewayServiceClient.h>
+#include <include/BuildInfo.h>
+#include <json/json.h>
 
 using namespace bcos;
 using namespace bcos::tool;
@@ -38,7 +40,6 @@ using namespace bcos::initializer;
 using namespace bcos::group;
 
 PBFTInitializer::PBFTInitializer(bcos::initializer::NodeArchitectureType _nodeArchType,
-    std::string const& _genesisConfigPath, std::string const& _iniConfigPath,
     bcos::tool::NodeConfig::Ptr _nodeConfig, ProtocolInitializer::Ptr _protocolInitializer,
     bcos::txpool::TxPoolInterface::Ptr _txpool, std::shared_ptr<bcos::ledger::Ledger> _ledger,
     bcos::scheduler::SchedulerInterface::Ptr _scheduler,
@@ -56,21 +57,63 @@ PBFTInitializer::PBFTInitializer(bcos::initializer::NodeArchitectureType _nodeAr
     createPBFT();
     createSync();
     registerHandlers();
-    initChainNodeInfo(_nodeArchType, _genesisConfigPath, _iniConfigPath, _nodeConfig);
+    initChainNodeInfo(_nodeArchType, _nodeConfig);
     m_timer = std::make_shared<Timer>(m_timerSchedulerInterval, "node info report");
 
     m_timer->registerTimeoutHandler(boost::bind(&PBFTInitializer::reportNodeInfo, this));
 }
 
-void PBFTInitializer::initChainNodeInfo(bcos::initializer::NodeArchitectureType _nodeArchType,
-    std::string const& _genesisConfigPath, std::string const& _iniConfigPath,
-    bcos::tool::NodeConfig::Ptr _nodeConfig)
+std::string PBFTInitializer::generateGenesisConfig(bcos::tool::NodeConfig::Ptr _nodeConfig)
+{
+    Json::Value genesisConfig;
+    genesisConfig["consensusType"] = _nodeConfig->consensusType();
+    genesisConfig["blockTxCountLimit"] = _nodeConfig->ledgerConfig()->blockTxCountLimit();
+    genesisConfig["txGasLimit"] = (int64_t)(_nodeConfig->txGasLimit());
+    genesisConfig["consensusLeaderPeriod"] = _nodeConfig->ledgerConfig()->leaderSwitchPeriod();
+    Json::Value sealerList(Json::arrayValue);
+    auto consensusNodeList = _nodeConfig->ledgerConfig()->consensusNodeList();
+    for (auto const& node : consensusNodeList)
+    {
+        Json::Value sealer;
+        sealer["nodeID"] = node->nodeID()->hex();
+        sealer["weight"] = node->weight();
+        sealerList.append(sealer);
+    }
+    genesisConfig["sealerList"] = sealerList;
+    Json::FastWriter fastWriter;
+    std::string genesisConfigStr = fastWriter.write(genesisConfig);
+    return genesisConfigStr;
+}
+std::string PBFTInitializer::generateIniConfig(bcos::tool::NodeConfig::Ptr _nodeConfig)
+{
+    Json::Value iniConfig;
+    Json::Value binaryInfo;
+
+    // get the binaryInfo
+    binaryInfo["version"] = FISCO_BCOS_PROJECT_VERSION;
+    binaryInfo["gitCommitHash"] = FISCO_BCOS_COMMIT_HASH;
+    binaryInfo["platform"] = FISCO_BCOS_BUILD_PLATFORM;
+    binaryInfo["buildTime"] = FISCO_BCOS_BUILD_TIME;
+    iniConfig["binaryInfo"] = binaryInfo;
+
+    iniConfig["chainID"] = _nodeConfig->chainId();
+    iniConfig["groupID"] = _nodeConfig->groupId();
+    iniConfig["smCryptoType"] = _nodeConfig->smCryptoType();
+    iniConfig["isWasm"] = _nodeConfig->isWasm();
+    iniConfig["nodeName"] = _nodeConfig->nodeName();
+    iniConfig["nodeID"] = m_protocolInitializer->keyPair()->publicKey()->hex();
+    iniConfig["rpcServiceName"] = _nodeConfig->rpcServiceName();
+    iniConfig["gatewayServiceName"] = _nodeConfig->gatewayServiceName();
+    Json::FastWriter fastWriter;
+    std::string iniConfigStr = fastWriter.write(iniConfig);
+    return iniConfigStr;
+}
+
+void PBFTInitializer::initChainNodeInfo(
+    bcos::initializer::NodeArchitectureType _nodeArchType, bcos::tool::NodeConfig::Ptr _nodeConfig)
 {
     m_groupInfo = std::make_shared<GroupInfo>(_nodeConfig->chainId(), _nodeConfig->groupId());
-
-    auto genesisConfig = readContentsToString(boost::filesystem::path(_genesisConfigPath));
-    m_groupInfo->setGenesisConfig(*genesisConfig);
-
+    m_groupInfo->setGenesisConfig(generateGenesisConfig(_nodeConfig));
     int32_t nodeType = bcos::group::NodeType::NON_SM_NODE;
     if (_nodeConfig->smCryptoType())
     {
@@ -84,8 +127,7 @@ void PBFTInitializer::initChainNodeInfo(bcos::initializer::NodeArchitectureType 
     auto chainNodeInfo = std::make_shared<ChainNodeInfo>(_nodeConfig->nodeName(), nodeType);
     chainNodeInfo->setNodeID(m_protocolInitializer->keyPair()->publicKey()->hex());
 
-    auto iniConfig = readContentsToString(boost::filesystem::path(_iniConfigPath));
-    chainNodeInfo->setIniConfig(*iniConfig);
+    chainNodeInfo->setIniConfig(generateIniConfig(_nodeConfig));
     chainNodeInfo->setMicroService(microServiceMode);
 
     bool useConfigServiceName = false;
