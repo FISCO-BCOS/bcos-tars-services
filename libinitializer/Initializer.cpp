@@ -23,6 +23,7 @@
  * @author: ancelmo
  * @date 2021-10-23
  */
+
 #include "Initializer.h"
 #include "ExecutorInitializer.h"
 #include "LedgerInitializer.h"
@@ -138,11 +139,10 @@ void Initializer::init(bcos::initializer::NodeArchitectureType _nodeArchType,
         m_frontServiceInitializer->init(m_pbftInitializer->pbft(), m_pbftInitializer->blockSync(),
             m_txpoolInitializer->txpool());
 
-        // auto cache = std::make_shared<bcos::executor::LRUStorage>(storage);
-        // cache->start();
+        auto cache = std::make_shared<bcos::executor::LRUStorage>(storage);
+        cache->start();
 
-        // Disable the lru storage for now
-        auto executor = ExecutorInitializer::build(m_txpoolInitializer->txpool(), nullptr, storage,
+        auto executor = ExecutorInitializer::build(m_txpoolInitializer->txpool(), cache, storage,
             executionMessageFactory, m_protocolInitializer->cryptoSuite()->hashImpl(),
             m_nodeConfig->isWasm());
         auto parallelExecutor = std::make_shared<bcos::initializer::ParallelExecutor>(executor);
