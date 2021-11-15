@@ -24,7 +24,6 @@
  * @date 2021-10-23
  */
 
-/*
 #include "Initializer.h"
 #include "ExecutorInitializer.h"
 #include "LedgerInitializer.h"
@@ -204,4 +203,3 @@ void Initializer::stop()
         exit(-1);
     }
 }
-*/

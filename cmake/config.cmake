@@ -51,8 +51,8 @@ hunter_config(rocksdb VERSION 6.20.3
 )
 
 hunter_config(bcos-storage VERSION 3.0.0-local-900836da
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-storage/archive/bf16a87c5366c910164be5f03177d50fd36cf4a8.tar.gz
-    SHA1 ba3e846c63ec30fe4241f245f1d8b817f7502c3a
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-storage/archive/83d66717c3ac1c5026c7078867418ff21311d03a.tar.gz
+    SHA1 9a2cb64d7b875e881915694a2b8f6f73f32d9916
     CMAKE_ARGS URL_BASE=${URL_BASE} HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
