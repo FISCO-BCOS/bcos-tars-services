@@ -16,10 +16,6 @@ public:
 
     void initialize() override {}
     void destroy() override {}
-
-    virtual bcostars::Error asyncNotifyTransactionResult(const std::string& _rpcID,
-        const std::string& _groupID, const vector<tars::Char>& _txHash,
-        const bcostars::TransactionSubmitResult& _result, tars::TarsCurrentPtr current) override;
     bcostars::Error asyncNotifyBlockNumber(const std::string& _groupID,
         const std::string& _nodeName, tars::Int64 blockNumber,
         tars::TarsCurrentPtr current) override;
