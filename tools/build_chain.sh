@@ -26,6 +26,9 @@ OPENSSL_CMD="${HOME}/.fisco/tassl"
 nodeid_list=""
 file_dir="./"
 nodes_json_file_name="nodes.json"
+command="deploy"
+ca_dir=""
+config_path=""
 
 LOG_WARN() {
     local content=${1}
@@ -37,7 +40,7 @@ LOG_INFO() {
     echo -e "\033[32m[INFO] ${content}\033[0m"
 }
 
-LOG_FALT() {
+LOG_FATAL() {
     local content=${1}
     echo -e "\033[31m[FALT] ${content}\033[0m"
     exit 1
@@ -45,19 +48,19 @@ LOG_FALT() {
 
 dir_must_exists() {
     if [ ! -d "$1" ]; then
-        LOG_FALT "$1 DIR does not exist, please check!"
+        LOG_FATAL "$1 DIR does not exist, please check!"
     fi
 }
 
 file_must_not_exists() {
     if [ -f "$1" ]; then
-        LOG_FALT "$1 file already exist, please check!"
+        LOG_FATAL "$1 file already exist, please check!"
     fi
 }
 
 file_must_exists() {
     if [ ! -f "$1" ]; then
-        LOG_FALT "$1 file does not exist, please check!"
+        LOG_FATAL "$1 file does not exist, please check!"
     fi
 }
 
@@ -82,7 +85,7 @@ check_name() {
     local name="$1"
     local value="$2"
     [[ "$value" =~ ^[a-zA-Z0-9._-]+$ ]] || {
-        LOG_FALT "$name name [$value] invalid, it should match regex: ^[a-zA-Z0-9._-]+\$"
+        LOG_FATAL "$name name [$value] invalid, it should match regex: ^[a-zA-Z0-9._-]+\$"
     }
 }
 
@@ -375,12 +378,16 @@ help() {
     echo $1
     cat <<EOF
 Usage:
+    -C <Command>                       [Optional] the command, support 'deploy' and 'expand' now, default is deploy
     -l <IP list>                       [Required] "ip1:nodeNum1,ip2:nodeNum2" e.g:"192.168.0.1:2,192.168.0.2:3"
     -o <output dir>                    [Optional] output directory, default ./nodes
     -e <fisco-bcos exec>               [Required] fisco-bcos binay exec
     -p <Start Port>                    Default 30300,20200 means p2p_port start from 30300, rpc_port from 20200
     -s <SM model>                      [Optional] SM SSL connection or not, default no
+    -c <Config Path>                   [Required when expand node] Specify the path of the expanded node config.ini, config.genesis and p2p connection file nodes.json
+    -d <CA cert path>                  [Required when expand node] When expanding the node, specify the path where the CA certificate and private key are located
     -h Help
+
 e.g
     bash $0 -p 30300,20200 -l 127.0.0.1:4 -o nodes -e ./fisco-bcos
     bash $0 -p 30300,20200 -l 127.0.0.1:4 -o nodes -e ./fisco-bcos -s
@@ -390,7 +397,7 @@ EOF
 }
 
 parse_params() {
-    while getopts "l:o:e:p:sh" option; do
+    while getopts "l:C:c:o:e:p:d:sh" option; do
         case $option in
         l)
             ip_param=$OPTARG
@@ -398,10 +405,14 @@ parse_params() {
             ;;
         o)
             output_dir="$OPTARG"
-            mkdir -p "$output_dir"
-            dir_must_exists "${output_dir}"
             ;;
         e) fisco_bcos_exec="$OPTARG" ;;
+        C) command="${OPTARG}"
+            ;;
+        d) ca_dir="${OPTARG}"
+        ;;
+        c) config_path="${OPTARG}"
+        ;;
         p)
             port_start=(${OPTARG//,/ })
             if [ ${#port_start[@]} -ne 2 ]; then LOG_WARN "p2p start port error. e.g: 30300" && exit 1; fi
@@ -645,7 +656,6 @@ generate_common_ini() {
 [executor]
     ; use the wasm virtual machine or not
     is_wasm=false
-    is_auth_check=false
 
 [storage]
     data_path=data
@@ -743,7 +753,7 @@ generate_config() {
     generate_nodes_json "${node_json_config_path}/${nodes_json_file_name}" "${connected_nodes}"
 }
 
-generate_node_account() {
+generate_secp256k1_node_account() {
     local output_path="${1}"
     local node_index="${2}"
     if [ ! -d "${output_path}" ]; then
@@ -851,7 +861,7 @@ if [ -n "${sm_mode}" ]; then
             elif [[ "$(uname -p)" == "x86_64" ]];then
                 curl -#LO "${tassl_link_perfix}/tassl.tar.gz"
             else
-                LOG_ERROR "Unsupported platform"
+                LOG_FATAL "Unsupported platform"
                 exit 1
             fi
         fi
@@ -863,11 +873,83 @@ if [ -n "${sm_mode}" ]; then
 fi
 }
 
-main() {
-    # FIXME: use openssl 1.1 to generate gm certificates
-    check_env
-    check_and_install_tassl
-    parse_params "$@"
+generate_node_account()
+{
+    local sm_mode="${1}"
+    local account_dir="${2}"
+    local count="${3}"
+    if [[ "${sm_mode}" == "false" ]]; then
+        generate_secp256k1_node_account "${account_dir}" "${count}"
+    else
+        generate_sm_node_account "${account_dir}" "${count}"
+    fi
+}
+
+expand_node()
+{
+    local sm_mode="${1}"
+    local ca_dir="${2}"
+    local node_dir="${3}"
+    local config_path="${4}"
+    if [ -d "${node_dir}" ];then
+        LOG_FATAL "expand node failed for ${node_dir} already exists!"
+    fi
+    file_must_exists "${config_path}/config.ini"
+    file_must_exists "${config_path}/config.genesis"
+    file_must_exists "${config_path}/nodes.json"
+    # check binary
+    parent_path=$(dirname ${node_dir})
+    binary_path="${parent_path}/${binary_name}"
+    if [ ! -f ${binary_path} ];then
+        if [ ! -f "${config_path}/${binary_name}" ];then
+            LOG_FATAL "Must copy binary file {fisco_bcos_exec} to ${config_path}/${binary_name} since directory ${parent_path}/ has no ready-made ${binary_name}"
+        fi
+    fi
+    mkdir -p "${node_dir}"
+    sdk_path="${parent_path}/sdk"
+    if [ ! -d "${sdk_path}" ];then
+        LOG_INFO "generate sdk cert, path: ${sdk_path} .."
+        generate_sdk_cert "${sm_mode}" "${ca_dir}" "${sdk_path}"
+        LOG_INFO "generate sdk cert success.."
+    fi
+    start_all_script_path="${parent_path}/start_all.sh"
+    if [ ! -f "${start_all_script_path}" ];then
+         LOG_INFO "generate start_all.sh and stop_all.sh ..."
+         generate_all_node_scripts "${parent_path}"
+         LOG_INFO "generate start_all.sh and stop_all.sh success..."
+    fi
+    LOG_INFO "generate_node_scripts ..."
+    generate_node_scripts "${node_dir}"
+    LOG_INFO "generate_node_scripts success..."
+    # generate cert
+    LOG_INFO "generate_node_cert ..."
+    generate_node_cert "${sm_mode}" "${ca_dir}" "${node_dir}/conf"
+    LOG_INFO "generate_node_cert success..."
+    # generate node account
+    LOG_INFO "generate_node_account ..."
+    generate_node_account "${sm_mode}" "${node_dir}/conf" "${i}"
+    LOG_INFO "generate_node_account success..."
+
+    LOG_INFO "copy configurations ..."
+    cp "${config_path}/config.ini" "${node_dir}"
+    cp "${config_path}/config.genesis" "${node_dir}"
+    cp "${config_path}/nodes.json" "${node_dir}"
+    if [ ! -f "$binary_path" ];then
+        cp "${config_path}/${binary_name}" "${binary_path}"
+    fi
+    LOG_INFO "copy configurations success..."
+    echo "=============================================================="
+    LOG_INFO "sdk dir         : ${sdk_path}"
+    LOG_INFO "SM Model         : ${sm_mode}"
+    LOG_INFO "Binary Path         : ${binary_path}"
+    LOG_INFO "output dir         : ${output_dir}"
+    LOG_INFO "All completed. Files in ${output_dir}"
+}
+
+deploy_nodes()
+{
+    mkdir -p "$output_dir"
+    dir_must_exists "${output_dir}"
     cert_conf="${output_dir}/cert.cnf"
     p2p_listen_port=port_start[0]
     rpc_listen_port=port_start[1]
@@ -882,7 +964,7 @@ main() {
         help
     fi
     if [[ ! -f "$fisco_bcos_exec" ]]; then
-        LOG_FALT "fisco bcos binary exec ${fisco_bcos_exec} not exist, please input the correct path."
+        LOG_FATAL "fisco bcos binary exec ${fisco_bcos_exec} not exist, please input the correct path."
     fi
     local i=0
     node_count=0
@@ -918,16 +1000,10 @@ main() {
             mkdir -p "${node_dir}"
             generate_node_cert "${sm_mode}" "${ca_dir}" "${node_dir}/conf"
             generate_node_scripts "${node_dir}"
-            account_dir="${node_dir}/conf"
-
             local port=$((p2p_listen_port + node_count))
             connected_nodes=${connected_nodes}"${ip}:${port}, "
-
-            if [[ "${sm_mode}" == "false" ]]; then
-                generate_node_account "${account_dir}" "${count}"
-            else
-                generate_sm_node_account "${account_dir}" "${count}"
-            fi
+            account_dir="${node_dir}/conf"
+            generate_node_account "${sm_mode}" "${account_dir}" "${count}"
             set_value ${ip//./}_count $(($(get_value ${ip//./}_count) + 1))
             ((++count))
             ((++node_count))
@@ -956,6 +1032,20 @@ main() {
         done
     done
     print_result
+}
+main() {
+    # FIXME: use openssl 1.1 to generate gm certificates
+    check_env
+    check_and_install_tassl
+    parse_params "$@"
+    if [[ "${command}" == "deploy" ]]; then
+        deploy_nodes
+    elif [[ "${command}" == "expand" ]]; then
+        dir_must_exists "${ca_dir}"
+        expand_node "${sm_mode}" "${ca_dir}" "${output_dir}" "${config_path}"
+    else
+        LOG_FATAL "Unsupported command ${command}, only support \'deploy\' and \'expand\' now!"
+    fi
 }
 
 main "$@"
