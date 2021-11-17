@@ -29,6 +29,9 @@ nodes_json_file_name="nodes.json"
 command="deploy"
 ca_dir=""
 config_path=""
+docker_mode=
+default_version="v3.1.0"
+compatibility_version=${default_version}
 
 LOG_WARN() {
     local content=${1}
@@ -379,6 +382,7 @@ help() {
     cat <<EOF
 Usage:
     -C <Command>                       [Optional] the command, support 'deploy' and 'expand' now, default is deploy
+    -v <FISCO-BCOS binary version>     Default is the latest v${default_version}
     -l <IP list>                       [Required] "ip1:nodeNum1,ip2:nodeNum2" e.g:"192.168.0.1:2,192.168.0.2:3"
     -o <output dir>                    [Optional] output directory, default ./nodes
     -e <fisco-bcos exec>               [Required] fisco-bcos binay exec
@@ -386,6 +390,7 @@ Usage:
     -s <SM model>                      [Optional] SM SSL connection or not, default no
     -c <Config Path>                   [Required when expand node] Specify the path of the expanded node config.ini, config.genesis and p2p connection file nodes.json
     -d <CA cert path>                  [Required when expand node] When expanding the node, specify the path where the CA certificate and private key are located
+    -D <docker mode>                    Default off. If set -d, build with docker
     -h Help
 
 e.g
@@ -397,7 +402,7 @@ EOF
 }
 
 parse_params() {
-    while getopts "l:C:c:o:e:p:d:sh" option; do
+    while getopts "l:C:c:o:e:p:d:v:Dsh" option; do
         case $option in
         l)
             ip_param=$OPTARG
@@ -418,6 +423,8 @@ parse_params() {
             if [ ${#port_start[@]} -ne 2 ]; then LOG_WARN "p2p start port error. e.g: 30300" && exit 1; fi
             ;;
         s) sm_mode="true" ;;
+        D) docker_mode="true" ;;
+        v) compatibility_version="${OPTARG}";;
         h) help ;;
         *) help ;;
         esac
@@ -426,10 +433,16 @@ parse_params() {
 
 print_result() {
     echo "=============================================================="
-    LOG_INFO "Start Port        : ${port_start[*]}"
-    LOG_INFO "Server IP         : ${ip_array[*]}"
-    LOG_INFO "SM Model         : ${sm_mode}"
-    LOG_INFO "output dir         : ${output_dir}"
+    if [ -z "${docker_mode}" ];then
+        LOG_INFO "Binary Path     : ${binary_path}"
+    else
+        LOG_INFO "docker mode     : ${docker_mode}"
+        LOG_INFO "docker tag      : ${compatibility_version}"
+    fi
+    LOG_INFO "Start Port          : ${port_start[*]}"
+    LOG_INFO "Server IP           : ${ip_array[*]}"
+    LOG_INFO "SM Model            : ${sm_mode}"
+    LOG_INFO "output dir          : ${output_dir}"
     LOG_INFO "All completed. Files in ${output_dir}"
 }
 
@@ -496,12 +509,22 @@ EOF
 
 generate_node_scripts() {
     local output=${1}
+    local docker_mode="${2}"
+    local docker_tag="${compatibility_version}"
     local ps_cmd="\$(ps aux|grep \${fisco_bcos}|grep -v grep|awk '{print \$2}')"
     local start_cmd="nohup \${fisco_bcos} -c config.ini -g config.genesis >>nohup.out 2>&1 &"
+    local stop_cmd="kill \${node_pid}"
     local pid="pid"
     local log_cmd="tail -n20  nohup.out"
     local check_success="\$(${log_cmd} | grep running)"
-
+    if [ -n "${docker_mode}" ];then
+        ps_cmd="\$(docker ps |grep \${SHELL_FOLDER//\//} | grep -v grep|awk '{print \$1}')"
+        start_cmd="docker run -d --rm --name \${SHELL_FOLDER//\//} -v \${SHELL_FOLDER}:/data --network=host -w=/data fiscoorg/fiscobcos:${docker_tag} -c config.ini -g config.genesis"
+        stop_cmd="docker kill \${node_pid} 2>/dev/null"
+        pid="container id"
+        log_cmd="tail -n20 \$(docker inspect --format='{{.LogPath}}' \${SHELL_FOLDER//\//})"
+        check_success="success"
+    fi
     generate_script_template "$output/start.sh"
     cat <<EOF >> "${output}/start.sh"
 fisco_bcos=\${SHELL_FOLDER}/../${binary_name}
@@ -532,8 +555,6 @@ echo -e "\033[31m  Exceed waiting time. Please try again to start \${node} \033[
 ${log_cmd}
 EOF
     chmod u+x "${output}/start.sh"
-
-    local stop_cmd="kill \${node_pid}"
     generate_script_template "$output/stop.sh"
     cat <<EOF >> "${output}/stop.sh"
 fisco_bcos=\${SHELL_FOLDER}/../${binary_name}
@@ -900,9 +921,11 @@ expand_node()
     # check binary
     parent_path=$(dirname ${node_dir})
     binary_path="${parent_path}/${binary_name}"
-    if [ ! -f ${binary_path} ];then
-        if [ ! -f "${config_path}/${binary_name}" ];then
-            LOG_FATAL "Must copy binary file {fisco_bcos_exec} to ${config_path}/${binary_name} since directory ${parent_path}/ has no ready-made ${binary_name}"
+    if [ -z "${docker_mode}" ];then
+        if [ ! -f ${binary_path} ];then
+            if [ ! -f "${config_path}/${binary_name}" ];then
+                LOG_FATAL "Must copy binary file {fisco_bcos_exec} to ${config_path}/${binary_name} since directory ${parent_path}/ has no ready-made ${binary_name}"
+            fi
         fi
     fi
     mkdir -p "${node_dir}"
@@ -919,7 +942,7 @@ expand_node()
          LOG_INFO "generate start_all.sh and stop_all.sh success..."
     fi
     LOG_INFO "generate_node_scripts ..."
-    generate_node_scripts "${node_dir}"
+    generate_node_scripts "${node_dir}" "${docker_mode}"
     LOG_INFO "generate_node_scripts success..."
     # generate cert
     LOG_INFO "generate_node_cert ..."
@@ -934,14 +957,22 @@ expand_node()
     cp "${config_path}/config.ini" "${node_dir}"
     cp "${config_path}/config.genesis" "${node_dir}"
     cp "${config_path}/nodes.json" "${node_dir}"
-    if [ ! -f "$binary_path" ];then
-        cp "${config_path}/${binary_name}" "${binary_path}"
+    if [ -z "${docker_mode}" ];then
+        if [ ! -f "$binary_path" ];then
+            cp "${config_path}/${binary_name}" "${binary_path}"
+        fi
     fi
     LOG_INFO "copy configurations success..."
     echo "=============================================================="
+    if [ -z "${docker_mode}" ];then
+        LOG_INFO "Binary Path       : ${binary_path}"
+    else
+        LOG_INFO "docker mode        : ${docker_mode}"
+        LOG_INFO "docker tag     : ${compatibility_version}"
+    fi
     LOG_INFO "sdk dir         : ${sdk_path}"
     LOG_INFO "SM Model         : ${sm_mode}"
-    LOG_INFO "Binary Path         : ${binary_path}"
+    
     LOG_INFO "output dir         : ${output_dir}"
     LOG_INFO "All completed. Files in ${output_dir}"
 }
@@ -963,8 +994,11 @@ deploy_nodes()
     else
         help
     fi
-    if [[ ! -f "$fisco_bcos_exec" ]]; then
-        LOG_FATAL "fisco bcos binary exec ${fisco_bcos_exec} not exist, please input the correct path."
+    # check the binary
+    if [ -z "${docker_mode}" ];then
+        if [[ ! -f "$fisco_bcos_exec" ]]; then
+            LOG_FATAL "fisco bcos binary exec ${fisco_bcos_exec} not exist, please input the correct path."
+        fi
     fi
     local i=0
     node_count=0
@@ -999,7 +1033,7 @@ deploy_nodes()
             node_dir="${output_dir}/${ip}/node${node_count}"
             mkdir -p "${node_dir}"
             generate_node_cert "${sm_mode}" "${ca_dir}" "${node_dir}/conf"
-            generate_node_scripts "${node_dir}"
+            generate_node_scripts "${node_dir}" "${docker_mode}"
             local port=$((p2p_listen_port + node_count))
             connected_nodes=${connected_nodes}"${ip}:${port}, "
             account_dir="${node_dir}/conf"
@@ -1033,7 +1067,9 @@ deploy_nodes()
     done
     print_result
 }
+
 main() {
+
     # FIXME: use openssl 1.1 to generate gm certificates
     check_env
     check_and_install_tassl
