@@ -144,7 +144,7 @@ void Initializer::init(bcos::initializer::NodeArchitectureType _nodeArchType,
 
         auto executor = ExecutorInitializer::build(m_txpoolInitializer->txpool(), cache, storage,
             executionMessageFactory, m_protocolInitializer->cryptoSuite()->hashImpl(),
-            m_nodeConfig->isWasm());
+            m_nodeConfig->isWasm(), m_nodeConfig->isAuthCheck());
         auto parallelExecutor = std::make_shared<bcos::initializer::ParallelExecutor>(executor);
         executorManager->addExecutor("default", parallelExecutor);
     }

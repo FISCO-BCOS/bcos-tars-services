@@ -515,6 +515,7 @@ generate_common_ini() {
 [executor]
     ; use the wasm virtual machine or not
     is_wasm=false
+    is_auth_check=false
 
 [storage]
     data_path=data

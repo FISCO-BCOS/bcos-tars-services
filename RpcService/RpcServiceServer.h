@@ -16,6 +16,7 @@ public:
 
     void initialize() override {}
     void destroy() override {}
+
     bcostars::Error asyncNotifyBlockNumber(const std::string& _groupID,
         const std::string& _nodeName, tars::Int64 blockNumber,
         tars::TarsCurrentPtr current) override;

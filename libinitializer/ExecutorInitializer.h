@@ -12,10 +12,10 @@ public:
         storage::MergeableStorageInterface::Ptr cache,
         storage::TransactionalStorageInterface::Ptr storage,
         protocol::ExecutionMessageFactory::Ptr executionMessageFactory,
-        bcos::crypto::Hash::Ptr hashImpl, bool isWasm)
+        bcos::crypto::Hash::Ptr hashImpl, bool isWasm, bool isAuthCheck)
     {
         return std::make_shared<executor::TransactionExecutor>(
-            txpool, cache, storage, executionMessageFactory, hashImpl, isWasm);
+            txpool, cache, storage, executionMessageFactory, hashImpl, isWasm, isAuthCheck);
     }
 };
 }  // namespace bcos::initializer
