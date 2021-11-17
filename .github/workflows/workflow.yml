@@ -52,12 +52,27 @@ jobs:
         run: sudo apt install -y git curl build-essential clang cmake ccache libzstd-dev
       - name: configure
         if: runner.os == 'macOS'
-        run: export SDKROOT=$(xcrun --sdk macosx --show-sdk-path) && CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake . -DTEST=ON
-      - name: configure
-        if: runner.os == 'Linux'
-        run: CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake . -DTEST=ON
+        run: export SDKROOT=$(xcrun --sdk macosx --show-sdk-path) && CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake . -DTEST=ON -DBUILD_STATIC=ON
       - name: compile
         run: make -j4 && make tar
+      - name: tar fisco-bcos for MacOS
+        run: mv fisco-bcos/ bin/ && cp tools/build_chain.sh bin/ && cd bin && strip fisco-bcos && tar -cvzf fisco-bcos.tar.gz fisco-bcos build_chain.sh
+      - uses: actions/upload-artifact@v2
+        with:
+          name: fisco-bcos-MacOS.zip
+          path: bin/fisco-bcos.tar.gz
+      - uses: actions/upload-artifact@v2
+        with:
+          name: RpcService-MacOS.zip
+          path: RpcService.tgz
+      - uses: actions/upload-artifact@v2
+        with:
+          name: GatewayService-MacOS.zip
+          path: GatewayService.tgz
+      - uses: actions/upload-artifact@v2
+        with:
+          name: NativeNode-MacOS.zip
+          path: NativeNode.tgz
   build_with_gcc:
     name: build_with_gcc
     runs-on: ${{ matrix.os }}
@@ -165,7 +180,24 @@ jobs:
           git config --global user.email "test@test.com"
           git config --global user.name "test"
           source /opt/rh/devtoolset-8/enable
-          # mkdir -p build && cd build
-          cmake3 . -DTEST=ON
+          cmake3 . -DBUILD_STATIC=ON -DTEST=ON
           make -j4
           make tar
+      - name: tar fisco-bcos for CentOS
+        run: mv fisco-bcos bin && cp tools/build_chain.sh bin/ && cd bin && strip fisco-bcos && tar -cvzf fisco-bcos.tar.gz fisco-bcos build_chain.sh
+      - uses: actions/upload-artifact@v2
+        with:
+          name: fisco-bcos-linux.zip
+          path: bin/fisco-bcos.tar.gz
+      - uses: actions/upload-artifact@v2
+        with:
+          name: RpcService.zip
+          path: RpcService.tgz
+      - uses: actions/upload-artifact@v2
+        with:
+          name: GatewayService.zip
+          path: GatewayService.tgz
+      - uses: actions/upload-artifact@v2
+        with:
+          name: NativeNode.zip
+          path: NativeNode.tgz
