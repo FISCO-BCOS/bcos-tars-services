@@ -1,7 +1,7 @@
 # Note: hunter_config takes effect globally, it is not recommended to set it in bcos-node, otherwise it will affect all projects that rely on bcos-framework
 hunter_config(bcos-framework VERSION 3.0.0-local
-	URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/ba05b4b274d16d218108e271414ece026429b228.tar.gz
-    SHA1 d8f6d4d9bc948b162775279c860cd1a51f044d1b
+	URL https://${URL_BASE}/FISCO-BCOS/bcos-framework/archive/1294f1988c112e1df0109d87cb574a704de92bd4.tar.gz
+  SHA1 05c735f032d3535410c4ea31acc8616fb0c60415
 	CMAKE_ARGS HUNTER_PACKAGE_LOG_BUILD=ON HUNTER_PACKAGE_LOG_INSTALL=ON
 )
 
@@ -14,8 +14,8 @@ hunter_config(bcos-crypto
 
 hunter_config(bcos-boostssl
 	VERSION 3.0.0-local
-	URL "https://${URL_BASE}/FISCO-BCOS/bcos-boostssl/archive/08f2ad5a5dea2827478c60d9aaddc08347e3ad79.tar.gz"
-	SHA1 afd2ae3a0c66aa2e238b1be7ce42e24ddc3fa43d
+	URL "https://${URL_BASE}/FISCO-BCOS/bcos-boostssl/archive/f75a921483fc15a6d63cf04fea799d8522e731d4.tar.gz"
+	SHA1 9879730f164af093f86dbf3f88d44871048df130
 )
 
 hunter_config(bcos-tars-protocol
@@ -26,8 +26,8 @@ hunter_config(bcos-tars-protocol
 )
 
 hunter_config(bcos-txpool VERSION 3.0.0-local-beda0a00
-    URL  https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/d175ee78263dae9edcd58f45a064b53ac8ff5f1c.tar.gz
-    SHA1 00c794e38f3daa1c0ecd9beb163b751b43e228c4
+    URL  https://${URL_BASE}/FISCO-BCOS/bcos-txpool/archive/bc104bcee00f50062c991f76a6a4150a08a09f52.tar.gz
+    SHA1 fe2f590bdaf8b27166aa59eff7d68baa1f895c9b
     CMAKE_ARGS URL_BASE=${URL_BASE}  HUNTER_KEEP_PACKAGE_SOURCES=ON
 )
 
