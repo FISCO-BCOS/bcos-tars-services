@@ -173,13 +173,11 @@ jobs:
       - name: install CentOS dependencies
         run: |
           yum install -y epel-release centos-release-scl
-          yum install -y git make gcc gcc-c++ glibc-static glibc-devel cmake3 ccache devtoolset-8 libzstd-devel zlib-devel flex bison python-devel python3-devel && source /opt/rh/devtoolset-8/enable
+          yum install -y git make gcc gcc-c++ glibc-static glibc-devel cmake3 ccache devtoolset-7 libzstd-devel zlib-devel flex bison python-devel python3-devel && source /opt/rh/devtoolset-7/enable
           alias cmake='cmake3'
       - name: configure and compile
         run: |
-          git config --global user.email "test@test.com"
-          git config --global user.name "test"
-          source /opt/rh/devtoolset-8/enable
+          source /opt/rh/devtoolset-7/enable
           cmake3 . -DBUILD_STATIC=ON -DTEST=ON
           make -j4
           make tar
