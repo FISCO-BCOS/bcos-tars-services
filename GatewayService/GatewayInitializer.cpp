@@ -27,14 +27,9 @@
 
 using namespace bcostars;
 
-void GatewayInitializer::init(
-    std::string const& _configPath, std::string const& _certPath, std::string const& _p2pConfigPath)
+void GatewayInitializer::init(std::string const& _configPath)
 {
     GATEWAYSERVICE_LOG(INFO) << LOG_DESC("initGateWayConfig") << LOG_KV("configPath", _configPath);
-    auto gateWayConfig = std::make_shared<bcos::gateway::GatewayConfig>();
-    gateWayConfig->setCertPath(_certPath);
-    gateWayConfig->setNodePath(_p2pConfigPath);
-    gateWayConfig->initConfig(_configPath);
 
     GATEWAYSERVICE_LOG(INFO) << LOG_DESC("load nodeConfig");
     auto nodeConfig = std::make_shared<bcos::tool::NodeConfig>();
@@ -46,11 +41,11 @@ void GatewayInitializer::init(
     GATEWAYSERVICE_LOG(INFO) << LOG_DESC("load nodeConfig success");
 
     GATEWAYSERVICE_LOG(INFO) << LOG_DESC("buildGateWay")
-                             << LOG_KV("certPath", gateWayConfig->certPath())
-                             << LOG_KV("nodePath", gateWayConfig->nodePath());
+                             << LOG_KV("certPath", m_gatewayConfig->certPath())
+                             << LOG_KV("nodePath", m_gatewayConfig->nodePath());
 
     bcos::gateway::GatewayFactory factory(nodeConfig->chainId());
-    auto gateway = factory.buildGateway(gateWayConfig, false);
+    auto gateway = factory.buildGateway(m_gatewayConfig, false);
 
     m_gateway = gateway;
     GATEWAYSERVICE_LOG(INFO) << LOG_DESC("buildGateway success");
