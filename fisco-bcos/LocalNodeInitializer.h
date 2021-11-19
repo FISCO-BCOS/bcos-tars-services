@@ -31,7 +31,7 @@ class LocalNodeInitializer
 {
 public:
     LocalNodeInitializer() = default;
-    virtual ~LocalNodeInitializer() {}
+    virtual ~LocalNodeInitializer() { stop(); }
 
     virtual void init(std::string const& _configFilePath, std::string const& _genesisFile);
     virtual void start();
