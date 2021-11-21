@@ -13,8 +13,8 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- * @brief Application for the NativeNode
- * @file NativeNodeApp.h
+ * @brief Application for the NodeService
+ * @file NodeServiceApp.h
  * @author: yujiechen
  * @date 2021-10-18
  */
@@ -32,14 +32,20 @@
 
 namespace bcostars
 {
-class NativeNodeApp : public Application
+class NodeServiceApp : public Application
 {
 public:
-    NativeNodeApp() {}
-    ~NativeNodeApp() override {}
+    NodeServiceApp() {}
+    ~NodeServiceApp() override {}
 
     void initialize() override;
-    void destroyApp() override { m_nodeInitializer->stop(); }
+    void destroyApp() override
+    {
+        // terminate the network threads
+        Application::terminate();
+        // stop the nodeService
+        m_nodeInitializer->stop();
+    }
 
 protected:
     virtual void initConfig()

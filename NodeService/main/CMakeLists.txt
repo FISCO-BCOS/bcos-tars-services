@@ -1,7 +1,7 @@
 file(GLOB SRC_LIST "*.cpp")
 file(GLOB HEADERS "*.h")
 
-set(BINARY_NAME NativeNode)
+set(BINARY_NAME BcosNodeService)
 
 aux_source_directory(. SRC_LIST)
 aux_source_directory(../../FrontService SRC_LIST)

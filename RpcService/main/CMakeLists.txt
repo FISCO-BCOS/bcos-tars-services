@@ -4,7 +4,7 @@ project(bcostars-rpc)
 file(GLOB SRC_LIST "*.cpp")
 file(GLOB HEADERS "*.h")
 
-set(BINARY_NAME RpcService)
+set(BINARY_NAME BcosRpcService)
 hunter_add_package(bcos-boostssl)
 find_package(bcos-boostssl CONFIG REQUIRED)
 

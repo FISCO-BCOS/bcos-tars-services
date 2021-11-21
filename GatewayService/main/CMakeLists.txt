@@ -5,7 +5,7 @@ project(bcostars-Gateway)
 file(GLOB SRC_LIST "*.cpp")
 file(GLOB HEADERS "*.h")
 
-set(BINARY_NAME GatewayService)
+set(BINARY_NAME BcosGatewayService)
 aux_source_directory(../ SRC_LIST)
 add_executable(${BINARY_NAME} ${SRC_LIST} ${HEADERS})
 
