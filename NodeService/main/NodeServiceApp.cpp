@@ -13,18 +13,18 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- * @brief Application for the NativeNode
- * @file NativeNodeApp.cpp
+ * @brief Application for the NodeService
+ * @file NodeServiceApp.cpp
  * @author: yujiechen
  * @date 2021-10-18
  */
-#include "NativeNodeApp.h"
+#include "NodeServiceApp.h"
 using namespace bcostars;
 using namespace bcos;
 using namespace bcos::initializer;
 using namespace bcos::protocol;
 
-void NativeNodeApp::initialize()
+void NodeServiceApp::initialize()
 {
     initConfig();
     initLog();
@@ -32,7 +32,7 @@ void NativeNodeApp::initialize()
     initTarsNodeService();
 }
 
-void NativeNodeApp::initLog()
+void NodeServiceApp::initLog()
 {
     boost::property_tree::ptree pt;
     boost::property_tree::read_ini(m_iniConfigPath, pt);
@@ -41,7 +41,7 @@ void NativeNodeApp::initLog()
     m_logInitializer->initLog(pt);
 }
 
-void NativeNodeApp::initNodeService()
+void NodeServiceApp::initNodeService()
 {
     m_nodeInitializer = std::make_shared<Initializer>();
     m_nodeInitializer->initMicroServiceNode(m_iniConfigPath, m_genesisConfigPath, m_privateKeyPath);
@@ -51,7 +51,7 @@ void NativeNodeApp::initNodeService()
     m_nodeInitializer->pbftInitializer()->startReport();
 }
 
-void NativeNodeApp::initTarsNodeService()
+void NodeServiceApp::initTarsNodeService()
 {
     // init the txpool servant
     TxPoolServiceParam txpoolParam;
@@ -85,7 +85,7 @@ void NativeNodeApp::initTarsNodeService()
         getProxyDesc(FRONT_SERVANT_NAME), frontServiceParam);
 }
 
-void NativeNodeApp::initHandler()
+void NodeServiceApp::initHandler()
 {
     auto scheduler = m_nodeInitializer->scheduler();
     auto rpcServicePrx = Application::getCommunicator()->stringToProxy<bcostars::RpcServicePrx>(
@@ -105,7 +105,7 @@ void NativeNodeApp::initHandler()
         });
 }
 
-void NativeNodeApp::notifyBlockNumberToAllRpcNodes(bcostars::RpcServicePrx _rpcPrx,
+void NodeServiceApp::notifyBlockNumberToAllRpcNodes(bcostars::RpcServicePrx _rpcPrx,
     bcos::protocol::BlockNumber _blockNumber, std::function<void(bcos::Error::Ptr)> _callback)
 {
     vector<EndpointInfo> activeEndPoints;
