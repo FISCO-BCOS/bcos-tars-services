@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
 if (NOT DEFINED URL_BASE)
     set(URL_BASE "github.com")
-   endif()
+    # set(URL_BASE "github.com.cnpmjs.org")
+endif()
 set (DEPENDENCIES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/src)
 
 set(BCOS_TARS_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake" CACHE PATH "The cmake path for the library")
