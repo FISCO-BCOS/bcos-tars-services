@@ -25,19 +25,22 @@
 #include <bcos-framework/interfaces/gateway/GatewayInterface.h>
 #include <bcos-framework/interfaces/multigroup/ChainNodeInfoFactory.h>
 #include <bcos-framework/interfaces/multigroup/GroupInfoFactory.h>
+#include <bcos-gateway/GatewayConfig.h>
+
 namespace bcostars
 {
 class GatewayInitializer
 {
 public:
     using Ptr = std::shared_ptr<GatewayInitializer>;
-    GatewayInitializer(std::string const& _configPath, std::string const& _certPath,
-        std::string const& _p2pConfigPath)
-      : m_keyFactory(std::make_shared<bcos::crypto::KeyFactoryImpl>()),
+    GatewayInitializer(
+        std::string const& _configPath, bcos::gateway::GatewayConfig::Ptr _gatewayConfig)
+      : m_gatewayConfig(_gatewayConfig),
+        m_keyFactory(std::make_shared<bcos::crypto::KeyFactoryImpl>()),
         m_groupInfoFactory(std::make_shared<bcos::group::GroupInfoFactory>()),
         m_chainNodeInfoFactory(std::make_shared<bcos::group::ChainNodeInfoFactory>())
     {
-        init(_configPath, _certPath, _p2pConfigPath);
+        init(_configPath);
     }
 
     virtual ~GatewayInitializer() { stop(); }
@@ -53,10 +56,10 @@ public:
     bcos::crypto::KeyFactory::Ptr keyFactory() { return m_keyFactory; }
 
 protected:
-    virtual void init(std::string const& _configPath, std::string const& _certPath,
-        std::string const& _p2pConfigPath);
+    virtual void init(std::string const& _configPath);
 
 private:
+    bcos::gateway::GatewayConfig::Ptr m_gatewayConfig;
     bcos::crypto::KeyFactory::Ptr m_keyFactory;
     bcos::group::GroupInfoFactory::Ptr m_groupInfoFactory;
     bcos::group::ChainNodeInfoFactory::Ptr m_chainNodeInfoFactory;

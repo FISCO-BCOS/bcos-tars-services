@@ -6,10 +6,10 @@ import argparse
 
 air_linux_binaries_list = ["fisco-bcos-linux.zip"]
 air_macos_binaries_list = ["fisco-bcos-MacOS.zip"]
-pro_linux_binaries_list = ["RpcService.zip",
-                           "GatewayService.zip", "NativeNode.zip"]
-pro_macos_binaries_list = ["RpcService-MacOS.zip",
-                           "GatewayService-MacOS.zip", "NativeNode-MacOS.zip"]
+pro_linux_binaries_list = ["BcosRpcService.zip",
+                           "BcosGatewayService.zip", "BcosNodeService.zip"]
+pro_macos_binaries_list = ["BcosRpcService-MacOS.zip",
+                           "BcosGatewayService-MacOS.zip", "BcosNodeService-MacOS.zip"]
 artifacts_url = "https://api.github.com/repos/FISCO-BCOS/bcos-tars-services/actions/artifacts"
 # Note: set the token
 token = ""

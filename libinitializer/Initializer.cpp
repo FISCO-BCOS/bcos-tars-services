@@ -130,10 +130,13 @@ void Initializer::init(bcos::initializer::NodeArchitectureType _nodeArchType,
         m_pbftInitializer = std::make_shared<PBFTInitializer>(_nodeArchType, m_nodeConfig,
             m_protocolInitializer, m_txpoolInitializer->txpool(), ledger, m_scheduler, storage,
             m_frontServiceInitializer->front());
-        m_pbftInitializer->init();
 
         // init the txpool
         m_txpoolInitializer->init(m_pbftInitializer->sealer());
+
+        // Note: must init PBFT after txpool, in case of pbft calls txpool to verifyBlock before
+        // txpool init finished
+        m_pbftInitializer->init();
 
         // init the frontService
         m_frontServiceInitializer->init(m_pbftInitializer->pbft(), m_pbftInitializer->blockSync(),

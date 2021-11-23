@@ -22,7 +22,7 @@
  * @author: ancelmo
  * @date 2021-10-14
  */
-#include "NativeNodeApp.h"
+#include "NodeServiceApp.h"
 #include "libinitializer/Common.h"
 #include <bcos-framework/libutilities/Common.h>
 #include <chrono>
@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
     try
     {
         bcos::initializer::initCommandLine(argc, argv);
-        NativeNodeApp app;
+        NodeServiceApp app;
         printVersion();
         std::cout << "[" << getCurrentDateTime() << "] ";
         std::cout << "The fisco-bcos is running..." << std::endl;

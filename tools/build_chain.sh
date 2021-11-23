@@ -32,6 +32,8 @@ config_path=""
 docker_mode=
 default_version="v3.1.0"
 compatibility_version=${default_version}
+auth_mode="false"
+auth_admin_account=
 
 LOG_WARN() {
     local content=${1}
@@ -330,8 +332,8 @@ gen_sm_chain_cert() {
     mkdir -p "$chaindir"
     dir_must_exists "$chaindir"
 
-    "$OPENSSL_CMD" genpkey -paramfile "${sm2_params}" -out "$chaindir/sm_ca.key"
-    "$OPENSSL_CMD" req -config sm_cert.cnf -x509 -days "${days}" -subj "/CN=FISCO-BCOS/O=FISCO-BCOS/OU=chain" -key "$chaindir/sm_ca.key" -extensions v3_ca -out "$chaindir/sm_ca.crt"
+    "$OPENSSL_CMD" genpkey -paramfile "${sm2_params}" -out "$chaindir/sm_ca.key" 2>/dev/null
+    "$OPENSSL_CMD" req -config sm_cert.cnf -x509 -days "${days}" -subj "/CN=FISCO-BCOS/O=FISCO-BCOS/OU=chain" -key "$chaindir/sm_ca.key" -extensions v3_ca -out "$chaindir/sm_ca.crt" 2>/dev/null
     cp "${sm_cert_conf}" "${chaindir}"
     cp "${sm2_params}" "${chaindir}"
 }
@@ -348,11 +350,11 @@ gen_sm_node_cert_with_ext() {
     file_must_not_exists "$ndpath/sm_${type}.crt"
     file_must_not_exists "$ndpath/sm_${type}.key"
 
-    "$OPENSSL_CMD" genpkey -paramfile "$capath/${sm2_params}" -out "$certpath/sm_${type}.key"
-    "$OPENSSL_CMD" req -new -subj "/CN=FISCO-BCOS/O=fisco-bcos/OU=${type}" -key "$certpath/sm_${type}.key" -config "$capath/sm_cert.cnf" -out "$certpath/sm_${type}.csr"
+    "$OPENSSL_CMD" genpkey -paramfile "$capath/${sm2_params}" -out "$certpath/sm_${type}.key" 2> /dev/null
+    "$OPENSSL_CMD" req -new -subj "/CN=FISCO-BCOS/O=fisco-bcos/OU=${type}" -key "$certpath/sm_${type}.key" -config "$capath/sm_cert.cnf" -out "$certpath/sm_${type}.csr" 2> /dev/null
 
-    echo "not use $(basename "$capath") to sign $(basename $certpath) ${type}" >>"${logfile}"
-    "$OPENSSL_CMD" x509 -sm3 -req -CA "$capath/sm_ca.crt" -CAkey "$capath/sm_ca.key" -days "${days}" -CAcreateserial -in "$certpath/sm_${type}.csr" -out "$certpath/sm_${type}.crt" -extfile "$capath/sm_cert.cnf" -extensions "$extensions"
+    # echo "not use $(basename "$capath") to sign $(basename $certpath) ${type}" >>"${logfile}"
+    "$OPENSSL_CMD" x509 -sm3 -req -CA "$capath/sm_ca.crt" -CAkey "$capath/sm_ca.key" -days "${days}" -CAcreateserial -in "$certpath/sm_${type}.csr" -out "$certpath/sm_${type}.crt" -extfile "$capath/sm_cert.cnf" -extensions "$extensions" 2> /dev/null
 
     rm -f "$certpath/sm_${type}.csr"
 }
@@ -381,16 +383,18 @@ help() {
     echo $1
     cat <<EOF
 Usage:
-    -C <Command>                       [Optional] the command, support 'deploy' and 'expand' now, default is deploy
-    -v <FISCO-BCOS binary version>     Default is the latest v${default_version}
-    -l <IP list>                       [Required] "ip1:nodeNum1,ip2:nodeNum2" e.g:"192.168.0.1:2,192.168.0.2:3"
-    -o <output dir>                    [Optional] output directory, default ./nodes
-    -e <fisco-bcos exec>               [Required] fisco-bcos binay exec
-    -p <Start Port>                    Default 30300,20200 means p2p_port start from 30300, rpc_port from 20200
-    -s <SM model>                      [Optional] SM SSL connection or not, default no
-    -c <Config Path>                   [Required when expand node] Specify the path of the expanded node config.ini, config.genesis and p2p connection file nodes.json
-    -d <CA cert path>                  [Required when expand node] When expanding the node, specify the path where the CA certificate and private key are located
+    -C <Command>                        [Optional] the command, support 'deploy' and 'expand' now, default is deploy
+    -v <FISCO-BCOS binary version>      Default is the latest v${default_version}
+    -l <IP list>                        [Required] "ip1:nodeNum1,ip2:nodeNum2" e.g:"192.168.0.1:2,192.168.0.2:3"
+    -o <output dir>                     [Optional] output directory, default ./nodes
+    -e <fisco-bcos exec>                [Required] fisco-bcos binary exec
+    -p <Start Port>                     Default 30300,20200 means p2p_port start from 30300, rpc_port from 20200
+    -s <SM model>                       [Optional] SM SSL connection or not, default no
+    -c <Config Path>                    [Required when expand node] Specify the path of the expanded node config.ini, config.genesis and p2p connection file nodes.json
+    -d <CA cert path>                   [Required when expand node] When expanding the node, specify the path where the CA certificate and private key are located
     -D <docker mode>                    Default off. If set -d, build with docker
+    -A <Auth mode>                      Default off. If set -A, build chain with auth, and generate admin account.
+    -a <Auth account>                   [Optional when Auth mode] Specify the admin account address.
     -h Help
 
 e.g
@@ -402,7 +406,7 @@ EOF
 }
 
 parse_params() {
-    while getopts "l:C:c:o:e:p:d:v:Dsh" option; do
+    while getopts "l:C:c:o:e:p:d:v:DshAa:" option; do
         case $option in
         l)
             ip_param=$OPTARG
@@ -424,6 +428,11 @@ parse_params() {
             ;;
         s) sm_mode="true" ;;
         D) docker_mode="true" ;;
+        A) auth_mode="true" ;;
+        a)
+          auth_mode="true"
+          auth_admin_account="${OPTARG}"
+        ;;
         v) compatibility_version="${OPTARG}";;
         h) help ;;
         *) help ;;
@@ -439,6 +448,7 @@ print_result() {
         LOG_INFO "docker mode     : ${docker_mode}"
         LOG_INFO "docker tag      : ${compatibility_version}"
     fi
+    LOG_INFO "Auth Mode           : ${auth_mode}"
     LOG_INFO "Start Port          : ${port_start[*]}"
     LOG_INFO "Server IP           : ${ip_array[*]}"
     LOG_INFO "SM Model            : ${sm_mode}"
@@ -677,6 +687,8 @@ generate_common_ini() {
 [executor]
     ; use the wasm virtual machine or not
     is_wasm=false
+    is_auth_check=${auth_mode}
+    auth_admin_account=${auth_admin_account}
 
 [storage]
     data_path=data
@@ -766,6 +778,7 @@ generate_config() {
     local connected_nodes="${4}"
     local p2p_listen_port="${5}"
     local rpc_listen_port="${6}"
+    check_auth_account
     if [ "${sm_mode}" == "false" ]; then
         generate_config_ini "${node_config_path}" "${p2p_listen_port}" "${rpc_listen_port}"
     else
@@ -783,7 +796,7 @@ generate_secp256k1_node_account() {
     if [ ! -f /tmp/secp256k1.param ]; then
         ${OPENSSL_CMD} ecparam -out /tmp/secp256k1.param -name secp256k1
     fi
-    ${OPENSSL_CMD} genpkey -paramfile /tmp/secp256k1.param -out ${output_path}/node.pem
+    ${OPENSSL_CMD} genpkey -paramfile /tmp/secp256k1.param -out ${output_path}/node.pem 2>/dev/null
     # generate nodeid
     ${OPENSSL_CMD} ec -text -noout -in "${output_path}/node.pem" 2>/dev/null | sed -n '7,11p' | tr -d ": \n" | awk '{print substr($0,3);}' | cat >"$output_path"/node.nodeid
     local node_id=$(cat "${output_path}/node.nodeid")
@@ -870,17 +883,17 @@ exit_with_clean() {
 check_and_install_tassl(){
 if [ -n "${sm_mode}" ]; then
     if [ ! -f "${OPENSSL_CMD}" ];then
-        local tassl_link_perfix="${cdn_link_header}/FISCO-BCOS/tools/tassl-1.0.2"
-        LOG_INFO "Downloading tassl binary from ${tassl_link_perfix}..."
+        local tassl_link_prefix="${cdn_link_header}/FISCO-BCOS/tools/tassl-1.0.2"
+        LOG_INFO "Downloading tassl binary from ${tassl_link_prefix}..."
         if [[ -n "${macOS}" ]];then
-            curl -#LO "${tassl_link_perfix}/tassl_mac.tar.gz"
+            curl -#LO "${tassl_link_prefix}/tassl_mac.tar.gz"
             mv tassl_mac.tar.gz tassl.tar.gz
         else
             if [[ "$(uname -p)" == "aarch64" ]];then
-                curl -#LO "${tassl_link_perfix}/tassl-aarch64.tar.gz"
+                curl -#LO "${tassl_link_prefix}/tassl-aarch64.tar.gz"
                 mv tassl-aarch64.tar.gz tassl.tar.gz
             elif [[ "$(uname -p)" == "x86_64" ]];then
-                curl -#LO "${tassl_link_perfix}/tassl.tar.gz"
+                curl -#LO "${tassl_link_prefix}/tassl.tar.gz"
             else
                 LOG_FATAL "Unsupported platform"
                 exit 1
@@ -1066,6 +1079,36 @@ deploy_nodes()
         done
     done
     print_result
+}
+
+check_auth_account()
+{
+  if [ -n "${auth_mode}" ]; then
+      if [ -z "${auth_admin_account}" ]; then
+        # get account string to auth_admin_account
+        generate_auth_account
+      fi
+  fi
+}
+
+generate_auth_account()
+{
+  if ${sm_mode}; then
+    if [ ! -f "get_gm_account.sh" ]; then
+      local get_gm_account_link="${cdn_link_header}/FISCO-BCOS/tools/get_gm_account.sh"
+      LOG_INFO "Downloading get_gm_account.sh from ${get_gm_account_link}..."
+      curl -#LO "${get_gm_account_link}"
+    fi
+      auth_admin_account=$(bash get_gm_account.sh | grep Address | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" | awk '{print $5}')
+  else
+    if [ ! -f "get_account.sh" ]; then
+      local get_account_link="${cdn_link_header}/FISCO-BCOS/tools/get_account.sh"
+      LOG_INFO "Downloading get_account.sh from ${get_account_link}..."
+      curl -#LO "${get_account_link}"
+    fi
+      auth_admin_account=$(bash get_account.sh | grep Address | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" | awk '{print $5}')
+  fi
+  mv accounts* "${ca_dir}"
 }
 
 main() {

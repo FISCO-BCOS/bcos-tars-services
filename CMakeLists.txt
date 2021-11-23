@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
 if (NOT DEFINED URL_BASE)
     set(URL_BASE "github.com")
-   endif()
+    # set(URL_BASE "github.com.cnpmjs.org")
+endif()
 set (DEPENDENCIES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/src)
 
 set(BCOS_TARS_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake" CACHE PATH "The cmake path for the library")
@@ -65,22 +66,23 @@ add_subdirectory(libinitializer)
 
 include(BuildInfoGenerator)
 # import services
-list(APPEND SERVICE_LIST FrontService GatewayService RpcService TxPoolService PBFTService NativeNode)
-# list(APPEND SERVICE_LIST GatewayService RpcService NativeNode)
+#list(APPEND SERVICE_LIST FrontService GatewayService RpcService TxPoolService PBFTService NodeService)
+list(APPEND SERVICE_LIST GatewayService RpcService NodeService)
 # TODO:
 # SchedulerService, ExecutorService
 
 foreach(SERVICE ${SERVICE_LIST})
     add_subdirectory(${SERVICE}/main)
+    set(BINARY_NAME Bcos${SERVICE})
 
-    add_custom_command(OUTPUT ${SERVICE}.tgz
+    add_custom_command(OUTPUT ${BINARY_NAME}.tgz
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/${SERVICE}/main/${SERVICE} ${CMAKE_BINARY_DIR}/${SERVICE}/${SERVICE}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR} tar czfv ${SERVICE}.tgz ${SERVICE}/${SERVICE}                              
-    COMMENT "Compressing ${SERVICE}...")
-    add_custom_target(${SERVICE}-tar DEPENDS ${SERVICE}.tgz ${SERVICE})
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/${SERVICE}/main/${BINARY_NAME} ${CMAKE_BINARY_DIR}/${BINARY_NAME}/${BINARY_NAME}
+    COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR} tar czfv ${BINARY_NAME}.tgz ${BINARY_NAME}/${BINARY_NAME}                              
+    COMMENT "Compressing ${BINARY_NAME}...")
 
-    list(APPEND SERVICE_TAR_LIST ${SERVICE}-tar)
+    add_custom_target(${BINARY_NAME}-tar DEPENDS ${BINARY_NAME}.tgz ${BINARY_NAME})
+    list(APPEND SERVICE_TAR_LIST ${BINARY_NAME}-tar)
 endforeach()
 
 add_subdirectory(fisco-bcos)

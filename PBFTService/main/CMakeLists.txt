@@ -4,7 +4,7 @@ project(bcostars-pbft)
 file(GLOB SRC_LIST "*.cpp")
 file(GLOB HEADERS "*.h")
 
-set(BINARY_NAME PBFTService)
+set(BINARY_NAME BcosPBFTService)
 
 aux_source_directory(../ SRC_LIST)
 add_executable(${BINARY_NAME} ${SRC_LIST} ${HEADERS})
